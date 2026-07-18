@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { lazy, Suspense, useEffect } from 'react'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 import { Nav, Cursor } from './chrome.jsx'
 import Services from './pages/Services.jsx'
 import About from './pages/About.jsx'
@@ -52,6 +53,7 @@ export default function App() {
           <Route path="/terms" element={<Terms />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <SpeedInsights />
       </div>
     </BrowserRouter>
   )
