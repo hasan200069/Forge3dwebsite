@@ -2,19 +2,20 @@ import * as THREE from 'three'
 import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useScroll, RoundedBox, Edges } from '@react-three/drei'
+import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing'
 
 export const SECTIONS = 9
 
 /* ————————————————————————————————————————
-   THE ROUTE — one winding road through white space.
+   THE ROUTE — one winding road through the dark forge.
    The camera travels along it; stations sit beside it.
    ———————————————————————————————————————— */
 
 const U_END = 0.93 // camera never quite reaches the end of the curve
-const AHEAD = 0.055 // stations sit this far ahead of the camera's arrival point
+const AHEAD = 0.05 // stations sit this far ahead of the camera's arrival point
 
 const curve = new THREE.CatmullRomCurve3(
-  Array.from({ length: 11 }, (_, k) =>
+  Array.from({ length: 12 }, (_, k) =>
     new THREE.Vector3(Math.sin(k * 0.9) * 6.5, Math.sin(k * 0.55) * 2.0, -k * 13)
   ),
   false,
@@ -23,7 +24,7 @@ const curve = new THREE.CatmullRomCurve3(
 )
 
 // which side of the road each station sits on (+1 right, -1 left)
-const SIDES = [0.35, 0, -1, 1, -1, 1, -1, 1, 0.15]
+const SIDES = [0.35, 0, -1, 1, -1, 1, -1, 1, 0.12]
 const Y_OFF = [0, -4.5, 0, 0, 0, 0, 0, 0, 0]
 
 const STATIONS = SIDES.map((side, i) => {
@@ -41,14 +42,36 @@ const STATIONS = SIDES.map((side, i) => {
 const easeOut = (t) => 1 - Math.pow(1 - t, 3)
 const clamp01 = (v) => Math.min(1, Math.max(0, v))
 
-const WHITE = '#ffffff'
-const BONE = '#e6e0d6'
-const LINE = '#c7beb1'
-const MOLTEN = '#ff4d00'
-const GOLD = '#ffb238'
+/* ember-black palette — heat without the neon */
+const BG = '#080302'
+const HOT = '#eec084' // warm white-hot, muted
+const CHAR = '#241610' // charred surfaces
+const LINE = '#54301a' // ember lines
+const DIM = '#6e5540' // dim metal nodes
+const MOLTEN = '#cf4514'
+const LAVA = '#992200'
+const GOLD = '#d3913d'
 
-const Porcelain = (props) => (
-  <meshStandardMaterial color={WHITE} roughness={0.3} metalness={0.1} {...props} />
+/* obsidian replaces porcelain — dark glassy metal with a faint inner heat */
+const Obsidian = (props) => (
+  <meshStandardMaterial
+    color="#251811"
+    roughness={0.32}
+    metalness={0.55}
+    emissive="#160804"
+    emissiveIntensity={0.3}
+    {...props}
+  />
+)
+
+const Molten = (props) => (
+  <meshStandardMaterial
+    color={MOLTEN}
+    roughness={0.32}
+    emissive={LAVA}
+    emissiveIntensity={0.7}
+    {...props}
+  />
 )
 
 function Station({ index, face = false, spin = 0, children }) {
@@ -59,7 +82,9 @@ function Station({ index, face = false, spin = 0, children }) {
   useFrame((state, delta) => {
     const cur = scroll.offset * (SECTIONS - 1)
     const near = easeOut(clamp01(1.8 - Math.abs(cur - index)))
-    outer.current.scale.setScalar(0.82 + 0.18 * near)
+    const target = 0.8 + 0.2 * near
+    const s = THREE.MathUtils.damp(outer.current.scale.x, target, 4.5, delta)
+    outer.current.scale.setScalar(s)
     if (spin) inner.current.rotation.y += delta * spin
     inner.current.position.y = Math.sin(state.clock.getElapsedTime() * 0.55 + index * 1.9) * 0.12
   })
@@ -69,15 +94,18 @@ function Station({ index, face = false, spin = 0, children }) {
       position={pos}
       onUpdate={(g) => { if (face) g.lookAt(camAnchor) }}
     >
+      {/* each station radiates its own gentle heat */}
+      <pointLight color={MOLTEN} intensity={16} distance={8.5} decay={1.9} position={[0, 0.6, 1.6]} />
       <group ref={inner}>{children}</group>
     </group>
   )
 }
 
-/* ———————————————————— the road itself ———————————————————— */
+/* ———————————————————— the road itself — a vein of lava ———————————————————— */
 
 function Road() {
-  const tube = useMemo(() => new THREE.TubeGeometry(curve, 400, 0.035, 8), [])
+  const core = useMemo(() => new THREE.TubeGeometry(curve, 400, 0.03, 8), [])
+  const glow = useMemo(() => new THREE.TubeGeometry(curve, 300, 0.11, 8), [])
   const pulses = useRef([])
   const defs = useMemo(() => {
     const rng = mulberry(5)
@@ -94,16 +122,86 @@ function Road() {
   })
   return (
     <group>
-      <mesh geometry={tube}>
-        <meshBasicMaterial color={BONE} />
+      {/* molten core */}
+      <mesh geometry={core}>
+        <meshBasicMaterial color="#c14a12" toneMapped={false} />
       </mesh>
+      {/* soft heat halo around the vein */}
+      <mesh geometry={glow}>
+        <meshBasicMaterial
+          color={LAVA}
+          transparent
+          opacity={0.1}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </mesh>
+      {/* sparks racing along the vein */}
       {defs.map((_, i) => (
         <mesh key={i} ref={(el) => (pulses.current[i] = el)}>
-          <sphereGeometry args={[0.06, 10, 10]} />
-          <meshBasicMaterial color={MOLTEN} />
+          <sphereGeometry args={[0.055, 10, 10]} />
+          <meshBasicMaterial color={HOT} toneMapped={false} />
         </mesh>
       ))}
     </group>
+  )
+}
+
+/* ———————————————————— embers drifting through the whole forge ———————————————————— */
+
+function Embers() {
+  const points = useRef()
+  const { positions, seeds, N } = useMemo(() => {
+    const rng = mulberry(99)
+    const N = 320
+    const positions = new Float32Array(N * 3)
+    const seeds = Array.from({ length: N }, () => {
+      const p = curve.getPointAt(rng())
+      return {
+        x: p.x + (rng() - 0.5) * 14,
+        y: p.y - 4 + rng() * 9,
+        z: p.z + (rng() - 0.5) * 14,
+        speed: 0.22 + rng() * 0.5,
+        sway: rng() * Math.PI * 2,
+        swayAmp: 0.15 + rng() * 0.35,
+      }
+    })
+    seeds.forEach((s, i) => {
+      positions[i * 3] = s.x
+      positions[i * 3 + 1] = s.y
+      positions[i * 3 + 2] = s.z
+    })
+    return { positions, seeds, N }
+  }, [])
+  useFrame((state, delta) => {
+    const t = state.clock.getElapsedTime()
+    const arr = points.current.geometry.attributes.position.array
+    for (let i = 0; i < N; i++) {
+      const s = seeds[i]
+      s.y += s.speed * delta
+      if (s.y > s.z * 0.02 + 7) s.y -= 12 // recycle from below
+      arr[i * 3] = s.x + Math.sin(t * 0.8 + s.sway) * s.swayAmp
+      arr[i * 3 + 1] = s.y
+      arr[i * 3 + 2] = s.z + Math.cos(t * 0.6 + s.sway) * s.swayAmp * 0.6
+    }
+    points.current.geometry.attributes.position.needsUpdate = true
+    points.current.material.opacity = 0.6 + Math.sin(t * 2.1) * 0.12
+  })
+  return (
+    <points ref={points}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+      </bufferGeometry>
+      <pointsMaterial
+        color="#d9691f"
+        size={0.065}
+        sizeAttenuation
+        transparent
+        opacity={0.7}
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
+      />
+    </points>
   )
 }
 
@@ -142,20 +240,21 @@ function NetworkCore() {
         {nodes.map((p, i) => (
           <mesh key={i} position={p}>
             <sphereGeometry args={[0.045, 10, 10]} />
-            <meshBasicMaterial color={i % 9 === 0 ? MOLTEN : '#9a9184'} />
+            <meshBasicMaterial color={i % 9 === 0 ? MOLTEN : DIM} />
           </mesh>
         ))}
         <lineSegments geometry={lineGeo}>
-          <lineBasicMaterial color={LINE} transparent opacity={0.5} />
+          <lineBasicMaterial color={LINE} transparent opacity={0.55} />
         </lineSegments>
         <mesh>
           <icosahedronGeometry args={[1.15, 1]} />
-          <meshBasicMaterial color={BONE} wireframe transparent opacity={0.6} />
+          <meshBasicMaterial color={CHAR} wireframe transparent opacity={0.7} />
         </mesh>
       </group>
+      {/* the molten heart */}
       <mesh ref={heart}>
         <sphereGeometry args={[0.22, 20, 20]} />
-        <meshBasicMaterial color={MOLTEN} />
+        <meshBasicMaterial color="#d94f14" toneMapped={false} />
       </mesh>
     </group>
   )
@@ -177,7 +276,7 @@ function TerrainMap() {
   }, [])
   return (
     <mesh geometry={geo} rotation={[-Math.PI / 2, 0, 0]}>
-      <meshBasicMaterial color={LINE} wireframe transparent opacity={0.4} />
+      <meshBasicMaterial color="#6e2f12" wireframe transparent opacity={0.32} />
     </mesh>
   )
 }
@@ -207,9 +306,7 @@ function ChatBubbles() {
       {bubbles.map((b, i) => (
         <group key={i} ref={(el) => (refs.current[i] = el)} position={[b.x, b.y, i * 0.06]}>
           <RoundedBox args={[b.w, 0.58, 0.2]} radius={0.09} smoothness={4}>
-            {b.mine
-              ? <meshStandardMaterial color={MOLTEN} roughness={0.35} />
-              : <Porcelain />}
+            {b.mine ? <Molten /> : <Obsidian />}
           </RoundedBox>
           {/* text lines on received bubbles */}
           {!b.mine && (
@@ -230,7 +327,7 @@ function ChatBubbles() {
               {[-1, 0, 1].map((k, j) => (
                 <mesh key={k} position={[k * 0.16, 0, 0]} ref={(el) => (dots.current[j] = el)}>
                   <sphereGeometry args={[0.045, 10, 10]} />
-                  <meshBasicMaterial color="#ffe3d1" />
+                  <meshBasicMaterial color={HOT} toneMapped={false} />
                 </mesh>
               ))}
             </group>
@@ -260,9 +357,7 @@ function Waveform() {
       {Array.from({ length: COUNT }, (_, i) => (
         <mesh key={i} position={[(i - COUNT / 2) * 0.22, 0, 0]} ref={(el) => (bars.current[i] = el)}>
           <cylinderGeometry args={[0.055, 0.055, 1, 10]} />
-          {Math.abs(i - Math.floor(COUNT / 2)) < 3
-            ? <meshStandardMaterial color={MOLTEN} roughness={0.35} />
-            : <Porcelain />}
+          {Math.abs(i - Math.floor(COUNT / 2)) < 3 ? <Molten /> : <Obsidian />}
         </mesh>
       ))}
     </group>
@@ -292,13 +387,15 @@ function AvatarHead() {
       {profile.map((p, i) => (
         <mesh key={i} position={[0, p.y, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <torusGeometry args={[p.r, 0.016, 8, 80]} />
-          <Porcelain color={i % 5 === 0 ? BONE : WHITE} />
+          {i % 5 === 0
+            ? <meshStandardMaterial color={CHAR} roughness={0.3} metalness={0.5} emissive={LAVA} emissiveIntensity={0.25} />
+            : <Obsidian />}
         </mesh>
       ))}
       {/* scan ring sweeping the head */}
       <mesh ref={scanner} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[1, 0.022, 8, 80]} />
-        <meshBasicMaterial color={MOLTEN} />
+        <meshBasicMaterial color="#c94f14" toneMapped={false} />
       </mesh>
     </group>
   )
@@ -330,22 +427,24 @@ function AgentGraph() {
   return (
     <group>
       <RoundedBox args={[0.6, 0.6, 0.6]} radius={0.08} smoothness={4}>
-        <Porcelain roughness={0.25} />
-        <Edges color={LINE} />
+        <Obsidian roughness={0.25} />
+        <Edges color={MOLTEN} />
       </RoundedBox>
       {nodePos.map((p, i) => (
         <mesh key={i} position={p}>
           <sphereGeometry args={[0.13, 14, 14]} />
-          <Porcelain color={i % 4 === 0 ? GOLD : WHITE} />
+          {i % 4 === 0
+            ? <meshStandardMaterial color={GOLD} roughness={0.3} emissive="#8a4a10" emissiveIntensity={0.6} />
+            : <Obsidian />}
         </mesh>
       ))}
       <lineSegments geometry={lineGeo}>
-        <lineBasicMaterial color={LINE} transparent opacity={0.6} />
+        <lineBasicMaterial color={LINE} transparent opacity={0.7} />
       </lineSegments>
       {Array.from({ length: 4 }, (_, i) => (
         <mesh key={i} ref={(el) => (pulses.current[i] = el)}>
           <sphereGeometry args={[0.055, 10, 10]} />
-          <meshBasicMaterial color={MOLTEN} />
+          <meshBasicMaterial color={HOT} toneMapped={false} />
         </mesh>
       ))}
     </group>
@@ -370,12 +469,12 @@ function ProductDashboard() {
     <group>
       {/* main app window */}
       <RoundedBox args={[3.3, 2.15, 0.12]} radius={0.08} smoothness={4}>
-        <Porcelain roughness={0.2} />
+        <Obsidian roughness={0.2} />
       </RoundedBox>
       {/* header bar + traffic light dot */}
       <mesh position={[0, 0.88, 0.075]}>
         <boxGeometry args={[3.0, 0.14, 0.01]} />
-        <meshBasicMaterial color={BONE} />
+        <meshBasicMaterial color={CHAR} />
       </mesh>
       <mesh position={[-1.36, 0.88, 0.08]}>
         <sphereGeometry args={[0.04, 10, 10]} />
@@ -384,7 +483,7 @@ function ProductDashboard() {
       {/* sidebar */}
       <mesh position={[-1.28, -0.12, 0.075]}>
         <boxGeometry args={[0.5, 1.55, 0.01]} />
-        <meshBasicMaterial color="#f1ece4" />
+        <meshBasicMaterial color="#180e08" />
       </mesh>
       {/* animated chart bars */}
       {Array.from({ length: 5 }, (_, i) => (
@@ -396,7 +495,7 @@ function ProductDashboard() {
       {/* floating satellite cards */}
       <group ref={cardA} position={[2.0, 0.55, 0.55]}>
         <RoundedBox args={[1.15, 0.75, 0.08]} radius={0.06} smoothness={4}>
-          <Porcelain />
+          <Obsidian />
         </RoundedBox>
         <mesh position={[0, 0.12, 0.05]}>
           <boxGeometry args={[0.8, 0.07, 0.01]} />
@@ -409,7 +508,7 @@ function ProductDashboard() {
       </group>
       <group ref={cardB} position={[-1.95, -0.75, 0.7]}>
         <RoundedBox args={[0.95, 0.95, 0.08]} radius={0.06} smoothness={4}>
-          <Porcelain />
+          <Obsidian />
         </RoundedBox>
         <mesh position={[0, 0, 0.05]} rotation={[0, 0, 0.5]}>
           <torusGeometry args={[0.24, 0.05, 8, 40, 4.2]} />
@@ -449,8 +548,8 @@ function BlockChain() {
         >
           <boxGeometry args={[0.55, 0.55, 0.55]} />
           {i === 2
-            ? <meshStandardMaterial color={MOLTEN} roughness={0.3} emissive={MOLTEN} emissiveIntensity={0.25} />
-            : <Porcelain roughness={0.22} metalness={0.3} />}
+            ? <Molten emissiveIntensity={0.6} />
+            : <Obsidian roughness={0.22} metalness={0.6} />}
           <Edges color={i === 2 ? GOLD : LINE} />
         </mesh>
       ))}
@@ -461,48 +560,52 @@ function BlockChain() {
   )
 }
 
-/* ———————————————————— 08 · destination: the map pin ———————————————————— */
+/* ———————————————————— 08 · finale: the forge gate ———————————————————— */
 
-function DestinationPin() {
-  const pin = useRef()
-  const rings = useRef([])
-  useFrame((state) => {
+function ForgeGate() {
+  const ring = useRef()
+  const disc = useRef()
+  const sparks = useRef([])
+  useFrame((state, delta) => {
     const t = state.clock.getElapsedTime()
-    pin.current.position.y = Math.abs(Math.sin(t * 1.6)) * 0.35
-    rings.current.forEach((r, i) => {
-      if (!r) return
-      const f = (t * 0.45 + i * 0.5) % 1
-      r.scale.setScalar(0.4 + f * 2.6)
-      r.material.opacity = (1 - f) * 0.55
+    ring.current.rotation.z += delta * 0.12
+    disc.current.material.opacity = 0.14 + Math.sin(t * 1.4) * 0.05
+    sparks.current.forEach((s, i) => {
+      if (!s) return
+      const a = t * (0.25 + (i % 3) * 0.04) + i * ((Math.PI * 2) / 14)
+      s.position.set(Math.cos(a) * 1.66, Math.sin(a) * 1.66, Math.sin(t * 1.2 + i) * 0.08)
     })
   })
   return (
     <group>
-      <group ref={pin}>
-        <mesh position={[0, 0.15, 0]} rotation={[Math.PI, 0, 0]}>
-          <coneGeometry args={[0.42, 1.1, 24]} />
-          <meshStandardMaterial color={MOLTEN} roughness={0.3} />
-        </mesh>
-        <mesh position={[0, 0.85, 0]}>
-          <sphereGeometry args={[0.42, 24, 24]} />
-          <meshStandardMaterial color={MOLTEN} roughness={0.3} />
-        </mesh>
-        <mesh position={[0, 0.85, 0.36]}>
-          <sphereGeometry args={[0.14, 16, 16]} />
-          <meshBasicMaterial color={WHITE} />
-        </mesh>
-      </group>
-      {/* radar rings on the ground */}
-      {Array.from({ length: 2 }, (_, i) => (
-        <mesh key={i} position={[0, -0.55, 0]} rotation={[-Math.PI / 2, 0, 0]} ref={(el) => (rings.current[i] = el)}>
-          <ringGeometry args={[0.92, 1, 48]} />
-          <meshBasicMaterial color={MOLTEN} transparent side={THREE.DoubleSide} />
+      {/* the gate — molten ring the whole journey leads to */}
+      <mesh ref={ring}>
+        <torusGeometry args={[1.6, 0.08, 16, 90]} />
+        <Molten emissiveIntensity={0.55} />
+      </mesh>
+      <mesh>
+        <torusGeometry args={[1.8, 0.018, 8, 90]} />
+        <meshBasicMaterial color={LINE} />
+      </mesh>
+      {/* heat shimmer filling the portal */}
+      <mesh ref={disc}>
+        <circleGeometry args={[1.5, 48]} />
+        <meshBasicMaterial
+          color={LAVA}
+          transparent
+          opacity={0.16}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      {/* sparks orbiting the rim */}
+      {Array.from({ length: 14 }, (_, i) => (
+        <mesh key={i} ref={(el) => (sparks.current[i] = el)}>
+          <sphereGeometry args={[0.035, 8, 8]} />
+          <meshBasicMaterial color={HOT} toneMapped={false} />
         </mesh>
       ))}
-      <mesh position={[0, -0.56, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.5, 32]} />
-        <meshBasicMaterial color={BONE} />
-      </mesh>
     </group>
   )
 }
@@ -512,6 +615,8 @@ function DestinationPin() {
 function Rig() {
   const scroll = useScroll()
   const look = useRef(new THREE.Vector3(0, 0, -10))
+  const roll = useRef(0)
+  const lamp = useRef()
   useFrame((state, delta) => {
     const u = clamp01(scroll.offset) * U_END
     const p = curve.getPointAt(u)
@@ -521,33 +626,42 @@ function Rig() {
     const targetLook = curve.getPointAt(Math.min(u + 0.05, 1))
     targetLook.x += state.pointer.x * 0.9
     targetLook.y += state.pointer.y * 0.5
-    look.current.x = THREE.MathUtils.damp(look.current.x, targetLook.x, 3.2, delta)
-    look.current.y = THREE.MathUtils.damp(look.current.y, targetLook.y, 3.2, delta)
-    look.current.z = THREE.MathUtils.damp(look.current.z, targetLook.z, 3.2, delta)
+    look.current.x = THREE.MathUtils.damp(look.current.x, targetLook.x, 3, delta)
+    look.current.y = THREE.MathUtils.damp(look.current.y, targetLook.y, 3, delta)
+    look.current.z = THREE.MathUtils.damp(look.current.z, targetLook.z, 3, delta)
     state.camera.lookAt(look.current)
+
+    // subtle banking into the bends + against the pointer
+    const tangent = curve.getTangentAt(u)
+    roll.current = THREE.MathUtils.damp(roll.current, -tangent.x * 0.1 - state.pointer.x * 0.03, 2.5, delta)
+    state.camera.rotateZ(roll.current)
+
+    // torch light travelling with the camera
+    if (lamp.current) lamp.current.position.set(p.x, p.y + 1.2, p.z)
 
     const fill = document.getElementById('progress-fill')
     if (fill) fill.style.transform = `scaleX(${scroll.offset})`
     const hud = document.getElementById('hud-current')
     if (hud) {
-      const label = `0${Math.round(scroll.offset * (SECTIONS - 1)) + 1}`
+      const label = String(Math.round(scroll.offset * (SECTIONS - 1)) + 1).padStart(2, '0')
       if (hud.textContent !== label) hud.textContent = label
     }
   })
-  return null
+  return <pointLight ref={lamp} color="#d67a3d" intensity={55} distance={26} decay={1.7} />
 }
 
 export default function Experience() {
   return (
     <>
-      <color attach="background" args={['#f7f5f1']} />
-      <fog attach="fog" args={['#f7f5f1', 14, 36]} />
+      <color attach="background" args={[BG]} />
+      <fog attach="fog" args={[BG, 12, 34]} />
 
-      <ambientLight intensity={1.15} />
-      <directionalLight position={[5, 8, 6]} intensity={1.6} />
-      <directionalLight position={[-6, -3, -4]} intensity={0.45} color="#ffe2c8" />
+      <ambientLight intensity={0.45} color="#38221a" />
+      <directionalLight position={[5, 8, 6]} intensity={0.8} color="#e8a066" />
+      <directionalLight position={[-6, -3, -4]} intensity={0.35} color="#4a2a66" />
 
       <Road />
+      <Embers />
       <Rig />
 
       <Station index={0} spin={0}><NetworkCore /></Station>
@@ -558,7 +672,12 @@ export default function Experience() {
       <Station index={5} spin={0.18}><AgentGraph /></Station>
       <Station index={6} face><ProductDashboard /></Station>
       <Station index={7} face><BlockChain /></Station>
-      <Station index={8} face><DestinationPin /></Station>
+      <Station index={8} face><ForgeGate /></Station>
+
+      <EffectComposer multisampling={2}>
+        <Bloom intensity={0.45} luminanceThreshold={0.5} luminanceSmoothing={0.5} mipmapBlur radius={0.65} />
+        <Vignette eskil={false} offset={0.22} darkness={0.8} />
+      </EffectComposer>
     </>
   )
 }
