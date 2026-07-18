@@ -16,9 +16,19 @@ export default function CaseStudies() {
           </p>
         </header>
 
+        <div className="cs-stats rise d3">
+          {CASES.map((c) => (
+            <div key={c.slug} className="cs-stat hoverable">
+              <span className="v molten-text">{c.metric}</span>
+              <span className="l">{c.metricLabel} · {c.client}</span>
+            </div>
+          ))}
+        </div>
+
         <div className="cs-list">
           {CASES.map((c, i) => (
             <article key={c.slug} className={`cs-card reveal ${i % 2 ? 'flip' : ''}`}>
+              <span className="cs-watermark" aria-hidden="true">{c.num}</span>
               <div className="cs-side">
                 <div className="cs-meta">
                   <span className="cs-num">{c.num}</span>
@@ -38,6 +48,7 @@ export default function CaseStudies() {
                 </Link>
               </div>
               <div className="cs-body">
+                <p className="cs-lede">{c.summary}</p>
                 <div className="cs-block">
                   <h3>The Ore</h3>
                   <p>{c.challenge}</p>

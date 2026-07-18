@@ -56,7 +56,9 @@ export function Cursor() {
     const move = (e) => {
       pos.x = e.clientX
       pos.y = e.clientY
-      dot.current.style.transform = `translate(${pos.x}px, ${pos.y}px)`
+      // `translate` (not `transform`) so the CSS scale transition never
+      // interpolates position — the dot tracks the pointer 1:1
+      dot.current.style.translate = `${pos.x}px ${pos.y}px`
       const hoverable = e.target.closest('a, button, .hoverable, li, input, select, textarea')
       dot.current.classList.toggle('hovering', !!hoverable)
     }
@@ -66,7 +68,7 @@ export function Cursor() {
       const k = 1 - Math.exp(-11 * dt) // framerate-independent smoothing
       ringPos.x += (pos.x - ringPos.x) * k
       ringPos.y += (pos.y - ringPos.y) * k
-      ring.current.style.transform = `translate(${ringPos.x}px, ${ringPos.y}px)`
+      ring.current.style.translate = `${ringPos.x}px ${ringPos.y}px`
       raf = requestAnimationFrame(tick)
     }
     window.addEventListener('mousemove', move)
@@ -78,8 +80,8 @@ export function Cursor() {
   }, [])
   return (
     <>
-      <div className="cursor" ref={dot} style={{ transform: 'translate(-100px,-100px)' }} />
-      <div className="cursor-ring" ref={ring} style={{ transform: 'translate(-100px,-100px)' }} />
+      <div className="cursor" ref={dot} style={{ translate: '-100px -100px' }} />
+      <div className="cursor-ring" ref={ring} style={{ translate: '-100px -100px' }} />
     </>
   )
 }

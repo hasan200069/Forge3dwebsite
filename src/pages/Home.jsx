@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Canvas } from '@react-three/fiber'
-import { ScrollControls, Scroll } from '@react-three/drei'
+import { ScrollControls, Scroll, Preload } from '@react-three/drei'
 import Experience, { SECTIONS } from '../Experience.jsx'
 import { EMAIL, useReveal } from '../chrome.jsx'
 
@@ -185,13 +185,22 @@ export default function Home() {
       </div>
       <div className="hud-label">An Immersive Descent</div>
 
-      <Canvas dpr={[1, 1.75]} camera={{ position: [0, 0, 13], fov: 42 }} gl={{ antialias: true, powerPreference: 'high-performance' }}>
-        <ScrollControls pages={SECTIONS} damping={0.42} maxSpeed={2}>
+      {/* antialias off: the EffectComposer's multisampled buffer already
+          handles AA — running canvas MSAA on top of it just costs frames */}
+      <Canvas
+        dpr={[1, 1.6]}
+        camera={{ position: [0, 0, 13], fov: 42 }}
+        gl={{ antialias: false, powerPreference: 'high-performance', stencil: false }}
+      >
+        <ScrollControls pages={SECTIONS} damping={0.32} maxSpeed={2}>
           <Experience />
           <Scroll html>
             <Overlay navigate={navigate} />
           </Scroll>
         </ScrollControls>
+        {/* compile every station's shaders up front so nothing hitches
+            the first time it scrolls into view */}
+        <Preload all />
       </Canvas>
     </div>
   )

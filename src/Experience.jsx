@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useScroll, RoundedBox, Edges } from '@react-three/drei'
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing'
@@ -104,8 +104,8 @@ function Station({ index, face = false, spin = 0, children }) {
 /* ———————————————————— the road itself — a vein of lava ———————————————————— */
 
 function Road() {
-  const core = useMemo(() => new THREE.TubeGeometry(curve, 400, 0.03, 8), [])
-  const glow = useMemo(() => new THREE.TubeGeometry(curve, 300, 0.11, 8), [])
+  const core = useMemo(() => new THREE.TubeGeometry(curve, 260, 0.03, 8), [])
+  const glow = useMemo(() => new THREE.TubeGeometry(curve, 180, 0.11, 8), [])
   const pulses = useRef([])
   const defs = useMemo(() => {
     const rng = mulberry(5)
@@ -617,6 +617,11 @@ function Rig() {
   const look = useRef(new THREE.Vector3(0, 0, -10))
   const roll = useRef(0)
   const lamp = useRef()
+  const dom = useRef({ fill: null, hud: null })
+  useEffect(() => {
+    dom.current.fill = document.getElementById('progress-fill')
+    dom.current.hud = document.getElementById('hud-current')
+  }, [])
   useFrame((state, delta) => {
     const u = clamp01(scroll.offset) * U_END
     const p = curve.getPointAt(u)
@@ -639,9 +644,8 @@ function Rig() {
     // torch light travelling with the camera
     if (lamp.current) lamp.current.position.set(p.x, p.y + 1.2, p.z)
 
-    const fill = document.getElementById('progress-fill')
+    const { fill, hud } = dom.current
     if (fill) fill.style.transform = `scaleX(${scroll.offset})`
-    const hud = document.getElementById('hud-current')
     if (hud) {
       const label = String(Math.round(scroll.offset * (SECTIONS - 1)) + 1).padStart(2, '0')
       if (hud.textContent !== label) hud.textContent = label
