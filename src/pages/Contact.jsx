@@ -29,27 +29,46 @@ const STEPS = [
 
 function ContactForm({ preselect }) {
   const [sent, setSent] = useState(false)
-  const onSubmit = (e) => {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const onSubmit = async (e) => {
     e.preventDefault()
+    setIsSubmitting(true)
+    
+    const accessKey = "b32d30de-6cc7-406d-b5fe-7f84bd709bd3"
+
     const f = new FormData(e.currentTarget)
-    const subject = encodeURIComponent(`Project inquiry — ${f.get('name')}`)
-    const body = encodeURIComponent(
-      `Name: ${f.get('name')}\nEmail: ${f.get('email')}\nInterested in: ${f.get('interest')}\n\n${f.get('message')}`
-    )
-    window.location.href = `mailto:${EMAIL}?subject=${subject}&body=${body}`
-    setSent(true)
+    f.append("access_key", accessKey)
+    f.append("subject", `New project inquiry from ${f.get('name')}`)
+
+    try {
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: f
+      })
+      
+      if (response.ok) {
+        setSent(true)
+      } else {
+        alert("Something went wrong! Please try again.")
+      }
+    } catch (error) {
+      alert("Something went wrong! Please try again.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
+
   if (sent) {
     return (
       <div className="contact-form form-sent rise">
         <span className="form-sent-spark" />
         <h3>The spark is struck.</h3>
         <p>
-          Your mail client should have opened with everything filled in — hit send and
-          we'll reply within 24 hours.
+          Your message has been successfully delivered to our inbox. We'll reply within 24 hours.
         </p>
         <p className="form-note">
-          Nothing opened? Write to us directly at{' '}
+          Need to add something? Write to us directly at{' '}
           <a className="hoverable" href={`mailto:${EMAIL}`}>{EMAIL}</a>
         </p>
         <button type="button" className="ghost-cta hoverable" onClick={() => setSent(false)}>
@@ -80,10 +99,10 @@ function ContactForm({ preselect }) {
         <span>The raw idea</span>
         <textarea name="message" rows="5" placeholder="Tell us what keeps you up at night…" required className="hoverable" />
       </label>
-      <button type="submit" className="form-submit hoverable">
-        Ignite the Project <span>→</span>
+      <button type="submit" className="form-submit hoverable" disabled={isSubmitting}>
+        {isSubmitting ? "Sending..." : "Ignite the Project"} <span>→</span>
       </button>
-      <p className="form-note">Opens your mail client — or write to us directly at {EMAIL}</p>
+      <p className="form-note">Or write to us directly at {EMAIL}</p>
     </form>
   )
 }
