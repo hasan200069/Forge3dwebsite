@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-export const SITE_URL = 'https://forgequbit.com'
+export const SITE_URL = 'https://forgequbit.co.uk'
 export const SITE_NAME = 'ForgeQubit'
 
 function setMeta(attr, key, content) {
@@ -33,6 +33,8 @@ export function Seo({ title, description, path = '/', type = 'website', robots =
     setMeta('name', 'twitter:title', title)
     setMeta('name', 'twitter:description', description)
 
+    setMeta('property', 'og:locale', 'en_GB')
+
     let canonical = document.head.querySelector('link[rel="canonical"]')
     if (!canonical) {
       canonical = document.createElement('link')
@@ -40,6 +42,19 @@ export function Seo({ title, description, path = '/', type = 'website', robots =
       document.head.appendChild(canonical)
     }
     canonical.setAttribute('href', url)
+
+    /* one English site serving the UK, Europe and the US — declare the
+       page as the English version and the default for every locale */
+    for (const lang of ['en', 'x-default']) {
+      let alt = document.head.querySelector(`link[rel="alternate"][hreflang="${lang}"]`)
+      if (!alt) {
+        alt = document.createElement('link')
+        alt.setAttribute('rel', 'alternate')
+        alt.setAttribute('hreflang', lang)
+        document.head.appendChild(alt)
+      }
+      alt.setAttribute('href', url)
+    }
 
     let ld = document.getElementById('route-jsonld')
     if (ldString) {

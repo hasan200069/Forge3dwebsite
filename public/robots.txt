@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://forgequbit.com/sitemap.xml
+Sitemap: https://forgequbit.co.uk/sitemap.xml
