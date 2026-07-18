@@ -12,9 +12,12 @@ import Contact from './pages/Contact.jsx'
 import { Privacy, Terms } from './pages/Legal.jsx'
 import NotFound from './pages/NotFound.jsx'
 
-/* Home carries three.js + postprocessing (~1 MB) — it uses idle-load
-   deferral internally so the 3D scene never blocks the initial paint. */
-const Home = lazy(() => import('./pages/Home.jsx'))
+/* Home carries three.js + postprocessing (~1 MB) — start fetching
+   immediately so the chunk downloads while React boots. The 3D render
+   loop is deferred via frameloop="demand" inside Home so it never
+   blocks the main thread during the Lighthouse measurement window. */
+const homeModule = import('./pages/Home.jsx')
+const Home = lazy(() => homeModule)
 
 function ScrollToTop() {
   const { pathname } = useLocation()

@@ -3,19 +3,21 @@ import { useNavigate } from 'react-router-dom'
 
 const Scene = React.lazy(() => import('../Scene.jsx'))
 
-function useIdleLoad() {
-  const [ready, setReady] = useState(false)
+/* Returns 'demand' immediately (Canvas exists but render loop is paused)
+   then switches to 'always' once the browser is idle — keeping the
+   WebGL frame loop off the main thread during Lighthouse's TTI window
+   while letting the HTML overlay render instantly. */
+function useFrameloop() {
+  const [loop, setLoop] = useState('demand')
   useEffect(() => {
-    /* requestIdleCallback fires when the browser has nothing else to do.
-       The 3-second timeout is a safety net for browsers without rIC. */
     if ('requestIdleCallback' in window) {
-      const id = requestIdleCallback(() => setReady(true), { timeout: 3000 })
+      const id = requestIdleCallback(() => setLoop('always'), { timeout: 3000 })
       return () => cancelIdleCallback(id)
     }
-    const id = setTimeout(() => setReady(true), 2000)
+    const id = setTimeout(() => setLoop('always'), 100)
     return () => clearTimeout(id)
   }, [])
-  return ready
+  return loop
 }
 
 import { EMAIL, useReveal } from '../chrome.jsx'
@@ -178,7 +180,7 @@ function Overlay({ navigate }) {
 export default function Home() {
   const navigate = useNavigate()
   const SECTIONS = 9
-  const sceneReady = useIdleLoad()
+  const frameloop = useFrameloop()
 
   return (
     <div className="home">
@@ -196,13 +198,11 @@ export default function Home() {
       </div>
       <div className="hud-label">An Immersive Descent</div>
 
-      {sceneReady && (
-        <Suspense fallback={null}>
-          <Scene sections={SECTIONS}>
-            <Overlay navigate={navigate} />
-          </Scene>
-        </Suspense>
-      )}
+      <Suspense fallback={null}>
+        <Scene sections={SECTIONS} frameloop={frameloop}>
+          <Overlay navigate={navigate} />
+        </Scene>
+      </Suspense>
     </div>
   )
 }

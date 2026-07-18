@@ -2,9 +2,10 @@ import { Canvas } from '@react-three/fiber'
 import { ScrollControls, Scroll, Preload } from '@react-three/drei'
 import Experience from './Experience.jsx'
 
-export default function Scene({ children, sections }) {
+export default function Scene({ children, sections, frameloop = 'always' }) {
   return (
     <Canvas
+      frameloop={frameloop}
       dpr={[1, 1.6]}
       camera={{ position: [0, 0, 13], fov: 42 }}
       gl={{ antialias: false, powerPreference: 'high-performance', stencil: false }}
