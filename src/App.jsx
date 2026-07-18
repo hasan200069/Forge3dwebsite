@@ -12,12 +12,9 @@ import Contact from './pages/Contact.jsx'
 import { Privacy, Terms } from './pages/Legal.jsx'
 import NotFound from './pages/NotFound.jsx'
 
-/* the home journey carries three.js + postprocessing (~1 MB) — split it
-   out so every other page ships a light bundle and scores well on
-   Core Web Vitals. The fetch starts immediately (not on first render),
-   so it downloads in parallel with React booting and never blocks paint. */
-const homeModule = import('./pages/Home.jsx')
-const Home = lazy(() => homeModule)
+/* Home carries three.js + postprocessing (~1 MB) — it uses idle-load
+   deferral internally so the 3D scene never blocks the initial paint. */
+const Home = lazy(() => import('./pages/Home.jsx'))
 
 function ScrollToTop() {
   const { pathname } = useLocation()

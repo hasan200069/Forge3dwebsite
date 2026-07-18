@@ -1,7 +1,23 @@
-import React, { Suspense } from 'react'
+import React, { Suspense, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 const Scene = React.lazy(() => import('../Scene.jsx'))
+
+function useIdleLoad() {
+  const [ready, setReady] = useState(false)
+  useEffect(() => {
+    /* requestIdleCallback fires when the browser has nothing else to do.
+       The 3-second timeout is a safety net for browsers without rIC. */
+    if ('requestIdleCallback' in window) {
+      const id = requestIdleCallback(() => setReady(true), { timeout: 3000 })
+      return () => cancelIdleCallback(id)
+    }
+    const id = setTimeout(() => setReady(true), 2000)
+    return () => clearTimeout(id)
+  }, [])
+  return ready
+}
+
 import { EMAIL, useReveal } from '../chrome.jsx'
 import { Seo } from '../seo.jsx'
 
@@ -162,6 +178,7 @@ function Overlay({ navigate }) {
 export default function Home() {
   const navigate = useNavigate()
   const SECTIONS = 9
+  const sceneReady = useIdleLoad()
 
   return (
     <div className="home">
@@ -179,11 +196,13 @@ export default function Home() {
       </div>
       <div className="hud-label">An Immersive Descent</div>
 
-      <Suspense fallback={null}>
-        <Scene sections={SECTIONS}>
-          <Overlay navigate={navigate} />
-        </Scene>
-      </Suspense>
+      {sceneReady && (
+        <Suspense fallback={null}>
+          <Scene sections={SECTIONS}>
+            <Overlay navigate={navigate} />
+          </Scene>
+        </Suspense>
+      )}
     </div>
   )
 }
