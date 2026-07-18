@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { EMAIL, Footer, useReveal } from '../chrome.jsx'
 
 const INTERESTS = [
@@ -16,7 +18,8 @@ const STEPS = [
   { n: '03', t: 'The Forging', d: 'Weekly demos of the real thing. Your first working prototype lands before onboarding paperwork would.' },
 ]
 
-function ContactForm() {
+function ContactForm({ preselect }) {
+  const [sent, setSent] = useState(false)
   const onSubmit = (e) => {
     e.preventDefault()
     const f = new FormData(e.currentTarget)
@@ -25,6 +28,26 @@ function ContactForm() {
       `Name: ${f.get('name')}\nEmail: ${f.get('email')}\nInterested in: ${f.get('interest')}\n\n${f.get('message')}`
     )
     window.location.href = `mailto:${EMAIL}?subject=${subject}&body=${body}`
+    setSent(true)
+  }
+  if (sent) {
+    return (
+      <div className="contact-form form-sent rise">
+        <span className="form-sent-spark" />
+        <h3>The spark is struck.</h3>
+        <p>
+          Your mail client should have opened with everything filled in — hit send and
+          we'll reply within 24 hours.
+        </p>
+        <p className="form-note">
+          Nothing opened? Write to us directly at{' '}
+          <a className="hoverable" href={`mailto:${EMAIL}`}>{EMAIL}</a>
+        </p>
+        <button type="button" className="ghost-cta hoverable" onClick={() => setSent(false)}>
+          Send another <span>→</span>
+        </button>
+      </div>
+    )
   }
   return (
     <form className="contact-form rise d2" onSubmit={onSubmit}>
@@ -40,7 +63,7 @@ function ContactForm() {
       </div>
       <label className="field">
         <span>What shall we forge?</span>
-        <select name="interest" defaultValue={INTERESTS[0]} className="hoverable">
+        <select name="interest" defaultValue={preselect} className="hoverable">
           {INTERESTS.map((o) => <option key={o}>{o}</option>)}
         </select>
       </label>
@@ -58,6 +81,9 @@ function ContactForm() {
 
 export default function Contact() {
   const ref = useReveal()
+  const [params] = useSearchParams()
+  const fromLink = params.get('interest')
+  const preselect = INTERESTS.includes(fromLink) ? fromLink : INTERESTS[0]
   return (
     <div className="page" ref={ref}>
       <div className="page-inner">
@@ -79,7 +105,7 @@ export default function Contact() {
               ))}
             </div>
           </div>
-          <ContactForm />
+          <ContactForm key={preselect} preselect={preselect} />
         </div>
       </div>
       <Footer />

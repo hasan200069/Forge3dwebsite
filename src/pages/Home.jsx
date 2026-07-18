@@ -12,6 +12,7 @@ const SERVICES = [
     title: <>WhatsApp <em>Automation</em></>,
     body: 'Two billion people live inside WhatsApp. We forge intelligent pipelines that live there with them — qualifying leads, closing sales, resolving support and remembering every conversation, around the clock.',
     tags: ['Lead Qualification', 'AI Sales Flows', 'Support Desks', 'Broadcast Engines', 'CRM Sync'],
+    interest: 'WhatsApp Automation',
     align: 'right',
   },
   {
@@ -20,6 +21,7 @@ const SERVICES = [
     title: <>Voice <em>Agents</em></>,
     body: 'Agents that pick up the phone. Sub-second latency, natural interruption handling, and a voice tuned to your brand — booking appointments, screening calls and running outbound campaigns while you sleep.',
     tags: ['Inbound Reception', 'Outbound Campaigns', 'Appointment Booking', 'IVR Replacement', 'Call Analytics'],
+    interest: 'Voice Agents',
     align: 'left',
   },
   {
@@ -28,6 +30,7 @@ const SERVICES = [
     title: <>Avatar <em>Agents</em></>,
     body: 'A face for your intelligence. Photoreal and stylised avatars that speak, emote and hold eye contact — greeting visitors, training teams and presenting products with human warmth at machine scale.',
     tags: ['Digital Receptionists', 'Video Concierges', 'Training Personas', 'Lip-Sync Engines', 'Brand Characters'],
+    interest: 'Avatar Agents',
     align: 'right',
   },
   {
@@ -36,6 +39,7 @@ const SERVICES = [
     title: <>Custom <em>Agents</em></>,
     body: 'When off-the-shelf thinks off-the-shelf. We design agents around your exact workflows — multi-step reasoning, tool use, retrieval over your private knowledge — orchestrated swarms that run your operations.',
     tags: ['Agentic Workflows', 'RAG Pipelines', 'Tool Orchestration', 'Multi-Agent Swarms', 'Fine-Tuning'],
+    interest: 'Custom Agents',
     align: 'left',
   },
   {
@@ -44,6 +48,7 @@ const SERVICES = [
     title: <>AI-Powered <em>SaaS</em></>,
     body: 'From napkin sketch to paying subscribers. We architect, design and ship full SaaS platforms with intelligence in their core — billing, auth, analytics and an AI engine your competitors can’t copy-paste.',
     tags: ['MVP in Weeks', 'Product Design', 'Scalable Backends', 'Usage Billing', 'AI-Native UX'],
+    interest: 'AI-Powered SaaS',
     align: 'right',
   },
   {
@@ -52,6 +57,7 @@ const SERVICES = [
     title: <>AI <em>×</em> Blockchain</>,
     body: 'Where autonomous intelligence meets trustless rails. On-chain agents, AI-driven protocols, intelligent contract auditing and tokenised products — engineered for chains that never sleep.',
     tags: ['On-Chain Agents', 'Smart Contract AI', 'DeFi Automation', 'Token Analytics', 'Web3 Products'],
+    interest: 'AI × Blockchain',
     align: 'left',
   },
 ]
@@ -76,6 +82,14 @@ function Overlay({ navigate }) {
             <span className="row"><span className="molten-text">Intelligence</span></span>
           </h1>
           <p className="hero-sub">Scroll down into the forge — six crafts, one obsession: agents that work while the world sleeps.</p>
+          <div className="hero-actions">
+            <a className="outro-cta hoverable" href="/contact" onClick={go('/contact')}>
+              Start a Project <span>→</span>
+            </a>
+            <a className="ghost-cta hoverable" href="/case-studies" onClick={go('/case-studies')}>
+              See the Work <span>→</span>
+            </a>
+          </div>
         </div>
         <div className="scroll-hint">
           <span>Descend</span>
@@ -107,6 +121,13 @@ function Overlay({ navigate }) {
             <ul className="service-tags reveal d3">
               {s.tags.map((t) => <li key={t}>{t}</li>)}
             </ul>
+            <a
+              className="service-cta reveal d3 hoverable"
+              href={`/contact?interest=${encodeURIComponent(s.interest)}`}
+              onClick={go(`/contact?interest=${encodeURIComponent(s.interest)}`)}
+            >
+              Forge this with us <span>→</span>
+            </a>
           </div>
         </section>
       ))}

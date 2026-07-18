@@ -30,6 +30,12 @@ export default function CaseStudies() {
                 <ul className="service-tags cs-tags">
                   {c.stack.map((t) => <li key={t}>{t}</li>)}
                 </ul>
+                <Link
+                  className="service-cta hoverable"
+                  to={`/contact?interest=${encodeURIComponent(c.field)}`}
+                >
+                  Forge something like this <span>→</span>
+                </Link>
               </div>
               <div className="cs-body">
                 <div className="cs-block">

@@ -29,6 +29,11 @@ export default function Blog() {
             </Link>
           ))}
         </div>
+
+        <div className="page-cta reveal">
+          <h2>Done reading? <span className="molten-text">Start forging.</span></h2>
+          <Link className="outro-cta hoverable" to="/contact">Start a Project <span>→</span></Link>
+        </div>
       </div>
       <Footer />
     </div>

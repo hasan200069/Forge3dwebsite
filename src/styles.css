@@ -646,6 +646,57 @@ canvas {
   box-shadow: 0 4px 18px rgba(207, 63, 14, 0.18);
 }
 
+/* ———— inline ctas ———— */
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  justify-content: center;
+  animation: hero-fade 1.2s ease 2.65s both;
+}
+
+.home:not(:has(.intro)) .hero-actions { animation-delay: 0.7s; }
+
+.service-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--molten-2);
+  text-decoration: none;
+  padding-bottom: 6px;
+  position: relative;
+  transition: color 0.3s ease, gap 0.3s var(--ease-smooth);
+}
+
+.service-cta::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(90deg, var(--molten-1), transparent);
+  transform: scaleX(0.35);
+  transform-origin: 0 50%;
+  transition: transform 0.45s var(--ease-smooth);
+}
+
+.service-cta:hover {
+  color: var(--molten-3);
+  gap: 16px;
+}
+
+.service-cta:hover::after { transform: scaleX(1); }
+
+.cs-side .service-cta { margin-top: 22px; }
+
 /* ———— finale (home) ———— */
 
 .finale-inner {
@@ -716,6 +767,7 @@ canvas {
   display: inline-flex;
   align-items: center;
   gap: 12px;
+  font-family: var(--font-body);
   font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.24em;
@@ -1231,6 +1283,45 @@ canvas {
   text-align: center;
   font-weight: 300;
 }
+
+.form-note a {
+  color: var(--molten-3);
+  text-decoration: none;
+}
+
+/* form success state */
+.form-sent {
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  padding: 60px 40px;
+}
+
+.form-sent-spark {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, var(--molten-hot), var(--molten-1));
+  box-shadow: 0 0 22px rgba(207, 63, 14, 0.7);
+  animation: spark-pulse 2.4s ease-in-out infinite;
+}
+
+.form-sent h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 22px;
+  text-transform: uppercase;
+}
+
+.form-sent p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  font-weight: 300;
+  max-width: 40ch;
+}
+
+.form-sent .ghost-cta { margin-top: 10px; padding: 14px 26px; font-size: 11px; }
 
 /* ———— footer ———— */
 
