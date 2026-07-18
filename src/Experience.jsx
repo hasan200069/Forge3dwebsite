@@ -4,7 +4,7 @@ import { useFrame } from '@react-three/fiber'
 import { useScroll, RoundedBox, Edges } from '@react-three/drei'
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing'
 
-export const SECTIONS = 9
+const SECTIONS = 9
 
 /* ————————————————————————————————————————
    THE ROUTE — one winding road through the dark forge.
