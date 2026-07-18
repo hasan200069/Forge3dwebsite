@@ -4,6 +4,7 @@ import { Canvas } from '@react-three/fiber'
 import { ScrollControls, Scroll, Preload } from '@react-three/drei'
 import Experience, { SECTIONS } from '../Experience.jsx'
 import { EMAIL, useReveal } from '../chrome.jsx'
+import { Seo } from '../seo.jsx'
 
 const SERVICES = [
   {
@@ -170,6 +171,11 @@ export default function Home() {
 
   return (
     <div className="home">
+      <Seo
+        title="ForgeQubit — AI Agency for WhatsApp, Voice & Custom AI Agents"
+        description="ForgeQubit is an AI agency that ships working systems: WhatsApp automation, voice agents, avatar agents, custom AI agents, AI-powered SaaS and AI × blockchain products."
+        path="/"
+      />
       {showIntro && (
         <div className="intro">
           <div className="intro-mark"><span>FORGE<span className="molten-text">QUBIT</span></span></div>

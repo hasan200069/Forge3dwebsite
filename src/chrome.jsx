@@ -12,8 +12,10 @@ export function Nav() {
         FORGE<span className="qubit">QUBIT</span>
       </Link>
       <div className="nav-links">
+        <NavLink to="/services" className={({ isActive }) => (isActive ? 'active' : '')}>Services</NavLink>
         <NavLink to="/case-studies" className={({ isActive }) => (isActive ? 'active' : '')}>Work</NavLink>
         <NavLink to="/blog" className={({ isActive }) => (isActive ? 'active' : '')}>Blog</NavLink>
+        <NavLink to="/about" className={({ isActive }) => (isActive ? 'active' : '')}>About</NavLink>
         <NavLink to="/contact" className={({ isActive }) => (isActive ? 'active' : '')}>Contact</NavLink>
         <Link className="nav-cta" to="/contact">Start a Project</Link>
       </div>
@@ -30,13 +32,17 @@ export function Footer() {
           FORGE<span className="qubit">QUBIT</span>
         </Link>
         <div className="footer-links">
+          <Link to="/services">Services</Link>
           <Link to="/case-studies">Work</Link>
           <Link to="/blog">Blog</Link>
+          <Link to="/about">About</Link>
           <Link to="/contact">Contact</Link>
           <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
         </div>
         <div className="footer-meta">
           <span>ForgeQubit © 2026</span>
+          <Link to="/privacy">Privacy</Link>
+          <Link to="/terms">Terms</Link>
           <span>Forged Worldwide</span>
         </div>
       </div>

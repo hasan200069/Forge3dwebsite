@@ -69,6 +69,7 @@ export const POSTS = [
   {
     slug: 'whatsapp-agent-next-hire',
     date: 'July 2026',
+    iso: '2026-07-06',
     tag: 'WhatsApp Automation',
     readTime: '5 min read',
     title: 'Why Your Next Hire Should Live Inside WhatsApp',
@@ -85,6 +86,7 @@ export const POSTS = [
   {
     slug: 'voice-agents-uncanny-valley',
     date: 'June 2026',
+    iso: '2026-06-10',
     tag: 'Voice Agents',
     readTime: '6 min read',
     title: 'Voice Agents Have Quietly Crossed the Uncanny Valley',
@@ -101,6 +103,7 @@ export const POSTS = [
   {
     slug: 'ai-saas-six-weeks',
     date: 'May 2026',
+    iso: '2026-05-14',
     tag: 'AI-Powered SaaS',
     readTime: '7 min read',
     title: 'Shipping an AI SaaS in Six Weeks Without Burning Down',

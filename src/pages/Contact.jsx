@@ -1,6 +1,15 @@
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { EMAIL, Footer, useReveal } from '../chrome.jsx'
+import { Seo, SITE_URL } from '../seo.jsx'
+
+const JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'ContactPage',
+  name: 'Contact ForgeQubit',
+  url: `${SITE_URL}/contact`,
+  mainEntity: { '@id': `${SITE_URL}/#organization` },
+}
 
 const INTERESTS = [
   'WhatsApp Automation',
@@ -86,6 +95,12 @@ export default function Contact() {
   const preselect = INTERESTS.includes(fromLink) ? fromLink : INTERESTS[0]
   return (
     <div className="page" ref={ref}>
+      <Seo
+        title="Contact ForgeQubit — Start Your AI Project"
+        description="Tell us the raw idea — WhatsApp automation, a voice agent, a custom AI build or a full SaaS. We reply within 24 hours with a fixed-scope plan."
+        path="/contact"
+        jsonLd={JSON_LD}
+      />
       <div className="page-inner">
         <div className="contact-grid">
           <div className="contact-left">

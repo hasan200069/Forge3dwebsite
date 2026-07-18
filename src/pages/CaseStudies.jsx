@@ -1,11 +1,34 @@
 import { Link } from 'react-router-dom'
 import { CASES } from '../data.js'
 import { Footer, useReveal } from '../chrome.jsx'
+import { Seo, SITE_URL } from '../seo.jsx'
+
+const JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'ForgeQubit Case Studies',
+  url: `${SITE_URL}/case-studies`,
+  mainEntity: {
+    '@type': 'ItemList',
+    itemListElement: CASES.map((c, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: `${c.client} — ${c.metric} ${c.metricLabel}`,
+      description: c.summary,
+    })),
+  },
+}
 
 export default function CaseStudies() {
   const ref = useReveal()
   return (
     <div className="page" ref={ref}>
+      <Seo
+        title="AI Case Studies — Measured Results | ForgeQubit"
+        description="Real numbers from real builds: 3.4× more qualified leads with WhatsApp automation, 82% of calls handled by a voice agent, an AI SaaS shipped in six weeks."
+        path="/case-studies"
+        jsonLd={JSON_LD}
+      />
       <div className="page-inner">
         <header className="page-hero">
           <div className="page-kicker rise">Selected Work</div>

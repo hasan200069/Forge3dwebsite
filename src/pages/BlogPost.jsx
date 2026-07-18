@@ -1,6 +1,7 @@
 import { Link, useParams, Navigate } from 'react-router-dom'
 import { POSTS } from '../data.js'
 import { Footer, useReveal } from '../chrome.jsx'
+import { Seo, SITE_URL, SITE_NAME } from '../seo.jsx'
 
 export default function BlogPost() {
   const { slug } = useParams()
@@ -10,8 +11,41 @@ export default function BlogPost() {
 
   const others = POSTS.filter((p) => p.slug !== slug).slice(0, 2)
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'BlogPosting',
+        headline: post.title,
+        description: post.excerpt,
+        datePublished: post.iso,
+        dateModified: post.iso,
+        url: `${SITE_URL}/blog/${post.slug}`,
+        mainEntityOfPage: `${SITE_URL}/blog/${post.slug}`,
+        author: { '@id': `${SITE_URL}/#organization` },
+        publisher: { '@id': `${SITE_URL}/#organization` },
+        keywords: post.tag,
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: SITE_NAME, item: `${SITE_URL}/` },
+          { '@type': 'ListItem', position: 2, name: 'Blog', item: `${SITE_URL}/blog` },
+          { '@type': 'ListItem', position: 3, name: post.title },
+        ],
+      },
+    ],
+  }
+
   return (
     <div className="page" ref={ref}>
+      <Seo
+        title={`${post.title} | ForgeQubit`}
+        description={post.excerpt}
+        path={`/blog/${post.slug}`}
+        type="article"
+        jsonLd={jsonLd}
+      />
       <div className="page-inner narrow">
         <article className="post">
           <header className="post-header">

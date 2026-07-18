@@ -1,11 +1,19 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { useEffect } from 'react'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { lazy, Suspense, useEffect } from 'react'
 import { Nav, Cursor } from './chrome.jsx'
-import Home from './pages/Home.jsx'
+import Services from './pages/Services.jsx'
+import About from './pages/About.jsx'
 import CaseStudies from './pages/CaseStudies.jsx'
 import Blog from './pages/Blog.jsx'
 import BlogPost from './pages/BlogPost.jsx'
 import Contact from './pages/Contact.jsx'
+import { Privacy, Terms } from './pages/Legal.jsx'
+import NotFound from './pages/NotFound.jsx'
+
+/* the home journey carries three.js + postprocessing (~1 MB) — split it
+   out so every other page ships a light bundle and scores well on
+   Core Web Vitals */
+const Home = lazy(() => import('./pages/Home.jsx'))
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -24,12 +32,23 @@ export default function App() {
         <Cursor />
         <ScrollToTop />
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route
+            path="/"
+            element={
+              <Suspense fallback={<div className="home" />}>
+                <Home />
+              </Suspense>
+            }
+          />
+          <Route path="/services" element={<Services />} />
+          <Route path="/about" element={<About />} />
           <Route path="/case-studies" element={<CaseStudies />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
     </BrowserRouter>

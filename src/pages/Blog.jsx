@@ -1,11 +1,32 @@
 import { Link } from 'react-router-dom'
 import { POSTS } from '../data.js'
 import { Footer, useReveal } from '../chrome.jsx'
+import { Seo, SITE_URL } from '../seo.jsx'
+
+const JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'Blog',
+  name: 'ForgeQubit Blog — Notes in the Fire',
+  url: `${SITE_URL}/blog`,
+  publisher: { '@id': `${SITE_URL}/#organization` },
+  blogPost: POSTS.map((p) => ({
+    '@type': 'BlogPosting',
+    headline: p.title,
+    url: `${SITE_URL}/blog/${p.slug}`,
+    datePublished: p.iso,
+  })),
+}
 
 export default function Blog() {
   const ref = useReveal()
   return (
     <div className="page" ref={ref}>
+      <Seo
+        title="AI Agents Blog — Notes from the Forge | ForgeQubit"
+        description="Practical writing on WhatsApp automation, voice agents and shipping AI SaaS — for founders and operators, not researchers."
+        path="/blog"
+        jsonLd={JSON_LD}
+      />
       <div className="page-inner">
         <header className="page-hero">
           <div className="page-kicker rise">From the Forge</div>
