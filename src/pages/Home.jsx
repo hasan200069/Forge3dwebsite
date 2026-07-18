@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Canvas } from '@react-three/fiber'
 import { ScrollControls, Scroll, Preload } from '@react-three/drei'
@@ -162,26 +161,14 @@ function Overlay({ navigate }) {
 
 export default function Home() {
   const navigate = useNavigate()
-  // only replay the intro once per session
-  const showIntro = useMemo(() => {
-    if (sessionStorage.getItem('fq-intro')) return false
-    sessionStorage.setItem('fq-intro', '1')
-    return true
-  }, [])
 
   return (
     <div className="home">
       <Seo
         title="ForgeQubit — AI Agency for WhatsApp, Voice & Custom AI Agents"
-        description="ForgeQubit is an AI agency that ships working systems: WhatsApp automation, voice agents, avatar agents, custom AI agents, AI-powered SaaS and AI × blockchain products."
+        description="ForgeQubit is a UK-registered AI agency serving Europe and the USA — shipping WhatsApp automation, voice agents, avatar agents, custom AI agents, AI-powered SaaS and AI × blockchain products."
         path="/"
       />
-      {showIntro && (
-        <div className="intro">
-          <div className="intro-mark"><span>FORGE<span className="molten-text">QUBIT</span></span></div>
-          <div className="intro-line" />
-        </div>
-      )}
 
       {/* fixed chrome specific to the journey */}
       <div className="progress-track"><div className="progress-fill" id="progress-fill" /></div>

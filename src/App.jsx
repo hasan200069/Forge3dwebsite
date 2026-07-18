@@ -12,8 +12,10 @@ import NotFound from './pages/NotFound.jsx'
 
 /* the home journey carries three.js + postprocessing (~1 MB) — split it
    out so every other page ships a light bundle and scores well on
-   Core Web Vitals */
-const Home = lazy(() => import('./pages/Home.jsx'))
+   Core Web Vitals. The fetch starts immediately (not on first render),
+   so it downloads in parallel with React booting and never blocks paint. */
+const homeModule = import('./pages/Home.jsx')
+const Home = lazy(() => homeModule)
 
 function ScrollToTop() {
   const { pathname } = useLocation()

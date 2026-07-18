@@ -36,9 +36,11 @@ export function Privacy() {
     >
       <h2>Who we are</h2>
       <p>
-        ForgeQubit (&ldquo;we&rdquo;, &ldquo;us&rdquo;) is an AI agency reachable at{' '}
+        ForgeQubit (&ldquo;we&rdquo;, &ldquo;us&rdquo;) is an AI agency registered in the
+        United Kingdom with Companies House, reachable at{' '}
         <a href={`mailto:${EMAIL}`}>{EMAIL}</a>. This policy explains what information we
-        handle when you visit forgequbit.com or get in touch with us.
+        handle when you visit forgequbit.co.uk or get in touch with us. We handle personal
+        data in accordance with UK GDPR and, for visitors in the European Union, EU GDPR.
       </p>
 
       <h2>What we collect</h2>
@@ -66,9 +68,11 @@ export function Privacy() {
 
       <h2>Your rights</h2>
       <p>
-        You may request a copy, correction or deletion of any personal information we hold
-        about you at any time by writing to <a href={`mailto:${EMAIL}`}>{EMAIL}</a>. We
-        respond within 30 days.
+        Under UK and EU GDPR you may request a copy, correction or deletion of any personal
+        information we hold about you at any time by writing to{' '}
+        <a href={`mailto:${EMAIL}`}>{EMAIL}</a>. We respond within 30 days. UK visitors may
+        also lodge a complaint with the ICO, and EU visitors with their local supervisory
+        authority.
       </p>
 
       <h2>Changes to this policy</h2>
@@ -94,8 +98,9 @@ export function Terms() {
     >
       <h2>Use of this site</h2>
       <p>
-        forgequbit.com and its content are provided for general information about our
-        services. You may browse, link to and quote the site with attribution. You may not
+        forgequbit.co.uk and its content are provided for general information about our
+        services. ForgeQubit is registered in the United Kingdom, and these terms are
+        governed by the laws of England and Wales. You may browse, link to and quote the site with attribution. You may not
         scrape it for resale, misrepresent its content as your own, or use it to build a
         competing dataset.
       </p>
