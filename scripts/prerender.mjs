@@ -1,96 +1,172 @@
-/* Post-build prerender: stamps a copy of dist/index.html for every route
-   with that route's own title, description, canonical and social tags.
-   Crawlers (and Search Console's URL inspection) then see unique,
-   correct metadata on every URL with zero JavaScript — and deep links
-   work on any static host because each route is a real file. */
+/* Post-build prerender.
 
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
+   Renders every route with react-dom/server and writes it as a real
+   HTML file, so a crawler that runs no JavaScript still sees the full
+   page — headings, copy, links and structured data. The client then
+   hydrates that markup rather than rebuilding it.
+
+   The <head> for each route comes from the page's own <Seo> element
+   (collected during the render), so titles and descriptions can't drift
+   out of sync with a table kept here. Sitemap and RSS are generated
+   from the same content module. */
+
+import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { POSTS } from '../src/data.js'
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..')
-const dist = join(root, 'dist')
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
+const DIST = join(ROOT, 'dist')
+const SSR = join(ROOT, '.ssr')
 const SITE = 'https://forgequbit.co.uk'
 
-/* keep titles/descriptions in sync with the <Seo> tags in src/pages */
+const { render } = await import(pathToFileURL(join(SSR, 'entry-server.js')).href)
+
+/* Routes to emit as files. Everything else falls back to the SPA shell
+   via the host rewrite. */
 const ROUTES = [
-  {
-    path: '/services',
-    title: 'AI Services — WhatsApp Automation, Voice Agents & AI SaaS | ForgeQubit',
-    desc: 'Six crafts, one obsession: WhatsApp automation, voice agents, avatar agents, custom AI agents, AI-powered SaaS and AI × blockchain — designed, built and shipped by ForgeQubit.',
-  },
-  {
-    path: '/case-studies',
-    title: 'AI Case Studies — Measured Results | ForgeQubit',
-    desc: 'Real numbers from real builds: 3.4× more qualified leads with WhatsApp automation, 82% of calls handled by a voice agent, an AI SaaS shipped in six weeks.',
-  },
-  {
-    path: '/about',
-    title: 'About ForgeQubit — The AI Agency That Ships Working Agents',
-    desc: 'ForgeQubit is an AI agency built by engineers, not account managers. Learn how we forge WhatsApp agents, voice agents and AI products — weekly demos, fixed scope, measurable results.',
-  },
-  {
-    path: '/blog',
-    title: 'AI Agents Blog — Notes from the Forge | ForgeQubit',
-    desc: 'Practical writing on WhatsApp automation, voice agents and shipping AI SaaS — for founders and operators, not researchers.',
-  },
-  ...POSTS.map((p) => ({
-    path: `/blog/${p.slug}`,
-    title: `${p.title} | ForgeQubit`,
-    desc: p.excerpt,
-    type: 'article',
-  })),
-  {
-    path: '/contact',
-    title: 'Contact ForgeQubit — Start Your AI Project',
-    desc: 'Tell us the raw idea — WhatsApp automation, a voice agent, a custom AI build or a full SaaS. We reply within 24 hours with a fixed-scope plan.',
-  },
-  {
-    path: '/privacy',
-    title: 'Privacy Policy | ForgeQubit',
-    desc: 'How ForgeQubit collects, uses and protects your information when you visit our site or contact us about a project.',
-  },
-  {
-    path: '/terms',
-    title: 'Terms of Service | ForgeQubit',
-    desc: 'The terms that govern use of the ForgeQubit website and engagement of our AI development services.',
-  },
-  {
-    path: '/404',
-    file: '404.html',
-    title: 'Page Not Found | ForgeQubit',
-    desc: 'This page never made it out of the forge.',
-    robots: 'noindex, follow',
-  },
+  { path: '/', changefreq: 'weekly', priority: '1.0' },
+  { path: '/services', changefreq: 'monthly', priority: '0.9' },
+  { path: '/case-studies', changefreq: 'monthly', priority: '0.9' },
+  { path: '/blog', changefreq: 'weekly', priority: '0.8' },
+  ...POSTS.map((p) => ({ path: `/blog/${p.slug}`, lastmod: p.iso, changefreq: 'yearly', priority: '0.7' })),
+  { path: '/about', changefreq: 'monthly', priority: '0.7' },
+  { path: '/contact', changefreq: 'yearly', priority: '0.8' },
+  { path: '/privacy', changefreq: 'yearly', priority: '0.3' },
+  { path: '/terms', changefreq: 'yearly', priority: '0.3' },
+  { path: '/404', file: '404.html', noindex: true },
 ]
 
-const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;')
+const BUILD_DATE = new Date().toISOString().slice(0, 10)
 
-const swapAttr = (html, re, value) => html.replace(re, (_, pre, post) => pre + value + post)
+const esc = (s) =>
+  String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
 
-const template = readFileSync(join(dist, 'index.html'), 'utf8')
+const template = readFileSync(join(DIST, 'index.html'), 'utf8')
 
-for (const r of ROUTES) {
-  const url = SITE + r.path
-  const title = esc(r.title)
-  const desc = esc(r.desc)
-  let html = template.replace(/<title>[\s\S]*?<\/title>/, () => `<title>${title}</title>`)
-  html = swapAttr(html, /(<meta name="description" content=")[^"]*(")/, desc)
-  html = swapAttr(html, /(<link rel="canonical" href=")[^"]*(")/, url)
-  html = swapAttr(html, /(<link rel="alternate" hreflang="en" href=")[^"]*(")/, url)
-  html = swapAttr(html, /(<link rel="alternate" hreflang="x-default" href=")[^"]*(")/, url)
-  html = swapAttr(html, /(<meta property="og:title" content=")[^"]*(")/, title)
-  html = swapAttr(html, /(<meta property="og:description" content=")[^"]*(")/, desc)
-  html = swapAttr(html, /(<meta property="og:url" content=")[^"]*(")/, url)
-  html = swapAttr(html, /(<meta name="twitter:title" content=")[^"]*(")/, title)
-  html = swapAttr(html, /(<meta name="twitter:description" content=")[^"]*(")/, desc)
-  if (r.type) html = swapAttr(html, /(<meta property="og:type" content=")[^"]*(")/, r.type)
-  if (r.robots) html = swapAttr(html, /(<meta name="robots" content=")[^"]*(")/, r.robots)
+/* Replace an attribute value in place, or append the whole tag if the
+   template doesn't carry it yet. */
+function setMeta(html, attr, key, value) {
+  const re = new RegExp(`(<meta ${attr}="${key}" content=")[^"]*(")`)
+  if (re.test(html)) return html.replace(re, (_, a, b) => a + esc(value) + b)
+  return html.replace('</head>', `  <meta ${attr}="${key}" content="${esc(value)}" />\n  </head>`)
+}
 
-  const out = r.file ? join(dist, r.file) : join(dist, r.path.slice(1), 'index.html')
+function dropMeta(html, attr, key) {
+  return html.replace(new RegExp(`\\s*<meta ${attr}="${key}" content="[^"]*"\\s*/?>`), '')
+}
+
+function setLink(html, re, value) {
+  return html.replace(re, (_, a, b) => a + esc(value) + b)
+}
+
+for (const route of ROUTES) {
+  const url = route.path === '/404' ? `${SITE}/404` : SITE + route.path
+  const { html: body, head } = render(route.path)
+
+  if (!head.title) throw new Error(`no <Seo> rendered for ${route.path}`)
+
+  let html = template
+
+  html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${esc(head.title)}</title>`)
+  html = setMeta(html, 'name', 'description', head.description)
+  html = setMeta(html, 'name', 'robots', route.noindex ? 'noindex, follow' : head.robots)
+
+  html = setMeta(html, 'property', 'og:title', head.title)
+  html = setMeta(html, 'property', 'og:description', head.description)
+  html = setMeta(html, 'property', 'og:url', url)
+  html = setMeta(html, 'property', 'og:type', head.type)
+  html = setMeta(html, 'property', 'og:image', head.image)
+  html = setMeta(html, 'property', 'og:image:alt', head.imageAlt)
+  html = setMeta(html, 'name', 'twitter:title', head.title)
+  html = setMeta(html, 'name', 'twitter:description', head.description)
+  html = setMeta(html, 'name', 'twitter:image', head.image)
+
+  if (head.publishedTime) {
+    html = setMeta(html, 'property', 'article:published_time', head.publishedTime)
+    html = setMeta(html, 'property', 'article:modified_time', head.modifiedTime ?? head.publishedTime)
+  } else {
+    html = dropMeta(html, 'property', 'article:published_time')
+    html = dropMeta(html, 'property', 'article:modified_time')
+  }
+
+  html = setLink(html, /(<link rel="canonical" href=")[^"]*(")/, url)
+  html = setLink(html, /(<link rel="alternate" hreflang="en" href=")[^"]*(")/, url)
+  html = setLink(html, /(<link rel="alternate" hreflang="x-default" href=")[^"]*(")/, url)
+
+  if (head.jsonLd) {
+    html = html.replace(
+      '</head>',
+      `  <script type="application/ld+json" id="route-jsonld">${head.jsonLd.replace(/</g, '\\u003c')}</script>\n  </head>`
+    )
+  }
+
+  html = html.replace('<div id="root"></div>', `<div id="root">${body}</div>`)
+
+  // '/' slices to '', so join lands back on dist/index.html — which is
+  // what we want: the shell is replaced by the rendered home page
+  const out = route.file ? join(DIST, route.file) : join(DIST, route.path.slice(1), 'index.html')
   mkdirSync(dirname(out), { recursive: true })
   writeFileSync(out, html)
 }
 
-console.log(`prerendered ${ROUTES.length} routes into dist/`)
+/* ———— sitemap ———— */
+
+const sitemap =
+  `<?xml version="1.0" encoding="UTF-8"?>\n` +
+  `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+  ROUTES.filter((r) => !r.noindex)
+    .map(
+      (r) =>
+        `  <url><loc>${SITE}${r.path === '/' ? '/' : r.path}</loc>` +
+        `<lastmod>${r.lastmod ?? BUILD_DATE}</lastmod>` +
+        `<changefreq>${r.changefreq}</changefreq>` +
+        `<priority>${r.priority}</priority></url>`
+    )
+    .join('\n') +
+  `\n</urlset>\n`
+
+writeFileSync(join(DIST, 'sitemap.xml'), sitemap)
+
+/* ———— rss ———— */
+
+const rfc822 = (iso) => new Date(`${iso}T09:00:00Z`).toUTCString()
+
+const rss =
+  `<?xml version="1.0" encoding="UTF-8"?>\n` +
+  `<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n` +
+  `<channel>\n` +
+  `  <title>ForgeQubit — Notes from the Forge</title>\n` +
+  `  <link>${SITE}/blog</link>\n` +
+  `  <description>Practical writing on WhatsApp automation, voice agents and shipping AI products.</description>\n` +
+  `  <language>en-gb</language>\n` +
+  `  <atom:link href="${SITE}/rss.xml" rel="self" type="application/rss+xml" />\n` +
+  POSTS.map(
+    (p) =>
+      `  <item>\n` +
+      `    <title>${esc(p.title)}</title>\n` +
+      `    <link>${SITE}/blog/${p.slug}</link>\n` +
+      `    <guid isPermaLink="true">${SITE}/blog/${p.slug}</guid>\n` +
+      `    <pubDate>${rfc822(p.iso)}</pubDate>\n` +
+      `    <category>${esc(p.tag)}</category>\n` +
+      `    <description>${esc(p.excerpt)}</description>\n` +
+      `  </item>`
+  ).join('\n') +
+  `\n</channel>\n</rss>\n`
+
+writeFileSync(join(DIST, 'rss.xml'), rss)
+
+/* ———— robots ———— */
+
+writeFileSync(
+  join(DIST, 'robots.txt'),
+  `User-agent: *\nAllow: /\n\n# no crawlable content behind these\nDisallow: /404\n\nSitemap: ${SITE}/sitemap.xml\n`
+)
+
+rmSync(SSR, { recursive: true, force: true })
+
+console.log(`prerendered ${ROUTES.length} routes, ${POSTS.length} feed items`)

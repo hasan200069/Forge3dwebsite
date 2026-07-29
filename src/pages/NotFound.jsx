@@ -12,14 +12,14 @@ export default function NotFound() {
         robots="noindex, follow"
       />
       <div className="page-inner nf-inner">
-        <div className="page-kicker rise">Lost in the Dark</div>
-        <h1 className="nf-code rise d1 molten-text">404</h1>
+        <p className="page-kicker rise">Lost in the Dark</p>
+        <h1 className="nf-code rise d1 ember-text">404</h1>
         <p className="page-sub rise d2">
           This page never made it out of the forge. The road you want is back at the start.
         </p>
-        <div className="finale-actions rise d3">
-          <Link className="outro-cta hoverable" to="/">Return to the Forge <span>→</span></Link>
-          <Link className="ghost-cta hoverable" to="/case-studies">See the Work <span>→</span></Link>
+        <div className="btn-row rise d3">
+          <Link className="btn btn-primary" to="/">Return to the Forge <span>→</span></Link>
+          <Link className="btn btn-ghost" to="/services">Browse the Services <span>→</span></Link>
         </div>
       </div>
       <Footer />

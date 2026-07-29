@@ -1,20 +1,27 @@
 import { Link } from 'react-router-dom'
-import { EMAIL, Footer } from '../chrome.jsx'
-import { Seo } from '../seo.jsx'
+import { Crumbs, EMAIL, Footer } from '../chrome.jsx'
+import { Seo, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
 
-function LegalPage({ kicker, title, updated, children, seo }) {
+function LegalPage({ kicker, title, updated, children, seo, crumb }) {
   return (
     <div className="page">
-      <Seo {...seo} />
+      <Seo
+        {...seo}
+        jsonLd={graph(
+          webPageLd({ path: seo.path, title: seo.title, description: seo.description }),
+          breadcrumbLd([{ label: crumb, path: seo.path }])
+        )}
+      />
       <div className="page-inner narrow">
         <header className="page-hero">
-          <div className="page-kicker rise">{kicker}</div>
+          <Crumbs trail={[{ label: crumb, to: seo.path }]} />
+          <p className="page-kicker rise">{kicker}</p>
           <h1 className="page-title rise d1">{title}</h1>
           <p className="page-sub rise d2">Last updated: {updated}</p>
         </header>
         <div className="legal-body rise d3">{children}</div>
         <div className="page-cta">
-          <Link className="ghost-cta hoverable" to="/">Back to the Forge <span>→</span></Link>
+          <Link className="btn btn-ghost" to="/">Back to the Forge <span>→</span></Link>
         </div>
       </div>
       <Footer />
@@ -26,6 +33,7 @@ export function Privacy() {
   return (
     <LegalPage
       kicker="The Fine Print"
+      crumb="Privacy"
       title="Privacy Policy"
       updated="July 18, 2026"
       seo={{
@@ -45,19 +53,21 @@ export function Privacy() {
 
       <h2>What we collect</h2>
       <p>
-        Our contact form composes an email in your own mail client — nothing is stored on
-        our servers when you use it. If you email us, we receive the information you choose
-        to send: typically your name, email address and a description of your project. We
-        use it solely to respond to your enquiry and, if we work together, to deliver the
-        engagement.
+        When you submit our contact form, the name, email address, area of interest and
+        message you enter are transmitted to our email inbox through Web3Forms, a form
+        delivery service acting as our processor. We do not operate a database of enquiries;
+        the submission reaches us as an email. If you email us directly, we receive whatever
+        you choose to send. Either way we use it solely to respond to your enquiry and, if we
+        work together, to deliver the engagement.
       </p>
 
       <h2>Cookies and analytics</h2>
       <p>
-        This site does not set advertising cookies and does not sell or share personal data
-        with third parties for marketing. Fonts are served by Google Fonts, which may log
-        standard technical request data (such as your IP address) when your browser fetches
-        them; see Google&rsquo;s privacy policy for details.
+        This site sets no advertising cookies and does not sell or share personal data with
+        third parties for marketing. We use Vercel Analytics and Speed Insights, which record
+        aggregated, cookie-less page and performance measurements and do not identify
+        individual visitors. Fonts and images are served from this domain, so loading a page
+        makes no request to a third-party content network.
       </p>
 
       <h2>How long we keep information</h2>
@@ -88,6 +98,7 @@ export function Terms() {
   return (
     <LegalPage
       kicker="The Fine Print"
+      crumb="Terms"
       title="Terms of Service"
       updated="July 18, 2026"
       seo={{

@@ -25,3 +25,6 @@ dist-ssr
 
 # other
 .claude
+
+# SSR bundle, built and removed by scripts/prerender.mjs
+.ssr

@@ -1,208 +1,356 @@
-import React, { Suspense, useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { SERVICES, PROCESS, CASES, POSTS } from '../data.js'
+import { EMAIL, Footer, useReveal } from '../chrome.jsx'
+import { Seo, SITE_URL, SITE_NAME, ORG_ID, orgRef, graph, webPageLd } from '../seo.jsx'
+import { registerJourney, scroll } from '../input.js'
 
-const Scene = React.lazy(() => import('../Scene.jsx'))
+const Scene = lazy(() => import('../Scene.jsx'))
 
-/* Returns 'demand' immediately (Canvas exists but render loop is paused)
-   then switches to 'always' once the browser is idle — keeping the
-   WebGL frame loop off the main thread during Lighthouse's TTI window
-   while letting the HTML overlay render instantly. */
-function useFrameloop() {
-  const [loop, setLoop] = useState('demand')
+const PANELS = 9 // hero + manifesto + six services + gate
+
+/* ————————————————————————————————————————
+   The 3D layer is mounted only once the browser is idle. The document
+   is fully interactive before three.js is even requested, and because
+   the canvas is a fixed backdrop rather than a scroll container, it
+   arriving late changes no layout.
+   ———————————————————————————————————————— */
+function useDeferredScene() {
+  const [ready, setReady] = useState(false)
+  const [tier, setTier] = useState('high')
+
   useEffect(() => {
-    if ('requestIdleCallback' in window) {
-      const id = requestIdleCallback(() => setLoop('always'), { timeout: 3000 })
-      return () => cancelIdleCallback(id)
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    let cancelled = false
+    const start = async () => {
+      const { pickTier } = await import('../Scene.jsx')
+      if (cancelled) return
+      setTier(pickTier())
+      setReady(true)
     }
-    const id = setTimeout(() => setLoop('always'), 100)
-    return () => clearTimeout(id)
+
+    if ('requestIdleCallback' in window) {
+      const id = requestIdleCallback(start, { timeout: 2200 })
+      return () => { cancelled = true; cancelIdleCallback(id) }
+    }
+    const id = setTimeout(start, 400)
+    return () => { cancelled = true; clearTimeout(id) }
   }, [])
-  return loop
+
+  return { ready, tier }
 }
 
-import { EMAIL, useReveal } from '../chrome.jsx'
-import { Seo } from '../seo.jsx'
+/* Progress bar and station counter, driven from one rAF loop that writes
+   straight to the DOM. Runs whether or not WebGL ever loads. */
+function useJourneyChrome(journeyRef) {
+  useEffect(() => {
+    const el = journeyRef.current
+    if (!el) return
+    const unregister = registerJourney(el)
 
-const SERVICES = [
-  {
-    num: '01',
-    cat: 'Conversational Infrastructure',
-    title: <>WhatsApp <em>Automation</em></>,
-    body: 'Two billion people live inside WhatsApp. We forge intelligent pipelines that live there with them — qualifying leads, closing sales, resolving support and remembering every conversation, around the clock.',
-    tags: ['Lead Qualification', 'AI Sales Flows', 'Support Desks', 'Broadcast Engines', 'CRM Sync'],
-    interest: 'WhatsApp Automation',
-    align: 'right',
-  },
-  {
-    num: '02',
-    cat: 'Audio Intelligence',
-    title: <>Voice <em>Agents</em></>,
-    body: 'Agents that pick up the phone. Sub-second latency, natural interruption handling, and a voice tuned to your brand — booking appointments, screening calls and running outbound campaigns while you sleep.',
-    tags: ['Inbound Reception', 'Outbound Campaigns', 'Appointment Booking', 'IVR Replacement', 'Call Analytics'],
-    interest: 'Voice Agents',
-    align: 'left',
-  },
-  {
-    num: '03',
-    cat: 'Embodied Presence',
-    title: <>Avatar <em>Agents</em></>,
-    body: 'A face for your intelligence. Photoreal and stylised avatars that speak, emote and hold eye contact — greeting visitors, training teams and presenting products with human warmth at machine scale.',
-    tags: ['Digital Receptionists', 'Video Concierges', 'Training Personas', 'Lip-Sync Engines', 'Brand Characters'],
-    interest: 'Avatar Agents',
-    align: 'right',
-  },
-  {
-    num: '04',
-    cat: 'Bespoke Cognition',
-    title: <>Custom <em>Agents</em></>,
-    body: 'When off-the-shelf thinks off-the-shelf. We design agents around your exact workflows — multi-step reasoning, tool use, retrieval over your private knowledge — orchestrated swarms that run your operations.',
-    tags: ['Agentic Workflows', 'RAG Pipelines', 'Tool Orchestration', 'Multi-Agent Swarms', 'Fine-Tuning'],
-    interest: 'Custom Agents',
-    align: 'left',
-  },
-  {
-    num: '05',
-    cat: 'Product Engineering',
-    title: <>AI-Powered <em>SaaS</em></>,
-    body: 'From napkin sketch to paying subscribers. We architect, design and ship full SaaS platforms with intelligence in their core — billing, auth, analytics and an AI engine your competitors can’t copy-paste.',
-    tags: ['MVP in Weeks', 'Product Design', 'Scalable Backends', 'Usage Billing', 'AI-Native UX'],
-    interest: 'AI-Powered SaaS',
-    align: 'right',
-  },
-  {
-    num: '06',
-    cat: 'Decentralised Intelligence',
-    title: <>AI <em>×</em> Blockchain</>,
-    body: 'Where autonomous intelligence meets trustless rails. On-chain agents, AI-driven protocols, intelligent contract auditing and tokenised products — engineered for chains that never sleep.',
-    tags: ['On-Chain Agents', 'Smart Contract AI', 'DeFi Automation', 'Token Analytics', 'Web3 Products'],
-    interest: 'AI × Blockchain',
-    align: 'left',
-  },
-]
+    const fill = document.getElementById('progress-fill')
+    const cur = document.getElementById('hud-current')
+    const hud = document.getElementById('hud')
+    const label = document.getElementById('hud-label')
 
-/* NOTE: this tree renders inside drei's <Scroll html>, across a renderer
-   boundary — router context is not available here, so navigation comes
-   in as a prop and links are plain anchors. */
-function Overlay({ navigate }) {
-  const ref = useReveal()
-  const go = (path) => (e) => {
-    e.preventDefault()
-    navigate(path)
-  }
-  return (
-    <div className="overlay" ref={ref}>
-      {/* 00 · hero */}
-      <section className="panel center">
-        <div className="hero-inner">
-          <div className="hero-eyebrow">AI Agency — Est. in the Fire</div>
-          <h1 className="hero-title">
-            <span className="row"><span>We Forge</span></span>
-            <span className="row"><span className="molten-text">Intelligence</span></span>
-          </h1>
-          <p className="hero-sub">Scroll down into the forge — six crafts, one obsession: agents that work while the world sleeps.</p>
-          <div className="hero-actions">
-            <a className="outro-cta hoverable" href="/contact" onClick={go('/contact')}>
-              Start a Project <span>→</span>
-            </a>
-            <a className="ghost-cta hoverable" href="/case-studies" onClick={go('/case-studies')}>
-              See the Work <span>→</span>
-            </a>
-          </div>
-        </div>
-        <div className="scroll-hint">
-          <span>Descend</span>
-          <span className="drip" />
-        </div>
-      </section>
+    let raf = 0
+    let lastLabel = ''
+    let lastGone = null
 
-      {/* 01 · manifesto */}
-      <section className="panel center">
-        <p className="manifesto reveal">
-          <span className="manifesto-tag">The Manifesto</span>
-          Every great product begins as <span className="molten-text">raw ore</span> — an idea, unshaped.
-          We heat it with research, strike it with engineering, and quench it in production.
-          What leaves our forge is not software. <span className="molten-text">It is leverage.</span>
-        </p>
-      </section>
+    const tick = () => {
+      if (fill) fill.style.transform = `scaleX(${scroll.progress})`
 
-      {/* 02–07 · services */}
-      {SERVICES.map((s) => (
-        <section key={s.num} className={`panel ${s.align}`}>
-          <div className="service-card">
-            <div className="service-index reveal">
-              <span className="num">{s.num}</span>
-              <span className="rule" />
-              <span className="cat">{s.cat}</span>
-            </div>
-            <h2 className="service-title reveal d1">{s.title}</h2>
-            <p className="service-body reveal d2">{s.body}</p>
-            <ul className="service-tags reveal d3">
-              {s.tags.map((t) => <li key={t}>{t}</li>)}
-            </ul>
-            <a
-              className="service-cta reveal d3 hoverable"
-              href={`/contact?interest=${encodeURIComponent(s.interest)}`}
-              onClick={go(`/contact?interest=${encodeURIComponent(s.interest)}`)}
-            >
-              Forge this with us <span>→</span>
-            </a>
-          </div>
-        </section>
-      ))}
+      const n = String(Math.min(PANELS, Math.round(scroll.journey * (PANELS - 1)) + 1)).padStart(2, '0')
+      if (n !== lastLabel && cur) {
+        cur.textContent = n
+        lastLabel = n
+      }
 
-      {/* 08 · finale — the forge gate */}
-      <section className="panel center">
-        <div className="finale-inner">
-          <div className="outro-kicker reveal">Final Chamber</div>
-          <h2 className="outro-title reveal d1">
-            Step through <span className="molten-text">the gate.</span>
-          </h2>
-          <p className="outro-serif reveal d2">Bring us the raw idea. Leave with the weapon.</p>
-          <div className="finale-actions reveal d3">
-            <a className="outro-cta hoverable" href="/contact" onClick={go('/contact')}>
-              Start a Project <span>→</span>
-            </a>
-            <a className="ghost-cta hoverable" href="/case-studies" onClick={go('/case-studies')}>
-              See the Work <span>→</span>
-            </a>
-          </div>
-          <div className="outro-meta reveal d3">
-            <span>ForgeQubit © 2026</span>
-            <a className="hoverable" href={`mailto:${EMAIL}`}>{EMAIL}</a>
-            <span>Forged Worldwide</span>
-          </div>
-        </div>
-      </section>
-    </div>
-  )
+      // the journey counter means nothing once you're past the gate
+      const gone = scroll.journey >= 0.999
+      if (gone !== lastGone) {
+        hud?.classList.toggle('gone', gone)
+        label?.classList.toggle('gone', gone)
+        lastGone = gone
+      }
+
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+
+    return () => {
+      cancelAnimationFrame(raf)
+      unregister()
+    }
+  }, [journeyRef])
 }
+
+/* ———————————————————— structured data ———————————————————— */
+
+const JSON_LD = graph(
+  {
+    '@type': ['Organization', 'ProfessionalService'],
+    '@id': ORG_ID,
+    name: SITE_NAME,
+    legalName: 'ForgeQubit',
+    url: `${SITE_URL}/`,
+    email: EMAIL,
+    slogan: 'Agents that work while the world sleeps.',
+    description:
+      'UK-registered AI agency building WhatsApp automation, voice agents, avatar agents, custom AI agents, AI-powered SaaS platforms and AI × blockchain products for clients across the United Kingdom, Europe and the United States.',
+    logo: {
+      '@type': 'ImageObject',
+      '@id': `${SITE_URL}/#logo`,
+      url: `${SITE_URL}/icon-512.png`,
+      width: 512,
+      height: 512,
+      caption: SITE_NAME,
+    },
+    image: { '@id': `${SITE_URL}/#logo` },
+    address: { '@type': 'PostalAddress', addressCountry: 'GB' },
+    areaServed: [
+      { '@type': 'Country', name: 'United Kingdom' },
+      { '@type': 'Country', name: 'United States' },
+      { '@type': 'AdministrativeArea', name: 'Europe' },
+    ],
+    knowsAbout: SERVICES.map((s) => s.title),
+    contactPoint: {
+      '@type': 'ContactPoint',
+      email: EMAIL,
+      contactType: 'sales',
+      availableLanguage: 'English',
+      areaServed: ['GB', 'US', 'EU'],
+    },
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: 'AI development services',
+      itemListElement: SERVICES.map((s) => ({
+        '@type': 'Offer',
+        itemOffered: { '@type': 'Service', name: s.title, description: s.short },
+      })),
+    },
+  },
+  {
+    '@type': 'WebSite',
+    '@id': `${SITE_URL}/#website`,
+    url: `${SITE_URL}/`,
+    name: SITE_NAME,
+    inLanguage: 'en-GB',
+    publisher: orgRef,
+  },
+  webPageLd({
+    path: '/',
+    title: 'ForgeQubit — AI Agency for WhatsApp, Voice & Custom AI Agents',
+    description:
+      'UK-registered AI agency shipping WhatsApp automation, voice agents, avatar agents, custom AI agents and AI-powered SaaS across the UK, Europe and the USA.',
+  })
+)
+
+/* ———————————————————— page ———————————————————— */
 
 export default function Home() {
-  const navigate = useNavigate()
-  const SECTIONS = 9
-  const frameloop = useFrameloop()
+  const revealRef = useReveal()
+  const journeyRef = useRef(null)
+  const { ready, tier } = useDeferredScene()
+  useJourneyChrome(journeyRef)
 
   return (
-    <div className="home">
+    <div className="home" ref={revealRef}>
       <Seo
         title="ForgeQubit — AI Agency for WhatsApp, Voice & Custom AI Agents"
         description="ForgeQubit is a UK-registered AI agency serving Europe and the USA — shipping WhatsApp automation, voice agents, avatar agents, custom AI agents, AI-powered SaaS and AI × blockchain products."
         path="/"
+        jsonLd={JSON_LD}
       />
 
-      {/* fixed chrome specific to the journey */}
-      <div className="progress-track"><div className="progress-fill" id="progress-fill" /></div>
-      <div className="hud">
-        <span className="current" id="hud-current">01</span>
-        <span className="total">/ {String(SECTIONS).padStart(2, '0')}</span>
+      <div className={`scene-layer ${ready ? 'lit' : ''}`} aria-hidden="true">
+        {ready && (
+          <Suspense fallback={null}>
+            <Scene tier={tier} />
+          </Suspense>
+        )}
       </div>
-      <div className="hud-label">An Immersive Descent</div>
 
-      <Suspense fallback={null}>
-        <Scene sections={SECTIONS} frameloop={frameloop}>
-          <Overlay navigate={navigate} />
-        </Scene>
-      </Suspense>
+      <div className="progress-track" aria-hidden="true">
+        <div className="progress-fill" id="progress-fill" />
+      </div>
+      <div className="hud" id="hud" aria-hidden="true">
+        <span className="current" id="hud-current">01</span>
+        <span className="total">/ {String(PANELS).padStart(2, '0')}</span>
+      </div>
+      <div className="hud-label" id="hud-label" aria-hidden="true">An Immersive Descent</div>
+
+      {/* ———— the descent ———— */}
+      <div className="journey" ref={journeyRef}>
+        <section className="panel center">
+          <div className="hero-inner">
+            <p className="eyebrow">AI Agency — Est. in the Fire</p>
+            {/* the explicit space keeps the accessible name and the
+                crawled text as "We Forge Intelligence" — the rows are
+                separate blocks, so without it they concatenate */}
+            <h1 className="hero-title">
+              <span className="row"><span>We Forge</span></span>{' '}
+              <span className="row"><span className="ember-text flow">Intelligence</span></span>
+            </h1>
+            <p className="hero-sub">
+              Six crafts, one obsession: agents that work while the world sleeps.
+            </p>
+            <div className="hero-actions">
+              <Link className="btn btn-primary" to="/contact">Start a Project <span>→</span></Link>
+              <Link className="btn btn-ghost" to="/case-studies">See the Work <span>→</span></Link>
+            </div>
+            <ul className="hero-strip">
+              <li>UK Registered</li>
+              <li>Serving UK · EU · USA</li>
+              <li>Fixed Scope, Weekly Demos</li>
+            </ul>
+          </div>
+          <div className="scroll-hint" aria-hidden="true">
+            <span>Descend</span>
+            <span className="drip" />
+          </div>
+        </section>
+
+        <section className="panel center">
+          <p className="manifesto reveal">
+            <span className="eyebrow" style={{ display: 'block', marginBottom: '3vh' }}>The Manifesto</span>
+            Every great product begins as <span className="ember-text">raw ore</span> — an idea, unshaped.
+            We heat it with research, strike it with engineering, and quench it in production.
+            What leaves our forge is not software. <span className="ember-text">It is leverage.</span>
+          </p>
+        </section>
+
+        {SERVICES.map((s, i) => (
+          <section key={s.num} className={`panel ${i % 2 ? 'left' : 'right'}`}>
+            <div className="panel-body">
+              <div className="service-index reveal">
+                <span className="num">{s.num}</span>
+                <span className="rule" />
+                <span className="cat">{s.cat}</span>
+              </div>
+              <h2 className="service-title reveal d1">
+                {s.lead} <em>{s.accent}</em>{s.tail ? ` ${s.tail}` : ''}
+              </h2>
+              <p className="service-body reveal d2">{s.short}</p>
+              <ul className="tag-row reveal d3">
+                {s.tags.map((t) => <li key={t}>{t}</li>)}
+              </ul>
+              <Link
+                className="link-cta reveal d3"
+                to={`/contact?interest=${encodeURIComponent(s.interest)}`}
+              >
+                Forge this with us <span>→</span>
+              </Link>
+            </div>
+          </section>
+        ))}
+
+        <section className="panel center">
+          <div className="gate-inner">
+            <p className="eyebrow reveal">Final Chamber</p>
+            <h2 className="gate-title reveal d1">
+              Step through <span className="ember-text flow">the gate.</span>
+            </h2>
+            <p className="gate-serif reveal d2">Bring us the raw idea. Leave with the weapon.</p>
+            <div className="btn-row reveal d3">
+              <Link className="btn btn-primary" to="/contact">Start a Project <span>→</span></Link>
+              <Link className="btn btn-ghost" to="/case-studies">See the Work <span>→</span></Link>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* ———— the ground floor ———— */}
+      <div className="ground">
+        <section className="ground-section shell" aria-labelledby="proof-h">
+          <div className="section-head reveal">
+            <p className="eyebrow eyebrow-mark">Measured, Not Claimed</p>
+            <h2 id="proof-h">Numbers that left <span className="ember-text">the fire.</span></h2>
+            <p>Every engagement is scored against the metric that matters to the client. These are the last three.</p>
+          </div>
+          <div className="metrics">
+            {CASES.map((c, i) => (
+              <Link key={c.slug} className={`card metric reveal d${i + 1}`} to="/case-studies">
+                <span className="v ember-text">{c.metric}</span>
+                <span className="l">{c.metricLabel}<br />{c.client} · {c.field}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section className="ground-section shell" aria-labelledby="process-h">
+          <div className="section-head reveal">
+            <p className="eyebrow eyebrow-mark">How We Work</p>
+            <h2 id="process-h">From ore <span className="ember-text">to weapon.</span></h2>
+            <p>Four stages, no mystery invoices, and a working demo in your hands every week from the first.</p>
+          </div>
+          <div className="rail reveal d1">
+            {PROCESS.map((s) => (
+              <div key={s.n} className="rail-step">
+                <span className="n">{s.n}</span>
+                <h3>{s.t}</h3>
+                <p>{s.d}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="ground-section shell" aria-labelledby="work-h">
+          <div className="section-head reveal">
+            <p className="eyebrow eyebrow-mark">Selected Work</p>
+            <h2 id="work-h">Forged <span className="ember-text">&amp; shipped.</span></h2>
+            <p>Three recent builds, still glowing — with the challenge, the approach and the result in full.</p>
+          </div>
+          <div className="grid-3">
+            {CASES.map((c, i) => (
+              <Link key={c.slug} className={`card post-card reveal d${i + 1}`} to="/case-studies">
+                <div className="post-meta">
+                  <span className="post-tag">{c.field}</span>
+                  <span className="post-date">{c.metric}</span>
+                </div>
+                <h3 className="post-title">{c.client}</h3>
+                <p className="post-excerpt">{c.summary}</p>
+                <span className="post-more">Read the case study →</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section className="ground-section shell" aria-labelledby="notes-h">
+          <div className="section-head reveal">
+            <p className="eyebrow eyebrow-mark">From the Forge</p>
+            <h2 id="notes-h">Notes in <span className="ember-text">the fire.</span></h2>
+            <p>Practical writing on WhatsApp automation, voice agents and shipping AI products — for operators, not researchers.</p>
+          </div>
+          <div className="grid-3">
+            {POSTS.map((p, i) => (
+              <Link key={p.slug} className={`card post-card reveal d${i + 1}`} to={`/blog/${p.slug}`}>
+                <div className="post-meta">
+                  <span className="post-tag">{p.tag}</span>
+                  <span className="post-date">{p.readTime}</span>
+                </div>
+                <h3 className="post-title">{p.title}</h3>
+                <p className="post-excerpt">{p.excerpt}</p>
+                <span className="post-more">Read the note →</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section className="ground-section shell">
+          <div className="page-cta reveal">
+            <p className="eyebrow">The Forge Is Lit</p>
+            <h2>Bring us the raw idea.<br /><span className="ember-text">Leave with the weapon.</span></h2>
+            <div className="btn-row">
+              <Link className="btn btn-primary" to="/contact">Start a Project <span>→</span></Link>
+              <a className="btn btn-ghost" href={`mailto:${EMAIL}`}>{EMAIL} <span>→</span></a>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <Footer />
     </div>
   )
 }

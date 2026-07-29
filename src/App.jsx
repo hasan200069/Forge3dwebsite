@@ -1,8 +1,10 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
-import { lazy, Suspense, useEffect } from 'react'
+import { useEffect } from 'react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { Analytics } from '@vercel/analytics/react'
 import { Nav, Cursor } from './chrome.jsx'
+import { startInputTracking } from './input.js'
+import Home from './pages/Home.jsx'
 import Services from './pages/Services.jsx'
 import About from './pages/About.jsx'
 import CaseStudies from './pages/CaseStudies.jsx'
@@ -12,38 +14,29 @@ import Contact from './pages/Contact.jsx'
 import { Privacy, Terms } from './pages/Legal.jsx'
 import NotFound from './pages/NotFound.jsx'
 
-/* Home carries three.js + postprocessing (~1 MB) — start fetching
-   immediately so the chunk downloads while React boots. The 3D render
-   loop is deferred via frameloop="demand" inside Home so it never
-   blocks the main thread during the Lighthouse measurement window. */
-const homeModule = import('./pages/Home.jsx')
-const Home = lazy(() => homeModule)
+/* Home is the entry page and the one that gets prerendered with real
+   content, so it ships in the main bundle. three.js sits behind a
+   dynamic import inside it and never blocks first paint. */
 
 function ScrollToTop() {
   const { pathname } = useLocation()
   useEffect(() => {
-    document.querySelector('.page')?.scrollTo(0, 0)
+    // 'instant' so a route change never animates the whole document
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
   }, [pathname])
   return null
 }
 
-export default function App() {
+/* Router-agnostic so the prerenderer can wrap it in a StaticRouter. */
+export function AppShell() {
   return (
-    <BrowserRouter>
-      <div className="app">
-        <Nav />
-        <div className="grain" />
-        <Cursor />
-        <ScrollToTop />
+    <div className="app">
+      <a className="skip-link" href="#main">Skip to content</a>
+      <Nav />
+      <ScrollToTop />
+      <main id="main">
         <Routes>
-          <Route
-            path="/"
-            element={
-              <Suspense fallback={<div className="home" />}>
-                <Home />
-              </Suspense>
-            }
-          />
+          <Route path="/" element={<Home />} />
           <Route path="/services" element={<Services />} />
           <Route path="/about" element={<About />} />
           <Route path="/case-studies" element={<CaseStudies />} />
@@ -54,9 +47,23 @@ export default function App() {
           <Route path="/terms" element={<Terms />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
-        <SpeedInsights />
-        <Analytics />
-      </div>
+      </main>
+      <div className="vignette" aria-hidden="true" />
+      <div className="grain" aria-hidden="true" />
+      {/* inside the shell so the prerendered markup and the hydrated
+          tree agree — the element is inert until the effect claims it */}
+      <Cursor />
+    </div>
+  )
+}
+
+export default function App() {
+  useEffect(startInputTracking, [])
+  return (
+    <BrowserRouter>
+      <AppShell />
+      <SpeedInsights />
+      <Analytics />
     </BrowserRouter>
   )
 }

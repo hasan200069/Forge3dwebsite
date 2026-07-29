@@ -1,17 +1,18 @@
 {
   "name": "forgequbit",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node scripts/prerender.mjs",
-    "preview": "vite preview"
+    "build": "vite build && vite build --ssr src/entry-server.jsx --outDir .ssr --emptyOutDir && node scripts/prerender.mjs",
+    "preview": "vite preview",
+    "assets": "node scripts/gen-assets.mjs",
+    "fonts": "node scripts/fetch-fonts.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.0.0",
     "@react-three/fiber": "^9.0.0",
-    "@react-three/postprocessing": "^3.0.4",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "react": "^19.0.0",
