@@ -22,6 +22,7 @@ async function start() {
   } else {
     createRoot(root).render(<App />)
   }
+  try { sessionStorage.removeItem('fq-chunk-reload') } catch { /* ignore */ }
 }
 
 start()

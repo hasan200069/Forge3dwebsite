@@ -4,9 +4,9 @@ import { Crumbs, Footer, Faq, CtaBand } from '../chrome.jsx'
 import { Seo, SITE_URL, orgRef, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
 import { CallSample } from '../visuals.jsx'
 
-const TITLE = 'Voice Agents — AI Phone Answering, Bookings and Call Handoff | ForgeQubit'
+const TITLE = 'AI Voice Agents for Phone Answering & Bookings | ForgeQubit'
 const DESC =
-  'Voice agents that answer your phone on the first ring, book and reschedule appointments, answer common questions and transfer to your team with context. Works with your existing number.'
+  'Voice agents that answer on the first ring, book and reschedule appointments, answer common questions and transfer to your team with context. Works with your number.'
 
 const JSON_LD = graph(
   webPageLd({ path: VOICE.path, title: TITLE, description: DESC }),

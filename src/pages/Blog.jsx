@@ -3,9 +3,9 @@ import { POSTS } from '../data.js'
 import { Crumbs, Footer, CtaBand } from '../chrome.jsx'
 import { Seo, SITE_URL, OG_IMAGE, orgRef, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
 
-const TITLE = 'Blog — Notes on AI Reception, Automation and AI Products | ForgeQubit'
+const TITLE = 'Blog: Notes on AI Reception, Automation & Products | ForgeQubit'
 const DESC =
-  'Practical writing on WhatsApp and voice agents, workflow automation and building AI products, written for founders and operations teams rather than researchers.'
+  'Practical writing on WhatsApp and voice agents, workflow automation and building AI products, for founders and operations teams rather than researchers.'
 
 const JSON_LD = graph(
   webPageLd({ path: '/blog', title: TITLE, description: DESC, type: 'CollectionPage' }),

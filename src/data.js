@@ -568,6 +568,26 @@ export const POSTS = [
   },
 ]
 
+/* ———— people and company details ————
+   Rendered only when filled in. Leave empty rather than adding
+   placeholders: the About page explains accountability structurally
+   until real, permission-backed details are supplied. Each person needs
+   a name and role; photo (path under /public), bio and links are
+   optional. Do not attribute work done at previous employers to
+   ForgeQubit. */
+
+export const TEAM = [
+  // { name: '', role: '', bio: '', photo: '/team/name.jpg', links: [{ label: 'LinkedIn', href: '' }] },
+]
+
+export const COMPANY = {
+  legalName: 'ForgeQubit',
+  registeredIn: 'United Kingdom',
+  companyNumber: null, // Companies House number, e.g. '12345678'
+  registeredOffice: null, // full registered address, one string
+  founded: null, // year, as a string
+}
+
 /* ———— contact form options ———— */
 
 export const INTERESTS = [

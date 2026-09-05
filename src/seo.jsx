@@ -79,7 +79,7 @@ export function Seo({
   useEffect(() => {
     document.title = title
     upsertMeta('name', 'description', description)
-    upsertMeta('name', 'robots', robots)
+    upsertMeta('name', 'robots', robots === 'index, follow' ? 'index, follow, max-image-preview:large' : robots)
 
     upsertMeta('property', 'og:title', title)
     upsertMeta('property', 'og:description', description)

@@ -42,8 +42,20 @@ icons and the social card from `scripts/gen-assets.mjs`.
    step highlight) is disabled under `prefers-reduced-motion`.
 4. **Cyan design system** in `src/styles.css` with tokens for colour,
    gradient, type, spacing, container, radius, elevation, motion and
-   focus. Brand assets regenerated in cyan (favicon, PWA icons, Apple
-   touch icon, social card, manifest, theme colour).
+   focus. Third pass deepened the palette (blue-black ground with two
+   quiet pools of light, a teal partner in the gradient, one warm accent
+   for the human moments) and added motion: hero entrance, scroll
+   reveals with a scroll fallback, a looping enquiry-to-booking
+   animation, a workflow token, a tool strip, button sheen and a logo
+   pulse. All of it is transform/opacity, off under
+   `prefers-reduced-motion`, and the prerendered HTML is the finished
+   state so nothing depends on it.
+4a. **New logo.** An open ring with a tail (a Q) and a bright pulse in
+   the opening, in `src/logo.jsx` and mirrored in
+   `scripts/gen-assets.mjs`; the wordmark is now mixed-case
+   "ForgeQubit" in Space Grotesk, which let the Unbounded font (168 kB)
+   be removed. Favicon, PWA icons, Apple touch icon and social card
+   regenerated.
 5. **Service pages** for the three offers plus `/services/voice-agents`
    (previously a 404 that search engines had indexed). Each covers who
    it helps, problems, what is included, a concrete labelled example,
@@ -54,7 +66,11 @@ icons and the social card from `scripts/gen-assets.mjs`.
    field-level validation with error association, input limits,
    honeypot, duplicate-submission guard, loading state, success only on
    `success: true` from the service, and recoverable errors that keep
-   the entered text. Optional budget and timeline selects added.
+   the entered text. Optional budget and timeline selects added. Field
+   ids are literal (`cf-name` …) and the query-string preselection is
+   applied after hydration, so the prerendered and hydrated forms are
+   identical. On narrow screens the form comes before the process
+   steps.
 7. **Performance.** Route-level code splitting (Home in the shell, every
    other page a separate chunk warmed before hydration), stylesheet
    inlined into each prerendered page, font preloads reduced to the two
@@ -79,6 +95,53 @@ icons and the social card from `scripts/gen-assets.mjs`.
     RSS regenerated, permanent redirects for plausible legacy service
     URLs, error boundary and helpful 404.
 
+### Fourth pass: audit follow-up
+
+- **Pages "not opening"**: server-side every route and link returned
+  200 in three separate crawls. The cause was client-side: after a
+  rebuild, an open tab requests chunk filenames that no longer exist,
+  which happens after every deployment too. Lazy routes now fall back
+  to a full reload of the target page once (guarded against loops),
+  verified by aborting a chunk request in headless Chrome.
+- **Hero demonstration** now tells one complete story: enquiry →
+  qualification → slot chosen → confirmed booking and CRM update, with
+  Play / Pause / Show result / Replay. Stages complete only when the
+  message that proves them is on screen. Every message is laid out from
+  the start, so playback never moves the layout. The finished state is
+  what is prerendered and what reduced-motion users see. Demonstrations
+  stop off screen, in hidden tabs, and if reduced motion is switched on
+  while the page is open.
+- **Workflow demonstration** plays node by node and stops at the
+  human decision; the visitor approves or queries the invoice and sees
+  the corresponding branch.
+- **Voice sample**: no recording exists, so none is faked. The written
+  call now plays at spoken pace with controls and states plainly that
+  it is text, not audio. A permission-cleared recording remains a
+  missing asset (see §7).
+- **Homepage** cut to six blocks; detailed responsibilities and
+  engineering practices live on About and the service pages. Mobile
+  height 15,967 → 9,592 px (−40%), desktop 8,665 → 5,672 px (−35%).
+- **Contact form**: draft kept in `sessionStorage` for the life of the
+  tab and cleared on success or Clear; privacy link opens in a new tab;
+  corrected fields clear their own error after the first attempt;
+  15-second timeout with a retry state that keeps the text; spinner in
+  the busy button; focus moves to the success heading; success copy
+  says the form service received it (not that an email was delivered).
+- **Service pages**: in-page nav marks the section in view with
+  `aria-current="location"` without moving focus; on narrow screens it
+  is a sticky "On this page" disclosure.
+- **Route loading**: a labelled progress bar appears only if a chunk
+  takes longer than 150 ms; the area reserves height.
+- **Motion polish**: FAQ answers ease in with the icon; hero light
+  settles once instead of drifting forever; the tool strip has a Pause
+  button; reveals limited to headings and demonstrations at 400 ms /
+  12 px with 50 ms stagger.
+- **SEO**: titles ≤ 70 and descriptions ≤ 165 characters on every page
+  (tested), `max-image-preview:large`, `og:image` and `hreflang` on
+  every page (tested), and a crawl test that starts the production-like
+  server and checks every route, link, chunk, redirect (308 with the
+  right target), unknown URL (404) and the CSP header.
+
 ## 3. Final design tokens
 
 | Token | Value | Use |
@@ -87,14 +150,16 @@ icons and the social card from `scripts/gen-assets.mjs`.
 | `--bg-alt` | `#091923` | alternate sections, footer |
 | `--surface` / `--surface-2` | `#102532` / `#153040` | cards, hover |
 | `--ink` / `--ink-2` / `--ink-3` | `#F2FAFD` / `#B4CAD4` / `#8AA7B4` | text (18.2 / 11.3 / 7.6 : 1 on `--bg`) |
-| `--cyan` / `--cyan-bright` / `--cyan-deep` | `#22D3EE` / `#67E8F9` / `#0891B2` | accents, focus, deep fills |
+| `--bg` / `--bg-alt` / `--surface` (final) | `#050D14` / `#081722` / `#0E2230` | deepened in the third pass |
+| `--cyan` / `--cyan-bright` / `--cyan-deep` | `#22D3EE` / `#7DF0FF` / `#0E7490` | accents, focus, deep fills |
+| `--teal` / `--warm` | `#2DD4BF` / `#FFB86B` | gradient partner; illustrative labels and exception nodes |
 | `--cyan-ink` | `#04141B` | text on the gradient (5.1:1 at the darkest stop) |
 | `--line` / `--line-strong` | `#254452` / `#3A6072` | decorative borders |
 | `--field-border` | `#4F7A8F` | form control boundaries (≥ 3:1 on field and card) |
 | `--ok` / `--warn` / `--err` | `#34D399` / `#FBBF24` / `#FB7185` | semantic states |
-| `--grad` | `linear-gradient(135deg, #67E8F9 0%, #22D3EE 48%, #0891B2 100%)` | primary buttons, signature graphics |
-| `--grad-text` | `linear-gradient(120deg, #9DF0FB, #22D3EE 55%, #0FB0D3)` | emphasised words only |
-| Type | Space Grotesk (body and headings), Instrument Serif italic (emphasis), Unbounded (wordmark, numerals) | |
+| `--grad` | `linear-gradient(135deg, #7DF0FF 0%, #22D3EE 40%, #14B8C9 70%, #0891B2 100%)` | primary buttons (dark text keeps ≥ 5:1 at every stop), signature graphics |
+| `--grad-text` | `linear-gradient(120deg, #B5F5FF, #22D3EE 50%, #2DD4BF)` | emphasised words only |
+| Type | Space Grotesk (body, headings, wordmark), Instrument Serif italic (emphasis) | |
 | Layout | `--shell: 1160px`, `--gutter: clamp(20px, 5vw, 56px)`, `--section: clamp(64px, 9vw, 112px)`, radii 16/10 px | |
 
 ## 4. Routes and redirects
@@ -129,12 +194,18 @@ was confirmed in search results. Unknown URLs return 404.
 | Horizontal overflow at 360, 390, 768, 1280, 1920 px | none | Measured (Chromium emulation) |
 | 150% root font size at 390 px | no overflow, no clipped headings | Measured (Chromium emulation) |
 | Touch targets | all controls ≥ 24 px except one inline text link (exempt) | Measured |
-| Mobile menu: focus moves in, Escape closes, focus returns, scroll locked | works | Manually verified via scripted events in Chromium |
-| Contact form: validation, error association, focus to first error, error path keeps text, success only on `success: true`, triple-click sends once | works | Manually verified against a stubbed endpoint; nothing sent to the live inbox |
-| Legacy `?interest=Voice%20Agents` preselects "Voice Agent" | works | Manually verified |
+| Mobile menu: focus moves in, Tab and Shift+Tab wrap inside the menu, page behind is `inert`, Escape closes, focus returns, scroll locked | works | Manually verified via scripted events in Chromium |
+| Contact form on a direct load: field ids identical before and after hydration, no hydration warnings, invalid submit focuses the first invalid field (name → email → message), error text associated via `aria-describedby` | works | Manually verified in Chromium at 390 px |
+| Contact form: error path keeps text, success only on `success: true`, triple-click sends once | works | Manually verified against a stubbed endpoint; nothing sent to the live inbox |
+| Direct link `/contact?interest=Voice%20Agent` shows "Voice Agent" immediately after hydration; legacy `?interest=Voice%20Agents` maps to it | works | Manually verified |
+| Mobile contact layout: form starts at ~417 px on an 844 px viewport, before the process steps; "Jump to the form" link on narrow screens | works | Measured (Chromium emulation) |
 | Client-side navigation between chunks, title/canonical update | works, no console errors | Manually verified |
 | CSP: no violations on load, form endpoint reachable | no violations | Manually verified on the local production-like server |
 | 404 status for unknown URLs, 308 for legacy slugs | works | Measured on the local server; **Not tested** on Vercel until deployed |
+| Behaviour checks (`npm run verify`): hero play/pause/show-result/stable layout, workflow decision branch, draft persistence across navigation, error clearing, busy state, 15 s timeout with kept text, success focus, scrollspy, chunk-failure recovery | 17/17 pass | Measured in headless Chrome |
+| Vite dev server (`npm run dev`) serves every route | 200 | Measured |
+| Scroll reveals fire on every block on `/`, `/services`, `/services/ai-reception`, `/case-studies`, `/contact` at 1280 and 390 px (29/29, 10/10, 13/13, 4/4, 3/3) | works | Measured in headless Chrome via `scripts/shots.mjs` |
+| Enquiry-flow loop, workflow token, tool strip, logo pulse | running | Manually verified in Chromium |
 | Firefox, Safari/WebKit, physical devices | | **Not tested** (only Chromium was available) |
 | Field Core Web Vitals | | **Not tested**; Speed Insights will report after deployment |
 | Live Web3Forms delivery | | **Not tested** on purpose; the key is unchanged from the working production form |
@@ -148,8 +219,11 @@ deployment. **Inferred.**
 1. **No verifiable proof yet.** The site is honest but proof-light. The
    biggest credibility gain is one real case study with permission.
 2. **No named people.** The About page describes accountability
-   structurally. A founder name, photo and a professional link would
-   materially raise trust.
+   structurally. `TEAM` and `COMPANY` in `src/data.js` are wired up:
+   fill in names, roles, photos, links, the Companies House number and
+   registered office and the About page renders them (with a link to
+   the Companies House record). They are empty on purpose; a test
+   fails if placeholder people appear.
 3. **Response-time promise removed.** The old "within 24 hours" was
    unverified. Restore it in `src/data.js`/`Contact.jsx` only if it is
    a real commitment.

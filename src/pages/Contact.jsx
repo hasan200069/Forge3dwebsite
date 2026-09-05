@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { INTERESTS } from '../data.js'
 import { ACCESS_KEY, ENDPOINT, LIMITS, resolveInterest, validate, interpretResponse } from '../contact-logic.js'
@@ -6,9 +6,9 @@ import { Crumbs, EMAIL, Footer } from '../chrome.jsx'
 import { track } from '../analytics.js'
 import { Seo, SITE_URL, orgRef, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
 
-const TITLE = 'Contact ForgeQubit — Discuss an AI Reception, Automation or Product Project'
+const TITLE = 'Contact ForgeQubit: Discuss Your AI Project'
 const DESC =
-  'Tell us about the enquiries, process or product you have in mind. We reply by email to arrange a short call, then send a written scope and price before any work starts.'
+  'Tell us about the enquiries, process or product you have in mind. We reply by email to arrange a short call, then send a written scope and price before work starts.'
 
 const JSON_LD = graph(
   webPageLd({ path: '/contact', title: TITLE, description: DESC, type: 'ContactPage' }),
@@ -33,12 +33,50 @@ const STEPS = [
 const BUDGETS = ['Not sure yet', 'Under £5k', '£5k – £15k', '£15k – £50k', 'Over £50k']
 const TIMELINES = ['Not sure yet', 'As soon as possible', 'Within 3 months', 'Later this year', 'Just researching']
 
+/* Draft persistence. sessionStorage only: it survives following a link
+   and coming back, and is gone when the tab closes, so enquiry text is
+   never stored indefinitely. Cleared on success or an explicit reset. */
+const DRAFT_KEY = 'fq-enquiry-draft'
+const DRAFT_FIELDS = ['name', 'email', 'interest', 'message', 'budget', 'timeline']
+const readDraft = () => {
+  try {
+    const raw = sessionStorage.getItem(DRAFT_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+const writeDraft = (values) => {
+  try {
+    const d = Object.fromEntries(DRAFT_FIELDS.map((k) => [k, values[k]]))
+    if (DRAFT_FIELDS.some((k) => k !== 'interest' && k !== 'budget' && k !== 'timeline' && values[k])) sessionStorage.setItem(DRAFT_KEY, JSON.stringify(d))
+    else sessionStorage.removeItem(DRAFT_KEY)
+  } catch {
+    /* storage unavailable: the form still works, the draft is not kept */
+  }
+}
+const clearDraft = () => {
+  try { sessionStorage.removeItem(DRAFT_KEY) } catch { /* ignore */ }
+}
+
+/* Delivery is bounded so a stalled network shows a retry instead of
+   an endless "Sending…" */
+const TIMEOUT_MS = 15000
+
+/* Field ids are literal: there is one form per page, and literal ids
+   are identical in the prerendered HTML and after hydration. useId()
+   is not used because the server and client trees are assembled
+   differently (static vs lazy pages) and its ids could drift. */
+const id = 'cf'
+
 export function ContactForm({ preselect, submit = defaultSubmit }) {
-  const id = useId()
   const [values, setValues] = useState({
     name: '',
     email: '',
-    interest: preselect,
+    /* the prerendered page has no query string, so the first render on
+       both server and client uses the default; the effect below applies
+       ?interest= after hydration without a mismatch */
+    interest: INTERESTS[0],
     message: '',
     budget: BUDGETS[0],
     timeline: TIMELINES[0],
@@ -50,8 +88,34 @@ export function ContactForm({ preselect, submit = defaultSubmit }) {
   const inFlight = useRef(false)
   const statusRef = useRef(null)
   const started = useRef(false)
+  const attempted = useRef(false)
+  const fields = useRef({})
+  const successRef = useRef(null)
 
-  const set = (k) => (e) => setValues((v) => ({ ...v, [k]: e.target.value }))
+  /* apply the query-string choice, then any draft left in this tab */
+  useEffect(() => {
+    const draft = readDraft()
+    setValues((v) => ({ ...v, ...(draft || {}), interest: draft?.interest || preselect }))
+  }, [preselect])
+
+  useEffect(() => {
+    if (status === 'idle' || status === 'error') writeDraft(values)
+  }, [values, status])
+
+  useEffect(() => {
+    if (status === 'sent') successRef.current?.focus()
+  }, [status])
+
+  /* after the first submit attempt, a corrected field clears its own
+     error as soon as it is valid; other errors stay until fixed */
+  const set = (k) => (e) => {
+    const next = { ...values, [k]: e.target.value }
+    setValues(next)
+    if (attempted.current) {
+      const errs = validate(next)
+      setErrors((prev) => (prev[k] !== errs[k] ? { ...prev, [k]: errs[k] } : prev))
+    }
+  }
 
   /* one "form started" event per form instance, on the first keystroke */
   const onFirstInput = () => {
@@ -64,11 +128,12 @@ export function ContactForm({ preselect, submit = defaultSubmit }) {
     e.preventDefault()
     if (inFlight.current) return
 
+    attempted.current = true
     const errs = validate(values)
     setErrors(errs)
     if (Object.keys(errs).length) {
-      const first = Object.keys(errs)[0]
-      document.getElementById(`${id}-${first}`)?.focus()
+      const first = ['name', 'email', 'message'].find((k) => errs[k])
+      fields.current[first]?.focus()
       return
     }
 
@@ -77,6 +142,7 @@ export function ContactForm({ preselect, submit = defaultSubmit }) {
     setServerError('')
     try {
       await submit(values)
+      clearDraft()
       setStatus('sent')
       track('form_submit_accepted', { interest: values.interest, budget: values.budget, timeline: values.timeline })
     } catch (err) {
@@ -94,7 +160,7 @@ export function ContactForm({ preselect, submit = defaultSubmit }) {
     return (
       <div className="form-sent" role="status" aria-live="polite">
         <span className="tick" aria-hidden="true">✓</span>
-        <h2>Thanks, your message is in our inbox.</h2>
+        <h2 ref={successRef} tabIndex={-1}>Thanks, your message has been received by our form service.</h2>
         <p>
           A person will reply by email to <strong>{values.email}</strong> to arrange a short call.
           If you do not hear from us, write to <a href={`mailto:${EMAIL}`}>{EMAIL}</a>.
@@ -104,6 +170,8 @@ export function ContactForm({ preselect, submit = defaultSubmit }) {
             type="button"
             className="btn btn-secondary btn-sm"
             onClick={() => {
+              attempted.current = false
+              setErrors({})
               setValues((v) => ({ ...v, message: '' }))
               setStatus('idle')
             }}
@@ -134,10 +202,10 @@ export function ContactForm({ preselect, submit = defaultSubmit }) {
     <form className="contact-form" onSubmit={onSubmit} onInput={onFirstInput} noValidate aria-busy={busy}>
       <div className="form-row">
         {field('name', 'Your name', (
-          <input id={`${id}-name`} name="name" type="text" autoComplete="name" maxLength={LIMITS.name} value={values.name} onChange={set('name')} aria-invalid={!!errors.name} aria-describedby={describedBy('name')} required />
+          <input id={`${id}-name`} ref={(el) => (fields.current.name = el)} name="name" type="text" autoComplete="name" maxLength={LIMITS.name} value={values.name} onChange={set('name')} aria-invalid={!!errors.name} aria-describedby={describedBy('name')} required />
         ))}
         {field('email', 'Work email', (
-          <input id={`${id}-email`} name="email" type="email" inputMode="email" autoComplete="email" maxLength={LIMITS.email} value={values.email} onChange={set('email')} aria-invalid={!!errors.email} aria-describedby={describedBy('email')} required />
+          <input id={`${id}-email`} ref={(el) => (fields.current.email = el)} name="email" type="email" inputMode="email" autoComplete="email" maxLength={LIMITS.email} value={values.email} onChange={set('email')} aria-invalid={!!errors.email} aria-describedby={describedBy('email')} required />
         ))}
       </div>
 
@@ -148,7 +216,7 @@ export function ContactForm({ preselect, submit = defaultSubmit }) {
       ))}
 
       {field('message', 'Brief description', (
-        <textarea id={`${id}-message`} name="message" rows="5" maxLength={LIMITS.message} value={values.message} onChange={set('message')} aria-invalid={!!errors.message} aria-describedby={describedBy('message', 'hint')} required />
+        <textarea id={`${id}-message`} ref={(el) => (fields.current.message = el)} name="message" rows="5" maxLength={LIMITS.message} value={values.message} onChange={set('message')} aria-invalid={!!errors.message} aria-describedby={describedBy('message', 'hint')} required />
       ), { hint: 'What happens today, which tools are involved, and what a good outcome would look like.' })}
 
       <div className="form-row">
@@ -179,12 +247,27 @@ export function ContactForm({ preselect, submit = defaultSubmit }) {
 
       <div className="btn-row">
         <button type="submit" className="btn btn-primary" disabled={busy}>
-          {busy ? 'Sending…' : 'Send message'} <span aria-hidden="true">→</span>
+          {busy ? <><span className="spinner" aria-hidden="true" /> Sending…</> : <>Send message <span aria-hidden="true">→</span></>}
         </button>
+        {(values.name || values.message) && !busy && (
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => {
+              clearDraft()
+              attempted.current = false
+              setErrors({})
+              setValues((v) => ({ ...v, name: '', email: '', message: '', budget: BUDGETS[0], timeline: TIMELINES[0] }))
+            }}
+          >
+            Clear
+          </button>
+        )}
       </div>
       <p className="form-note">
-        Sent to our inbox via Web3Forms. We use what you enter only to reply to you. See the{' '}
-        <a href="/privacy">privacy policy</a>.
+        Sent to our inbox via Web3Forms. We use what you enter only to reply to you. Your draft
+        stays in this tab until you send or clear it. See the{' '}
+        <a href="/privacy" target="_blank" rel="noopener">privacy policy (opens in a new tab)</a>.
       </p>
     </form>
   )
@@ -198,12 +281,21 @@ async function defaultSubmit(values) {
   for (const k of ['name', 'email', 'interest', 'message', 'budget', 'timeline', 'botcheck']) body.append(k, values[k])
 
   let res
+  const ctl = new AbortController()
+  const t = setTimeout(() => ctl.abort(), TIMEOUT_MS)
   try {
-    res = await fetch(ENDPOINT, { method: 'POST', body, headers: { Accept: 'application/json' } })
-  } catch {
-    const err = new Error('We could not reach the form service. Check your connection and try again.')
-    err.code = 'network'
+    res = await fetch(ENDPOINT, { method: 'POST', body, headers: { Accept: 'application/json' }, signal: ctl.signal })
+  } catch (e) {
+    const timedOut = e?.name === 'AbortError'
+    const err = new Error(
+      timedOut
+        ? 'The form service did not respond within 15 seconds.'
+        : 'We could not reach the form service. Check your connection and try again.'
+    )
+    err.code = timedOut ? 'timeout' : 'network'
     throw err
+  } finally {
+    clearTimeout(t)
   }
   let data = null
   try { data = await res.json() } catch { /* non-JSON body: treated as failure below */ }
@@ -219,7 +311,7 @@ export default function Contact() {
     <div className="page">
       <Seo title={TITLE} description={DESC} path="/contact" jsonLd={JSON_LD} />
       <div className="shell contact-grid">
-        <div className="contact-left">
+        <div className="contact-intro">
           <Crumbs trail={[{ label: 'Contact', to: '/contact' }]} />
           <p className="eyebrow">Contact</p>
           <h1>Discuss <span className="em">your project.</span></h1>
@@ -227,9 +319,15 @@ export default function Contact() {
             A few sentences about the enquiries, the process or the product you have in mind is
             enough to start. No pitch deck required.
           </p>
-          <a className="contact-email" href={`mailto:${EMAIL}`}>{EMAIL}</a>
+          <p className="contact-alt">
+            <a className="contact-email" href={`mailto:${EMAIL}`} data-track="contact-email">{EMAIL}</a>
+            <a className="jump-to-form" href="#cf-name">Jump to the form ↓</a>
+          </p>
+        </div>
+        <ContactForm preselect={preselect} />
+        <div className="contact-steps">
           <div className="next-steps">
-            <h2 className="sr-only">What happens after you send it</h2>
+            <h2>What happens after you send it</h2>
             {STEPS.map((s, i) => (
               <div key={s.t}>
                 <span className="n" aria-hidden="true">{i + 1}</span>
@@ -241,7 +339,6 @@ export default function Contact() {
             ))}
           </div>
         </div>
-        <ContactForm key={preselect} preselect={preselect} />
       </div>
       <Footer />
     </div>

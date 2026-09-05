@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom'
-import { PROCESS, ENGINEERING } from '../data.js'
+import { PROCESS, ENGINEERING, TEAM, COMPANY } from '../data.js'
 import { Crumbs, EMAIL, Footer, CtaBand } from '../chrome.jsx'
 import { Seo, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
 
-const TITLE = 'About ForgeQubit — An Engineer-Led AI Studio'
+const TITLE = 'About ForgeQubit: An Engineer-Led AI Studio'
 const DESC =
-  'ForgeQubit is a UK-registered, engineer-led studio building voice and WhatsApp agents, workflow automation and custom AI products. How we work, who you deal with, and what we commit to.'
+  'A UK-registered, engineer-led studio building voice and WhatsApp agents, workflow automation and custom AI products. How we work and what we commit to.'
 
 const JSON_LD = graph(
   webPageLd({ path: '/about', title: TITLE, description: DESC, type: 'AboutPage' }),
@@ -67,7 +67,19 @@ export default function About() {
             </p>
           </div>
           <dl className="facts" aria-label="Company facts">
-            <div><dt>Company</dt><dd>ForgeQubit, registered in the United Kingdom</dd></div>
+            <div><dt>Company</dt><dd>{COMPANY.legalName}, registered in the {COMPANY.registeredIn}</dd></div>
+            {COMPANY.companyNumber && (
+              <div>
+                <dt>Company no.</dt>
+                <dd>
+                  <a href={`https://find-and-update.company-information.service.gov.uk/company/${COMPANY.companyNumber}`} rel="noopener">
+                    {COMPANY.companyNumber}
+                  </a>
+                </dd>
+              </div>
+            )}
+            {COMPANY.registeredOffice && <div><dt>Registered office</dt><dd>{COMPANY.registeredOffice}</dd></div>}
+            {COMPANY.founded && <div><dt>Founded</dt><dd>{COMPANY.founded}</dd></div>}
             <div><dt>Works with</dt><dd>Service businesses, operations teams, founders and product teams</dd></div>
             <div><dt>Regions</dt><dd>United Kingdom, Europe, United States (remote)</dd></div>
             <div><dt>Contact</dt><dd><a href={`mailto:${EMAIL}`}>{EMAIL}</a></dd></div>
@@ -75,6 +87,34 @@ export default function About() {
           </dl>
         </div>
       </section>
+
+      {TEAM.length > 0 && (
+        <section className="section alt" aria-labelledby="team-h">
+          <div className="shell">
+            <div className="section-head">
+              <p className="eyebrow">People</p>
+              <h2 id="team-h">Who builds your system.</h2>
+            </div>
+            <div className="grid-3 team">
+              {TEAM.map((p) => (
+                <article key={p.name} className="card person">
+                  {p.photo && <img src={p.photo} alt="" width="96" height="96" loading="lazy" />}
+                  <h3>{p.name}</h3>
+                  <p className="role">{p.role}</p>
+                  {p.bio && <p>{p.bio}</p>}
+                  {p.links?.length > 0 && (
+                    <ul className="person-links">
+                      {p.links.map((l) => (
+                        <li key={l.href}><a href={l.href} rel="noopener">{l.label}</a></li>
+                      ))}
+                    </ul>
+                  )}
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="section alt" aria-labelledby="commit-h">
         <div className="shell">
@@ -117,7 +157,7 @@ export default function About() {
         </div>
       </section>
 
-      <section className="section alt" aria-labelledby="process-h">
+      <section className="section alt" aria-labelledby="process-h" id="process">
         <div className="shell">
           <div className="section-head">
             <p className="eyebrow">How a project runs</p>

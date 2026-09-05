@@ -212,12 +212,14 @@ const bboxOf = (pts, pad) => [
 /* ————————————————————————— palette ————————————————————————— */
 
 const C = {
-  bg: hex('#061017'),
-  bgLift: hex('#102532'),
+  bg: hex('#050D14'),
+  bgLift: hex('#0E2230'),
   cyan: hex('#22D3EE'),
-  cyanBright: hex('#67E8F9'),
-  cyanPale: hex('#A5F0FA'),
-  cyanDeep: hex('#0891B2'),
+  cyanBright: hex('#7DF0FF'),
+  cyanPale: hex('#7DF0FF'),
+  cyanDeep: hex('#0E7490'),
+  teal: hex('#2DD4BF'),
+  pulse: hex('#B5F5FF'),
   ink: hex('#F2FAFD'),
   inkDim: hex('#B4CAD4'),
 }
@@ -241,60 +243,50 @@ const flat = (c) => () => c
 
 /* ————————————————————————— the mark ————————————————————————— */
 
-/* draws the 48×48 mark into `c`, scaled by `s` and translated to (ox, oy) */
+/* draws the 48×48 mark into `c`, scaled by `s` and translated to (ox, oy)
+
+   An open ring with a tail (a Q) and a bright pulse sitting in the
+   opening. Same geometry as src/logo.jsx:
+     ring   centre (23, 23), r 14.5, stroke 3.6, gap 61.2° centred at 315°
+     pulse  23.7° arc centred at 315°
+     tail   (27.5, 27.5) → (39.5, 39.5), crossing the bowl */
 function drawMark(c, ox, oy, s) {
   const P = (x, y) => [ox + x * s, oy + y * s]
+  const [cx, cy] = P(23, 23)
+  const r = 14.5 * s
+  const half = 1.8 * s
 
-  const hexPts = [[24, 5], [39.59, 14], [39.59, 32], [24, 41], [8.41, 32], [8.41, 14]].map(([x, y]) => P(x, y))
-  const caretPts = [[24, 13], [32, 23], [27.6, 23], [24, 18.6], [20.4, 23], [16, 23]].map(([x, y]) => P(x, y))
+  const deg = (x, y) => ((Math.atan2(y - cy, x - cx) * 180) / Math.PI + 360) % 360
+  const between = (a, lo, hi) => (lo <= hi ? a >= lo && a <= hi : a >= lo || a <= hi)
+  const endpoint = (a) => [cx + r * Math.cos((a * Math.PI) / 180), cy + r * Math.sin((a * Math.PI) / 180)]
 
-  const g1 = lin(...P(8, 5), ...P(40, 41), [[0, C.cyanBright], [0.5, C.cyan], [1, C.cyanDeep]])
-  const g2 = lin(...P(16, 12), ...P(34, 32), [[0, C.cyanPale], [0.5, C.cyan], [1, C.cyanDeep]])
+  /* stroke of an arc from a0 clockwise to a1 with round caps */
+  const sdArc = (a0, a1) => {
+    const [e0x, e0y] = endpoint(a0)
+    const [e1x, e1y] = endpoint(a1)
+    return (x, y) => {
+      if (between(deg(x, y), a0, a1)) return Math.abs(Math.hypot(x - cx, y - cy) - r) - half
+      return Math.min(Math.hypot(x - e0x, y - e0y), Math.hypot(x - e1x, y - e1y)) - half
+    }
+  }
 
-  // a restrained pool of light behind the cell
-  const [gx, gy] = P(24, 23)
-  const gr = 19 * s
+  const g = lin(...P(8, 8), ...P(42, 42), [[0, C.cyanPale], [0.55, C.cyan], [1, C.cyanDeep]])
+  const bbox = [cx - r - half - 2, cy - r - half - 2, cx + r + half + 2, cy + r + half + 2]
+
+  // the loop: gap from 284.4° to 345.6°
+  draw(c, { sdf: sdArc(345.6, 284.4), color: g, bbox })
+
+  // the tail
+  const [tax, tay] = P(27.5, 27.5)
+  const [tbx, tby] = P(39.5, 39.5)
   draw(c, {
-    sdf: (x, y) => Math.hypot(x - gx, y - gy) - gr,
-    color: (x, y) => {
-      const t = clamp01(Math.hypot(x - gx, y - gy) / gr)
-      return C.cyanDeep.map((v) => v * (1 - t) * (1 - t) * 0.35)
-    },
-    bbox: [gx - gr, gy - gr, gx + gr, gy + gr],
-    additive: true,
+    sdf: (x, y) => sdSegment(x, y, tax, tay, tbx, tby) - half,
+    color: g,
+    bbox: bboxOf([[tax, tay], [tbx, tby]], half + 2),
   })
 
-  // the qubit cell — |sdf| - halfwidth turns a fill into a stroke
-  const ring = 1.3 * s
-  draw(c, {
-    sdf: (x, y) => Math.abs(sdPolygon(x, y, hexPts)) - ring,
-    color: g1,
-    bbox: bboxOf(hexPts, ring + 2),
-  })
-
-  // the Q tail
-  const [tax, tay] = P(29, 34.7)
-  const [tbx, tby] = P(38, 44)
-  draw(c, {
-    sdf: (x, y) => sdSegment(x, y, tax, tay, tbx, tby) - 2.2 * s,
-    color: g2,
-    bbox: bboxOf([[tax, tay], [tbx, tby]], 2.2 * s + 2),
-  })
-
-  // the strike
-  draw(c, {
-    sdf: (x, y) => sdPolygon(x, y, caretPts),
-    color: g2,
-    bbox: bboxOf(caretPts, 2),
-  })
-
-  // the anvil
-  const [ax2, ay2] = P(24, 28.6)
-  draw(c, {
-    sdf: (x, y) => sdRoundRect(x, y, ax2, ay2, 8 * s, 2 * s, 2 * s),
-    color: g2,
-    bbox: [ax2 - 9 * s, ay2 - 3 * s, ax2 + 9 * s, ay2 + 3 * s],
-  })
+  // the pulse, centred in the opening
+  draw(c, { sdf: sdArc(303.1, 326.9), color: flat(C.pulse), bbox })
 }
 
 /* ————————————————————————— stroke typeface ————————————————————————— */
@@ -391,19 +383,15 @@ function drawText(c, text, x, y, size, { weight = 0.08, tracking = 0.16, color }
 /* ————————————————————————— outputs ————————————————————————— */
 
 /* --- favicon.svg --- */
-const FAVICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+const FAVICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
   <defs>
-    <linearGradient id="r" x1="8" y1="5" x2="40" y2="41" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#67E8F9"/><stop offset=".5" stop-color="#22D3EE"/><stop offset="1" stop-color="#0891B2"/>
-    </linearGradient>
-    <linearGradient id="f" x1="16" y1="12" x2="34" y2="32" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#A5F0FA"/><stop offset=".5" stop-color="#22D3EE"/><stop offset="1" stop-color="#0891B2"/>
+    <linearGradient id="g" x1="8" y1="8" x2="42" y2="42" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7DF0FF"/><stop offset=".55" stop-color="#22D3EE"/><stop offset="1" stop-color="#0E7490"/>
     </linearGradient>
   </defs>
-  <path d="M24 5 L39.59 14 L39.59 32 L24 41 L8.41 32 L8.41 14 Z" fill="none" stroke="url(#r)" stroke-width="2.6" stroke-linejoin="round"/>
-  <path d="M29 34.7 L38 44" stroke="url(#f)" stroke-width="4.4" stroke-linecap="round"/>
-  <path d="M24 13 L32 23 L27.6 23 L24 18.6 L20.4 23 L16 23 Z" fill="url(#f)"/>
-  <rect x="16" y="26.6" width="16" height="4" rx="2" fill="url(#f)"/>
+  <circle cx="23" cy="23" r="14.5" stroke="url(#g)" stroke-width="3.6" stroke-linecap="round" stroke-dasharray="75.6 15.5" stroke-dashoffset="-87.46"/>
+  <path d="M27.5 27.5 L39.5 39.5" stroke="url(#g)" stroke-width="3.6" stroke-linecap="round"/>
+  <circle cx="23" cy="23" r="14.5" stroke="#B5F5FF" stroke-width="3.6" stroke-linecap="round" stroke-dasharray="6 85.1" stroke-dashoffset="-76.71"/>
 </svg>
 `
 writeFileSync(join(PUB, 'favicon.svg'), FAVICON)
@@ -447,13 +435,13 @@ function ogCard() {
   // top hairline in the signature gradient
   draw(c, {
     sdf: (x, y) => Math.abs(y - 3) - 3,
-    color: lin(0, 0, W, 0, [[0, C.cyanBright], [0.48, C.cyan], [1, C.cyanDeep]]),
+    color: lin(0, 0, W, 0, [[0, C.cyanBright], [0.5, C.cyan], [1, C.teal]]),
     bbox: [0, 0, W, 8],
   })
 
   drawMark(c, 96, 96, 2.5) // 48 * 2.5 = 120px mark
 
-  const gText = lin(96, 250, 900, 340, [[0, C.cyanPale], [0.5, C.cyan], [1, C.cyanDeep]])
+  const gText = lin(96, 250, 900, 340, [[0, C.cyanPale], [0.5, C.cyan], [1, C.teal]])
   const M = 96 // left margin
   const COL = W - M * 2 // usable column
 
