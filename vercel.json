@@ -2,34 +2,118 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/services/whatsapp-automation",
+      "destination": "/services/ai-reception",
+      "permanent": true
+    },
+    {
+      "source": "/services/whatsapp-agents",
+      "destination": "/services/ai-reception",
+      "permanent": true
+    },
+    {
+      "source": "/services/avatar-agents",
+      "destination": "/services#capabilities",
+      "permanent": true
+    },
+    {
+      "source": "/services/custom-ai-agents",
+      "destination": "/services/custom-ai-products",
+      "permanent": true
+    },
+    {
+      "source": "/services/custom-agents",
+      "destination": "/services/custom-ai-products",
+      "permanent": true
+    },
+    {
+      "source": "/services/ai-powered-saas",
+      "destination": "/services/custom-ai-products",
+      "permanent": true
+    },
+    {
+      "source": "/services/ai-saas",
+      "destination": "/services/custom-ai-products",
+      "permanent": true
+    },
+    {
+      "source": "/services/ai-blockchain",
+      "destination": "/services#capabilities",
+      "permanent": true
+    },
+    {
+      "source": "/work",
+      "destination": "/case-studies",
+      "permanent": true
+    },
+    {
+      "source": "/solutions",
+      "destination": "/services",
+      "permanent": true
+    }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     },
     {
       "source": "/fonts/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     },
     {
       "source": "/(favicon.svg|og.png|icon-192.png|icon-512.png|apple-touch-icon.png)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=604800"
+        }
+      ]
     },
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
-        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
-        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://api.web3forms.com https://vitals.vercel-insights.com https://va.vercel-scripts.com; form-action 'self' https://api.web3forms.com; frame-ancestors 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
+        },
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin"
+        }
       ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/((?!assets/|fonts/).*)",
-      "destination": "/index.html"
     }
   ]
 }

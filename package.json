@@ -8,17 +8,17 @@
     "build": "vite build && vite build --ssr src/entry-server.jsx --outDir .ssr --emptyOutDir && node scripts/prerender.mjs",
     "preview": "vite preview",
     "assets": "node scripts/gen-assets.mjs",
-    "fonts": "node scripts/fetch-fonts.mjs"
+    "fonts": "node scripts/fetch-fonts.mjs",
+    "test": "node --test scripts/check-dist.test.mjs",
+    "check": "npm run build && npm test",
+    "serve": "node scripts/serve-dist.mjs 4180"
   },
   "dependencies": {
-    "@react-three/drei": "^10.0.0",
-    "@react-three/fiber": "^9.0.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-router-dom": "^7.18.1",
-    "three": "^0.182.0"
+    "react-router-dom": "^7.18.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.0.0",

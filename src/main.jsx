@@ -1,14 +1,27 @@
 import { createRoot, hydrateRoot } from 'react-dom/client'
-import App from './App.jsx'
+import App, { PAGE_LOADERS, loaderFor } from './App.jsx'
 import './styles.css'
 
 const root = document.getElementById('root')
 
-/* Every route is prerendered to real HTML, so the normal path is
-   hydration — the markup is already on screen and React just adopts it.
-   createRoot is the fallback for a URL that wasn't prerendered. */
-if (root.firstElementChild) {
-  hydrateRoot(root, <App />)
-} else {
-  createRoot(root).render(<App />)
+/* Every route is prerendered to real HTML. The page's own chunk is
+   fetched before hydration so React adopts the markup in one pass
+   instead of suspending on a lazy import; Home ships in the main
+   bundle and needs nothing extra. */
+async function start() {
+  const key = loaderFor(window.location.pathname)
+  if (key) {
+    try {
+      await PAGE_LOADERS[key]()
+    } catch {
+      /* the chunk will be retried by React's lazy() on render */
+    }
+  }
+  if (root.firstElementChild) {
+    hydrateRoot(root, <App />)
+  } else {
+    createRoot(root).render(<App />)
+  }
 }
+
+start()

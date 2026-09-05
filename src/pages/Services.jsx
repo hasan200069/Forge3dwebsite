@@ -1,28 +1,27 @@
 import { Link } from 'react-router-dom'
-import { SERVICES, FAQS } from '../data.js'
-import { Crumbs, Footer, useReveal } from '../chrome.jsx'
+import { SOLUTIONS, VOICE, CAPABILITIES, FAQS, contactHref } from '../data.js'
+import { Crumbs, Footer, Faq, CtaBand } from '../chrome.jsx'
 import { Seo, SITE_URL, orgRef, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
 
-const TITLE = 'AI Services — WhatsApp Automation, Voice Agents & AI SaaS | ForgeQubit'
+const TITLE = 'Solutions — AI Reception, Workflow Automation & Custom AI Products | ForgeQubit'
 const DESC =
-  'Six crafts, one obsession: WhatsApp automation, voice agents, avatar agents, custom AI agents, AI-powered SaaS and AI × blockchain — designed, built and shipped by ForgeQubit.'
+  'Three things ForgeQubit builds end to end: voice and WhatsApp agents for reception and lead handling, workflow automation and integrations, and custom AI products. Plus avatar and blockchain work for specialist needs.'
 
 const JSON_LD = graph(
   webPageLd({ path: '/services', title: TITLE, description: DESC, type: 'CollectionPage' }),
-  breadcrumbLd([{ label: 'Services', path: '/services' }]),
+  breadcrumbLd([{ label: 'Solutions', path: '/services' }]),
   {
     '@type': 'ItemList',
-    name: 'ForgeQubit AI Services',
-    itemListElement: SERVICES.map((s, i) => ({
+    name: 'ForgeQubit solutions',
+    itemListElement: [...SOLUTIONS, VOICE].map((s, i) => ({
       '@type': 'ListItem',
       position: i + 1,
       item: {
         '@type': 'Service',
-        '@id': `${SITE_URL}/services#${s.interest.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
-        name: s.title,
-        description: s.long,
-        serviceType: s.title,
-        category: s.cat,
+        '@id': `${SITE_URL}${s.path}#service`,
+        name: s.name,
+        description: s.short,
+        url: `${SITE_URL}${s.path}`,
         provider: orgRef,
         areaServed: ['GB', 'US', 'EU'],
       },
@@ -40,62 +39,95 @@ const JSON_LD = graph(
 )
 
 export default function Services() {
-  const ref = useReveal()
   return (
-    <div className="page" ref={ref}>
+    <div className="page">
       <Seo title={TITLE} description={DESC} path="/services" jsonLd={JSON_LD} />
-      <div className="page-inner">
-        <header className="page-hero">
-          <Crumbs trail={[{ label: 'Services', to: '/services' }]} />
-          <p className="page-kicker rise">Six Crafts</p>
-          <h1 className="page-title rise d1">What we <span className="ember-text">forge.</span></h1>
-          <p className="page-sub rise d2">
-            Every service below leaves as a working system, not a slide deck —
-            integrated with your tools, measured against your numbers.
-          </p>
-        </header>
 
-        <div className="grid-2">
-          {SERVICES.map((s) => (
-            <article key={s.num} className="card svc-card reveal">
-              <div className="service-index">
-                <span className="num">{s.num}</span>
-                <span className="rule" />
-                <span className="cat">{s.cat}</span>
+      <header className="shell page-hero">
+        <Crumbs trail={[{ label: 'Solutions', to: '/services' }]} />
+        <p className="eyebrow">Solutions</p>
+        <h1>Three things we build, and two we add <span className="em">when they fit.</span></h1>
+        <p className="lede">
+          Each solution below is delivered as a working, integrated system with a written scope,
+          weekly demos and a proper handover. Pick the one closest to your problem; the discovery
+          call sorts out the rest.
+        </p>
+      </header>
+
+      <section className="section tight" aria-label="Primary solutions">
+        <div className="shell svc-overview">
+          {SOLUTIONS.map((s) => (
+            <article key={s.slug} className="svc-row" aria-labelledby={`svc-${s.slug}`}>
+              <span className="num">{s.num}</span>
+              <div>
+                <h2 id={`svc-${s.slug}`}>{s.name}</h2>
+                <p>{s.short}</p>
+                <Link className="link-cta" to={s.path}>Read the full page <span aria-hidden="true">→</span></Link>
               </div>
-              <h2 className="svc-title">{s.title}</h2>
-              <p className="svc-body">{s.long}</p>
-              <ul className="tag-row">
-                {s.tags.map((t) => <li key={t}>{t}</li>)}
+              <ul className="list">
+                {s.includes.slice(0, 4).map((i) => <li key={i}>{i}</li>)}
               </ul>
-              <Link className="link-cta" to={`/contact?interest=${encodeURIComponent(s.interest)}`}>
-                Forge this with us <span>→</span>
-              </Link>
             </article>
           ))}
-        </div>
 
-        <section className="section-block reveal" aria-labelledby="faq-h">
-          <p className="page-kicker">Questions, Answered</p>
-          <h2 className="section-title" id="faq-h">Before you <span className="ember-text">ask.</span></h2>
-          <div className="faq-list">
-            {FAQS.map((f) => (
-              <details key={f.q} className="faq">
-                <summary>{f.q}</summary>
-                <p>{f.a}</p>
-              </details>
+          <article className="svc-row" aria-labelledby="svc-voice">
+            <span className="num">01a</span>
+            <div>
+              <h2 id="svc-voice">{VOICE.name}</h2>
+              <p>{VOICE.short} Part of AI Reception, with its own page for teams whose problem is the phone line specifically.</p>
+              <Link className="link-cta" to={VOICE.path}>Read about voice agents <span aria-hidden="true">→</span></Link>
+            </div>
+            <ul className="list">
+              {VOICE.handles.slice(0, 4).map((i) => <li key={i}>{i}</li>)}
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section className="section alt tight" id="capabilities" aria-labelledby="cap-h">
+        <div className="shell">
+          <div className="section-head">
+            <p className="eyebrow">Specialist capabilities</p>
+            <h2 id="cap-h">Avatars and blockchain, for the projects that need them.</h2>
+            <p className="lede">
+              These are not front-page offers. They are capabilities we bring into a project when
+              the brief calls for them, scoped and priced in the same way.
+            </p>
+          </div>
+          <div className="capabilities" style={{ marginTop: 0 }}>
+            {CAPABILITIES.map((c) => (
+              <div key={c.id} className="capability" id={c.id}>
+                <span className="tag">Specialist</span>
+                <div>
+                  <h3>{c.name}</h3>
+                  <p>{c.short}</p>
+                  <Link className="link-cta" to={contactHref(c.interest)}>Ask about {c.name.toLowerCase()} <span aria-hidden="true">→</span></Link>
+                </div>
+              </div>
             ))}
           </div>
-        </section>
-
-        <div className="page-cta reveal">
-          <h2>Pick a craft. <span className="ember-text">Or bring a new one.</span></h2>
-          <div className="btn-row">
-            <Link className="btn btn-primary" to="/contact">Start a Project <span>→</span></Link>
-            <Link className="btn btn-ghost" to="/case-studies">See the Work <span>→</span></Link>
-          </div>
         </div>
-      </div>
+      </section>
+
+      <section className="section" aria-labelledby="faq-h">
+        <div className="shell faq-grid">
+          <div>
+            <p className="eyebrow">Questions</p>
+            <h2 id="faq-h">Before you get in touch.</h2>
+            <p className="lede" style={{ marginTop: 14 }}>
+              Costs, timelines, integrations, handoff, ownership and support. Each solution page
+              has questions specific to that kind of work.
+            </p>
+          </div>
+          <Faq items={FAQS} />
+        </div>
+      </section>
+
+      <CtaBand
+        title="Not sure which one fits?"
+        body="Describe the situation in a few sentences. We will tell you which solution applies, or that none does, before anyone talks about price."
+        secondary={{ to: '/case-studies', label: 'See worked examples' }}
+      />
       <Footer />
     </div>
   )

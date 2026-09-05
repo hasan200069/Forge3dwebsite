@@ -1,90 +1,12 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { SERVICES, PROCESS, CASES, POSTS } from '../data.js'
-import { EMAIL, Footer, useReveal } from '../chrome.jsx'
+import { SOLUTIONS, CAPABILITIES, PROCESS, ENGINEERING, FAQS, POSTS, contactHref } from '../data.js'
+import { EMAIL, Footer, Faq, CtaBand } from '../chrome.jsx'
 import { Seo, SITE_URL, SITE_NAME, ORG_ID, orgRef, graph, webPageLd } from '../seo.jsx'
-import { registerJourney, scroll } from '../input.js'
+import { EnquiryFlow, Transcript, Workflow } from '../visuals.jsx'
 
-const Scene = lazy(() => import('../Scene.jsx'))
-
-const PANELS = 9 // hero + manifesto + six services + gate
-
-/* ————————————————————————————————————————
-   The 3D layer is mounted only once the browser is idle. The document
-   is fully interactive before three.js is even requested, and because
-   the canvas is a fixed backdrop rather than a scroll container, it
-   arriving late changes no layout.
-   ———————————————————————————————————————— */
-function useDeferredScene() {
-  const [ready, setReady] = useState(false)
-  const [tier, setTier] = useState('high')
-
-  useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-
-    let cancelled = false
-    const start = async () => {
-      const { pickTier } = await import('../Scene.jsx')
-      if (cancelled) return
-      setTier(pickTier())
-      setReady(true)
-    }
-
-    if ('requestIdleCallback' in window) {
-      const id = requestIdleCallback(start, { timeout: 2200 })
-      return () => { cancelled = true; cancelIdleCallback(id) }
-    }
-    const id = setTimeout(start, 400)
-    return () => { cancelled = true; clearTimeout(id) }
-  }, [])
-
-  return { ready, tier }
-}
-
-/* Progress bar and station counter, driven from one rAF loop that writes
-   straight to the DOM. Runs whether or not WebGL ever loads. */
-function useJourneyChrome(journeyRef) {
-  useEffect(() => {
-    const el = journeyRef.current
-    if (!el) return
-    const unregister = registerJourney(el)
-
-    const fill = document.getElementById('progress-fill')
-    const cur = document.getElementById('hud-current')
-    const hud = document.getElementById('hud')
-    const label = document.getElementById('hud-label')
-
-    let raf = 0
-    let lastLabel = ''
-    let lastGone = null
-
-    const tick = () => {
-      if (fill) fill.style.transform = `scaleX(${scroll.progress})`
-
-      const n = String(Math.min(PANELS, Math.round(scroll.journey * (PANELS - 1)) + 1)).padStart(2, '0')
-      if (n !== lastLabel && cur) {
-        cur.textContent = n
-        lastLabel = n
-      }
-
-      // the journey counter means nothing once you're past the gate
-      const gone = scroll.journey >= 0.999
-      if (gone !== lastGone) {
-        hud?.classList.toggle('gone', gone)
-        label?.classList.toggle('gone', gone)
-        lastGone = gone
-      }
-
-      raf = requestAnimationFrame(tick)
-    }
-    raf = requestAnimationFrame(tick)
-
-    return () => {
-      cancelAnimationFrame(raf)
-      unregister()
-    }
-  }, [journeyRef])
-}
+const TITLE = 'ForgeQubit — AI Reception, Workflow Automation & Custom AI Products'
+const DESC =
+  'ForgeQubit builds voice and WhatsApp agents that answer customers, automations that connect your business tools, and custom AI products. UK-registered, working with clients in the UK, Europe and the US.'
 
 /* ———————————————————— structured data ———————————————————— */
 
@@ -96,9 +18,9 @@ const JSON_LD = graph(
     legalName: 'ForgeQubit',
     url: `${SITE_URL}/`,
     email: EMAIL,
-    slogan: 'Agents that work while the world sleeps.',
+    slogan: 'AI systems that answer customers and move work forward.',
     description:
-      'UK-registered AI agency building WhatsApp automation, voice agents, avatar agents, custom AI agents, AI-powered SaaS platforms and AI × blockchain products for clients across the United Kingdom, Europe and the United States.',
+      'UK-registered studio building voice and WhatsApp agents for reception and lead handling, workflow automation and integrations, and custom AI products for clients in the United Kingdom, Europe and the United States.',
     logo: {
       '@type': 'ImageObject',
       '@id': `${SITE_URL}/#logo`,
@@ -114,7 +36,7 @@ const JSON_LD = graph(
       { '@type': 'Country', name: 'United States' },
       { '@type': 'AdministrativeArea', name: 'Europe' },
     ],
-    knowsAbout: SERVICES.map((s) => s.title),
+    knowsAbout: SOLUTIONS.map((s) => s.name),
     contactPoint: {
       '@type': 'ContactPoint',
       email: EMAIL,
@@ -125,9 +47,9 @@ const JSON_LD = graph(
     hasOfferCatalog: {
       '@type': 'OfferCatalog',
       name: 'AI development services',
-      itemListElement: SERVICES.map((s) => ({
+      itemListElement: SOLUTIONS.map((s) => ({
         '@type': 'Offer',
-        itemOffered: { '@type': 'Service', name: s.title, description: s.short },
+        itemOffered: { '@type': 'Service', name: s.name, description: s.short, url: SITE_URL + s.path },
       })),
     },
   },
@@ -139,216 +61,288 @@ const JSON_LD = graph(
     inLanguage: 'en-GB',
     publisher: orgRef,
   },
-  webPageLd({
-    path: '/',
-    title: 'ForgeQubit — AI Agency for WhatsApp, Voice & Custom AI Agents',
-    description:
-      'UK-registered AI agency shipping WhatsApp automation, voice agents, avatar agents, custom AI agents and AI-powered SaaS across the UK, Europe and the USA.',
-  })
+  webPageLd({ path: '/', title: TITLE, description: DESC })
 )
+
+const featured = SOLUTIONS[0]
+const invoice = SOLUTIONS[1]
 
 /* ———————————————————— page ———————————————————— */
 
 export default function Home() {
-  const revealRef = useReveal()
-  const journeyRef = useRef(null)
-  const { ready, tier } = useDeferredScene()
-  useJourneyChrome(journeyRef)
-
   return (
-    <div className="home" ref={revealRef}>
-      <Seo
-        title="ForgeQubit — AI Agency for WhatsApp, Voice & Custom AI Agents"
-        description="ForgeQubit is a UK-registered AI agency serving Europe and the USA — shipping WhatsApp automation, voice agents, avatar agents, custom AI agents, AI-powered SaaS and AI × blockchain products."
-        path="/"
-        jsonLd={JSON_LD}
-      />
+    <div className="home">
+      <Seo title={TITLE} description={DESC} path="/" jsonLd={JSON_LD} />
 
-      <div className={`scene-layer ${ready ? 'lit' : ''}`} aria-hidden="true">
-        {ready && (
-          <Suspense fallback={null}>
-            <Scene tier={tier} />
-          </Suspense>
-        )}
-      </div>
-
-      <div className="progress-track" aria-hidden="true">
-        <div className="progress-fill" id="progress-fill" />
-      </div>
-      <div className="hud" id="hud" aria-hidden="true">
-        <span className="current" id="hud-current">01</span>
-        <span className="total">/ {String(PANELS).padStart(2, '0')}</span>
-      </div>
-      <div className="hud-label" id="hud-label" aria-hidden="true">An Immersive Descent</div>
-
-      {/* ———— the descent ———— */}
-      <div className="journey" ref={journeyRef}>
-        <section className="panel center">
-          <div className="hero-inner">
-            <p className="eyebrow">AI Agency — Est. in the Fire</p>
-            {/* the explicit space keeps the accessible name and the
-                crawled text as "We Forge Intelligence" — the rows are
-                separate blocks, so without it they concatenate */}
-            <h1 className="hero-title">
-              <span className="row"><span>We Forge</span></span>{' '}
-              <span className="row"><span className="ember-text flow">Intelligence</span></span>
+      {/* ———— 1. hero ———— */}
+      <section className="hero" aria-labelledby="hero-h">
+        <div className="shell hero-grid">
+          <div>
+            <p className="eyebrow">Voice · WhatsApp · Automation · AI products</p>
+            <h1 id="hero-h">
+              AI systems that answer customers and <span className="em">move work forward.</span>
             </h1>
-            <p className="hero-sub">
-              Six crafts, one obsession: agents that work while the world sleeps.
+            <p className="lede">
+              ForgeQubit builds voice and WhatsApp agents that answer enquiries and book appointments,
+              connects the tools your team already uses, and develops custom AI products when
+              off-the-shelf software is not enough.
             </p>
-            <div className="hero-actions">
-              <Link className="btn btn-primary" to="/contact">Start a Project <span>→</span></Link>
-              <Link className="btn btn-ghost" to="/case-studies">See the Work <span>→</span></Link>
+            <div className="btn-row">
+              <Link className="btn btn-primary" to="/contact" data-track="hero-primary">Discuss your project <span aria-hidden="true">→</span></Link>
+              <Link className="btn btn-secondary" to="/services" data-track="hero-secondary">Explore our solutions</Link>
             </div>
-            <ul className="hero-strip">
-              <li>UK Registered</li>
-              <li>Serving UK · EU · USA</li>
-              <li>Fixed Scope, Weekly Demos</li>
+            <ul className="hero-strip" aria-label="How we work">
+              <li>Fixed-scope proposals</li>
+              <li>Weekly working demos</li>
+              <li>You own the code and accounts</li>
+              <li>UK-registered</li>
             </ul>
           </div>
-          <div className="scroll-hint" aria-hidden="true">
-            <span>Descend</span>
-            <span className="drip" />
+          <EnquiryFlow />
+        </div>
+      </section>
+
+      {/* ———— 2. evidence: delivery practices ———— */}
+      <section className="section alt tight" aria-labelledby="proof-h">
+        <div className="shell">
+          <div className="section-head split">
+            <div>
+              <p className="eyebrow">What you can check</p>
+              <h2 id="proof-h">Specific practices, <span className="em">not promises.</span></h2>
+            </div>
+            <p className="lede">
+              We are building our public case studies with client permission. Until they are
+              published, here is what every engagement includes and what you can hold us to.
+            </p>
           </div>
-        </section>
+          <div className="grid-3">
+            <div className="card">
+              <span className="num">01</span>
+              <h3>A written scope before any invoice</h3>
+              <p>Outcomes, integrations, price and an estimate of ongoing third-party costs, so you know what you are buying.</p>
+            </div>
+            <div className="card">
+              <span className="num">02</span>
+              <h3>A working demo every week</h3>
+              <p>You see the real system on test numbers or staging, and you supply the real examples we test it against.</p>
+            </div>
+            <div className="card">
+              <span className="num">03</span>
+              <h3>Handover you can live with</h3>
+              <p>Accounts in your name, code in your repositories, documentation for changes, and a defined route to a person when the AI stops.</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        <section className="panel center">
-          <p className="manifesto reveal">
-            <span className="eyebrow" style={{ display: 'block', marginBottom: '3vh' }}>The Manifesto</span>
-            Every great product begins as <span className="ember-text">raw ore</span> — an idea, unshaped.
-            We heat it with research, strike it with engineering, and quench it in production.
-            What leaves our forge is not software. <span className="ember-text">It is leverage.</span>
-          </p>
-        </section>
+      {/* ———— 3. three primary solutions ———— */}
+      <section className="section" aria-labelledby="solutions-h">
+        <div className="shell">
+          <div className="section-head">
+            <p className="eyebrow">Solutions</p>
+            <h2 id="solutions-h">Three things we build, <span className="em">start to finish.</span></h2>
+            <p className="lede">
+              Most clients start with reception and lead handling. Operations teams usually add
+              automation next. Founders and product teams come to us for the third.
+            </p>
+          </div>
 
-        {SERVICES.map((s, i) => (
-          <section key={s.num} className={`panel ${i % 2 ? 'left' : 'right'}`}>
-            <div className="panel-body">
-              <div className="service-index reveal">
+          <div className="solutions">
+            {SOLUTIONS.map((s) => (
+              <article key={s.slug} className="solution" aria-labelledby={`sol-${s.slug}`}>
                 <span className="num">{s.num}</span>
-                <span className="rule" />
-                <span className="cat">{s.cat}</span>
-              </div>
-              <h2 className="service-title reveal d1">
-                {s.lead} <em>{s.accent}</em>{s.tail ? ` ${s.tail}` : ''}
-              </h2>
-              <p className="service-body reveal d2">{s.short}</p>
-              <ul className="tag-row reveal d3">
-                {s.tags.map((t) => <li key={t}>{t}</li>)}
-              </ul>
-              <Link
-                className="link-cta reveal d3"
-                to={`/contact?interest=${encodeURIComponent(s.interest)}`}
-              >
-                Forge this with us <span>→</span>
-              </Link>
-            </div>
-          </section>
-        ))}
-
-        <section className="panel center">
-          <div className="gate-inner">
-            <p className="eyebrow reveal">Final Chamber</p>
-            <h2 className="gate-title reveal d1">
-              Step through <span className="ember-text flow">the gate.</span>
-            </h2>
-            <p className="gate-serif reveal d2">Bring us the raw idea. Leave with the weapon.</p>
-            <div className="btn-row reveal d3">
-              <Link className="btn btn-primary" to="/contact">Start a Project <span>→</span></Link>
-              <Link className="btn btn-ghost" to="/case-studies">See the Work <span>→</span></Link>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      {/* ———— the ground floor ———— */}
-      <div className="ground">
-        <section className="ground-section shell" aria-labelledby="proof-h">
-          <div className="section-head reveal">
-            <p className="eyebrow eyebrow-mark">Measured, Not Claimed</p>
-            <h2 id="proof-h">Numbers that left <span className="ember-text">the fire.</span></h2>
-            <p>Every engagement is scored against the metric that matters to the client. These are the last three.</p>
-          </div>
-          <div className="metrics">
-            {CASES.map((c, i) => (
-              <Link key={c.slug} className={`card metric reveal d${i + 1}`} to="/case-studies">
-                <span className="v ember-text">{c.metric}</span>
-                <span className="l">{c.metricLabel}<br />{c.client} · {c.field}</span>
-              </Link>
+                <h3 id={`sol-${s.slug}`}>{s.name}</h3>
+                <dl>
+                  <div><dt>The problem</dt><dd>{s.problem}</dd></div>
+                  <div><dt>What we build</dt><dd>{s.build}</dd></div>
+                  <div><dt>Intended outcome</dt><dd>{s.outcome}</dd></div>
+                </dl>
+                {/* the whole card is clickable via the stretched link, but
+                    the accessible name stays short */}
+                <Link className="link-cta stretch" to={s.path} data-track={`solution-${s.slug}`}>
+                  Explore {s.shortName} <span aria-hidden="true">→</span>
+                </Link>
+              </article>
             ))}
           </div>
-        </section>
 
-        <section className="ground-section shell" aria-labelledby="process-h">
-          <div className="section-head reveal">
-            <p className="eyebrow eyebrow-mark">How We Work</p>
-            <h2 id="process-h">From ore <span className="ember-text">to weapon.</span></h2>
-            <p>Four stages, no mystery invoices, and a working demo in your hands every week from the first.</p>
+          <div className="capabilities" id="capabilities">
+            {CAPABILITIES.map((c) => (
+              <div key={c.id} className="capability">
+                <span className="tag">Specialist</span>
+                <div>
+                  <h3>{c.name}</h3>
+                  <p>{c.short}</p>
+                </div>
+              </div>
+            ))}
           </div>
-          <div className="rail reveal d1">
+        </div>
+      </section>
+
+      {/* ———— 4. featured demonstration ———— */}
+      <section className="section alt" aria-labelledby="feature-h">
+        <div className="shell">
+          <div className="feature">
+            <div>
+              <span className="label-illustrative">Illustrative build, not client work</span>
+              <h2 id="feature-h">Enquiry to booked viewing, with the CRM kept honest.</h2>
+              <p className="lede">
+                A worked example of what a reception project looks like for a lettings team: the
+                scope we would agree, the conversation the agent holds, and the numbers we would
+                measure. Every figure would come from your own systems, with the baseline recorded
+                before launch.
+              </p>
+              <div className="feature-meta">
+                <div>
+                  <h3>Scope</h3>
+                  <ul className="list">
+                    <li>WhatsApp agent on the official Business Platform, fluent in current listings.</li>
+                    <li>Qualifying questions and viewing bookings straight into negotiator calendars.</li>
+                    <li>CRM record updated with intent and timeline; a person alerted for hot leads.</li>
+                    <li>Handoff to a negotiator on request or when confidence is low.</li>
+                  </ul>
+                </div>
+                <div>
+                  <h3>What we would measure</h3>
+                  <ul className="list">
+                    <li>First response time, from customer message to first reply.</li>
+                    <li>Enquiries qualified: a completed set of qualifying answers.</li>
+                    <li>Viewings booked per week, before and after, over a matched period.</li>
+                    <li>Handoff rate and the reasons, reviewed weekly with you.</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="btn-row" style={{ marginTop: 26 }}>
+                <Link className="btn btn-secondary" to="/case-studies">See more worked examples</Link>
+                <Link className="link-cta" to={contactHref(featured.interest)} data-track="feature-enquiry">Discuss a reception project <span aria-hidden="true">→</span></Link>
+              </div>
+            </div>
+            <Transcript steps={featured.example.steps} note={featured.example.note} />
+          </div>
+        </div>
+      </section>
+
+      {/* ———— 5. delivery process ———— */}
+      <section className="section" aria-labelledby="process-h">
+        <div className="shell">
+          <div className="section-head split">
+            <div>
+              <p className="eyebrow">How a project runs</p>
+              <h2 id="process-h">Four stages, with responsibilities <span className="em">written down.</span></h2>
+            </div>
+            <p className="lede">
+              Each stage has a deliverable you can see. If discovery shows AI is the wrong tool for
+              your problem, we say so and stop there.
+            </p>
+          </div>
+          <ol className="process" aria-label="Delivery stages">
             {PROCESS.map((s) => (
-              <div key={s.n} className="rail-step">
+              <li key={s.n} className="step">
                 <span className="n">{s.n}</span>
                 <h3>{s.t}</h3>
                 <p>{s.d}</p>
-              </div>
+                <dl>
+                  <div><dt>You</dt><dd>{s.you}</dd></div>
+                  <div><dt>We</dt><dd>{s.we}</dd></div>
+                  <div><dt>Deliverable</dt><dd>{s.out}</dd></div>
+                </dl>
+              </li>
             ))}
-          </div>
-        </section>
+          </ol>
+        </div>
+      </section>
 
-        <section className="ground-section shell" aria-labelledby="work-h">
-          <div className="section-head reveal">
-            <p className="eyebrow eyebrow-mark">Selected Work</p>
-            <h2 id="work-h">Forged <span className="ember-text">&amp; shipped.</span></h2>
-            <p>Three recent builds, still glowing — with the challenge, the approach and the result in full.</p>
+      {/* ———— 6. engineering approach and team ———— */}
+      <section className="section alt" aria-labelledby="approach-h">
+        <div className="shell approach">
+          <div>
+            <p className="eyebrow">Engineering approach</p>
+            <h2 id="approach-h">Integrated, tested, monitored, <span className="em">handed over.</span></h2>
+            <p className="lede" style={{ marginTop: 14 }}>
+              Language models are one component. The work that makes a system dependable is the
+              integration, the testing and the handoff rules around it.
+            </p>
+            <div className="team-note">
+              <h3>Who you work with</h3>
+              <p>
+                ForgeQubit is an engineer-led studio. The people who scope your project are the
+                people who build it, and you have a named engineer as your point of contact from the
+                first call to handover.
+              </p>
+              <p>
+                <Link to="/about">More about how we work →</Link>
+              </p>
+            </div>
           </div>
-          <div className="grid-3">
-            {CASES.map((c, i) => (
-              <Link key={c.slug} className={`card post-card reveal d${i + 1}`} to="/case-studies">
-                <div className="post-meta">
-                  <span className="post-tag">{c.field}</span>
-                  <span className="post-date">{c.metric}</span>
+          <div>
+            <div className="approach-list">
+              {ENGINEERING.map((e, i) => (
+                <div key={e.t} className="approach-item">
+                  <span className="k" aria-hidden="true">0{i + 1}</span>
+                  <div>
+                    <h3>{e.t}</h3>
+                    <p>{e.d}</p>
+                  </div>
                 </div>
-                <h3 className="post-title">{c.client}</h3>
-                <p className="post-excerpt">{c.summary}</p>
-                <span className="post-more">Read the case study →</span>
-              </Link>
-            ))}
+              ))}
+            </div>
+            <div style={{ marginTop: 22 }}>
+              <Workflow flow={invoice.example.flow} note="Illustrative automation with an approval step. Uncertain cases go to a person, never guessed." />
+            </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="ground-section shell" aria-labelledby="notes-h">
-          <div className="section-head reveal">
-            <p className="eyebrow eyebrow-mark">From the Forge</p>
-            <h2 id="notes-h">Notes in <span className="ember-text">the fire.</span></h2>
-            <p>Practical writing on WhatsApp automation, voice agents and shipping AI products — for operators, not researchers.</p>
+      {/* ———— 7. faqs ———— */}
+      <section className="section" aria-labelledby="faq-h">
+        <div className="shell faq-grid">
+          <div>
+            <p className="eyebrow">Questions</p>
+            <h2 id="faq-h">Costs, timelines, integrations and <span className="em">what happens when it fails.</span></h2>
+            <p className="lede" style={{ marginTop: 14 }}>
+              Straight answers to the questions we are asked most. Anything else, ask on the call.
+            </p>
+            <div className="btn-row" style={{ marginTop: 22 }}>
+              <Link className="btn btn-secondary" to="/services">All solutions</Link>
+            </div>
           </div>
-          <div className="grid-3">
-            {POSTS.map((p, i) => (
-              <Link key={p.slug} className={`card post-card reveal d${i + 1}`} to={`/blog/${p.slug}`}>
+          <Faq items={FAQS} />
+        </div>
+      </section>
+
+      {/* ———— writing ———— */}
+      <section className="section alt tight" aria-labelledby="notes-h">
+        <div className="shell">
+          <div className="section-head split">
+            <div>
+              <p className="eyebrow">Writing</p>
+              <h2 id="notes-h">Notes for operators.</h2>
+            </div>
+            <p className="lede">Practical writing on reception agents, automation and building AI products.</p>
+          </div>
+          <div className="blog-list">
+            {POSTS.map((p) => (
+              <Link key={p.slug} className="card post-card" to={`/blog/${p.slug}`}>
                 <div className="post-meta">
                   <span className="post-tag">{p.tag}</span>
-                  <span className="post-date">{p.readTime}</span>
+                  <span>{p.readTime}</span>
                 </div>
-                <h3 className="post-title">{p.title}</h3>
-                <p className="post-excerpt">{p.excerpt}</p>
+                <h3>{p.title}</h3>
+                <p>{p.excerpt}</p>
                 <span className="post-more">Read the note →</span>
               </Link>
             ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="ground-section shell">
-          <div className="page-cta reveal">
-            <p className="eyebrow">The Forge Is Lit</p>
-            <h2>Bring us the raw idea.<br /><span className="ember-text">Leave with the weapon.</span></h2>
-            <div className="btn-row">
-              <Link className="btn btn-primary" to="/contact">Start a Project <span>→</span></Link>
-              <a className="btn btn-ghost" href={`mailto:${EMAIL}`}>{EMAIL} <span>→</span></a>
-            </div>
-          </div>
-        </section>
-      </div>
+      {/* ———— 8. final cta ———— */}
+      <CtaBand
+        title="Tell us what your team is dealing with."
+        body="Send a short description of the enquiries, process or product you have in mind. We reply by email to arrange a call, then send a written scope and price. No commitment until you sign a proposal."
+        secondary={{ to: `mailto:${EMAIL}`, label: EMAIL }}
+      />
 
       <Footer />
     </div>
