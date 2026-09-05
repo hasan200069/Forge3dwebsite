@@ -4,9 +4,9 @@ import { Crumbs, Footer, CtaBand } from '../chrome.jsx'
 import { Seo, SITE_URL, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
 import { Transcript, Workflow, CallSample } from '../visuals.jsx'
 
-const TITLE = 'Work — Worked Examples of AI Reception, Voice and Automation Projects | ForgeQubit'
+const TITLE = 'Work: Worked Examples of AI Reception & Automation | ForgeQubit'
 const DESC =
-  'Three worked examples showing how ForgeQubit scopes, builds and measures AI reception, voice agent and workflow automation projects. Clearly labelled illustrations, not client case studies.'
+  'Three worked examples of how we scope, build and measure AI reception, voice agent and automation projects. Clearly labelled illustrations, not client case studies.'
 
 const JSON_LD = graph(
   webPageLd({ path: '/case-studies', title: TITLE, description: DESC, type: 'CollectionPage' }),

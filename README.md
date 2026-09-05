@@ -20,6 +20,15 @@ npm run serve        # http://localhost:4180
 
 `npm run preview` is the plain Vite preview without the Vercel headers.
 
+Optional browser checks (need Google Chrome and `puppeteer-core`, e.g.
+`PUPPETEER_CORE=~/.npm/_npx/<hash>/node_modules/puppeteer-core` after a
+Lighthouse run), against a running `npm run serve`:
+
+```bash
+npm run verify    # demo controls, contact draft/timeout/errors, scrollspy, chunk recovery
+npm run shots -- ./shots   # full-page screenshots at desktop and mobile widths
+```
+
 ## Checks
 
 ```bash
@@ -47,6 +56,7 @@ splitting, contact-form validation and analytics privacy.
 | Brand assets (favicon, icons, social card) | `scripts/gen-assets.mjs` → `npm run assets` |
 | Hosting: redirects, headers, CSP | `vercel.json` (Netlify mirror in `public/_redirects`) |
 | Full-page screenshots for visual checks | `scripts/shots.mjs` (needs Chrome and `puppeteer-core`; see file header) |
+| Browser behaviour checks | `scripts/verify-behaviour.mjs` |
 
 ## Content rules
 

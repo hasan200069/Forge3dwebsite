@@ -85,7 +85,7 @@ for (const route of ROUTES) {
 
   html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${esc(head.title)}</title>`)
   html = setMeta(html, 'name', 'description', head.description)
-  html = setMeta(html, 'name', 'robots', route.noindex ? 'noindex, follow' : head.robots)
+  html = setMeta(html, 'name', 'robots', route.noindex ? 'noindex, follow' : `${head.robots}, max-image-preview:large`)
 
   html = setMeta(html, 'property', 'og:title', head.title)
   html = setMeta(html, 'property', 'og:description', head.description)

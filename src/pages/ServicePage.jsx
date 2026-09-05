@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import { SOLUTIONS, VOICE, contactHref } from '../data.js'
 import { Crumbs, Footer, Faq, CtaBand } from '../chrome.jsx'
 import { Seo, SITE_URL, orgRef, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
@@ -17,19 +18,19 @@ const SECTIONS = [
 
 const META = {
   'ai-reception': {
-    title: 'AI Reception & Lead Handling — Voice and WhatsApp Agents | ForgeQubit',
+    title: 'AI Reception & Lead Handling: Voice & WhatsApp Agents | ForgeQubit',
     description:
-      'Voice and WhatsApp agents that answer enquiries in seconds, qualify prospects, book appointments into your calendar and hand off to your team. Built on the official WhatsApp Business Platform and your phone number.',
+      'Voice and WhatsApp agents that answer enquiries in seconds, qualify prospects, book into your calendar and hand off to your team. Built on your number.',
   },
   'workflow-automation': {
-    title: 'Workflow Automation & Integrations — Connect CRMs, Calendars and Support Tools | ForgeQubit',
+    title: 'Workflow Automation & Integrations | ForgeQubit',
     description:
-      'Connected workflows across CRMs, accounting, helpdesks and internal tools, with language-model steps only where judgement is needed and a person approving anything uncertain.',
+      'Connected workflows across CRMs, accounting, helpdesks and internal tools. AI only where judgement is needed, with a person approving anything uncertain.',
   },
   'custom-ai-products': {
-    title: 'Custom AI Product Development — AI Applications, Agents and SaaS | ForgeQubit',
+    title: 'Custom AI Product Development: Apps, Agents & SaaS | ForgeQubit',
     description:
-      'Product design and full-stack engineering for AI applications, agent systems and SaaS products, built with evaluation from day one. You own the code, prompts, data and infrastructure.',
+      'Design and engineering for AI applications, agent systems and SaaS, with evaluation built in from day one. You own the code, prompts, data and infrastructure.',
   },
 }
 
@@ -59,8 +60,38 @@ function Example({ solution }) {
   )
 }
 
+/* which section is in view — drives aria-current on the in-page nav
+   without ever moving keyboard focus */
+function useCurrentSection(ids) {
+  const [current, setCurrent] = useState(ids[0])
+  useEffect(() => {
+    if (!('IntersectionObserver' in window)) return
+    const els = ids.map((id) => document.getElementById(id)).filter(Boolean)
+    const ratios = new Map()
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) ratios.set(e.target.id, e.isIntersecting ? e.intersectionRatio : 0)
+        let best = null
+        let bestRatio = 0
+        for (const el of els) {
+          const r = ratios.get(el.id) || 0
+          if (r > bestRatio) { best = el.id; bestRatio = r }
+        }
+        if (best) setCurrent(best)
+      },
+      { rootMargin: '-25% 0px -55% 0px', threshold: [0, 0.2, 0.5, 1] }
+    )
+    els.forEach((el) => io.observe(el))
+    return () => io.disconnect()
+  }, [ids])
+  return current
+}
+
+const SECTION_IDS = SECTIONS.map(([id]) => id)
+
 export default function ServicePage({ solution: s }) {
   const meta = META[s.slug]
+  const current = useCurrentSection(SECTION_IDS)
   const others = [...SOLUTIONS.filter((o) => o.slug !== s.slug), ...(s.slug === 'ai-reception' ? [VOICE] : [])]
 
   const jsonLd = graph(
@@ -106,9 +137,17 @@ export default function ServicePage({ solution: s }) {
       </header>
 
       <div className="shell svc-layout" style={{ paddingTop: 12 }}>
+        <details className="svc-nav-mobile">
+          <summary>On this page</summary>
+          <nav aria-label="On this page">
+            {SECTIONS.map(([id, label]) => (
+              <a key={id} href={`#${id}`} aria-current={current === id ? 'location' : undefined}>{label}</a>
+            ))}
+          </nav>
+        </details>
         <nav className="svc-nav" aria-label="On this page">
           {SECTIONS.map(([id, label]) => (
-            <a key={id} href={`#${id}`}>{label}</a>
+            <a key={id} href={`#${id}`} aria-current={current === id ? 'location' : undefined}>{label}</a>
           ))}
         </nav>
 

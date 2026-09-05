@@ -6,9 +6,9 @@ import { Crumbs, EMAIL, Footer } from '../chrome.jsx'
 import { track } from '../analytics.js'
 import { Seo, SITE_URL, orgRef, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
 
-const TITLE = 'Contact ForgeQubit — Discuss an AI Reception, Automation or Product Project'
+const TITLE = 'Contact ForgeQubit: Discuss Your AI Project'
 const DESC =
-  'Tell us about the enquiries, process or product you have in mind. We reply by email to arrange a short call, then send a written scope and price before any work starts.'
+  'Tell us about the enquiries, process or product you have in mind. We reply by email to arrange a short call, then send a written scope and price before work starts.'
 
 const JSON_LD = graph(
   webPageLd({ path: '/contact', title: TITLE, description: DESC, type: 'ContactPage' }),
@@ -32,6 +32,36 @@ const STEPS = [
 
 const BUDGETS = ['Not sure yet', 'Under £5k', '£5k – £15k', '£15k – £50k', 'Over £50k']
 const TIMELINES = ['Not sure yet', 'As soon as possible', 'Within 3 months', 'Later this year', 'Just researching']
+
+/* Draft persistence. sessionStorage only: it survives following a link
+   and coming back, and is gone when the tab closes, so enquiry text is
+   never stored indefinitely. Cleared on success or an explicit reset. */
+const DRAFT_KEY = 'fq-enquiry-draft'
+const DRAFT_FIELDS = ['name', 'email', 'interest', 'message', 'budget', 'timeline']
+const readDraft = () => {
+  try {
+    const raw = sessionStorage.getItem(DRAFT_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+const writeDraft = (values) => {
+  try {
+    const d = Object.fromEntries(DRAFT_FIELDS.map((k) => [k, values[k]]))
+    if (DRAFT_FIELDS.some((k) => k !== 'interest' && k !== 'budget' && k !== 'timeline' && values[k])) sessionStorage.setItem(DRAFT_KEY, JSON.stringify(d))
+    else sessionStorage.removeItem(DRAFT_KEY)
+  } catch {
+    /* storage unavailable: the form still works, the draft is not kept */
+  }
+}
+const clearDraft = () => {
+  try { sessionStorage.removeItem(DRAFT_KEY) } catch { /* ignore */ }
+}
+
+/* Delivery is bounded so a stalled network shows a retry instead of
+   an endless "Sending…" */
+const TIMEOUT_MS = 15000
 
 /* Field ids are literal: there is one form per page, and literal ids
    are identical in the prerendered HTML and after hydration. useId()
@@ -58,13 +88,34 @@ export function ContactForm({ preselect, submit = defaultSubmit }) {
   const inFlight = useRef(false)
   const statusRef = useRef(null)
   const started = useRef(false)
+  const attempted = useRef(false)
   const fields = useRef({})
+  const successRef = useRef(null)
 
+  /* apply the query-string choice, then any draft left in this tab */
   useEffect(() => {
-    setValues((v) => ({ ...v, interest: preselect }))
+    const draft = readDraft()
+    setValues((v) => ({ ...v, ...(draft || {}), interest: draft?.interest || preselect }))
   }, [preselect])
 
-  const set = (k) => (e) => setValues((v) => ({ ...v, [k]: e.target.value }))
+  useEffect(() => {
+    if (status === 'idle' || status === 'error') writeDraft(values)
+  }, [values, status])
+
+  useEffect(() => {
+    if (status === 'sent') successRef.current?.focus()
+  }, [status])
+
+  /* after the first submit attempt, a corrected field clears its own
+     error as soon as it is valid; other errors stay until fixed */
+  const set = (k) => (e) => {
+    const next = { ...values, [k]: e.target.value }
+    setValues(next)
+    if (attempted.current) {
+      const errs = validate(next)
+      setErrors((prev) => (prev[k] !== errs[k] ? { ...prev, [k]: errs[k] } : prev))
+    }
+  }
 
   /* one "form started" event per form instance, on the first keystroke */
   const onFirstInput = () => {
@@ -77,6 +128,7 @@ export function ContactForm({ preselect, submit = defaultSubmit }) {
     e.preventDefault()
     if (inFlight.current) return
 
+    attempted.current = true
     const errs = validate(values)
     setErrors(errs)
     if (Object.keys(errs).length) {
@@ -90,6 +142,7 @@ export function ContactForm({ preselect, submit = defaultSubmit }) {
     setServerError('')
     try {
       await submit(values)
+      clearDraft()
       setStatus('sent')
       track('form_submit_accepted', { interest: values.interest, budget: values.budget, timeline: values.timeline })
     } catch (err) {
@@ -107,7 +160,7 @@ export function ContactForm({ preselect, submit = defaultSubmit }) {
     return (
       <div className="form-sent" role="status" aria-live="polite">
         <span className="tick" aria-hidden="true">✓</span>
-        <h2>Thanks, your message is in our inbox.</h2>
+        <h2 ref={successRef} tabIndex={-1}>Thanks, your message has been received by our form service.</h2>
         <p>
           A person will reply by email to <strong>{values.email}</strong> to arrange a short call.
           If you do not hear from us, write to <a href={`mailto:${EMAIL}`}>{EMAIL}</a>.
@@ -117,6 +170,8 @@ export function ContactForm({ preselect, submit = defaultSubmit }) {
             type="button"
             className="btn btn-secondary btn-sm"
             onClick={() => {
+              attempted.current = false
+              setErrors({})
               setValues((v) => ({ ...v, message: '' }))
               setStatus('idle')
             }}
@@ -192,12 +247,27 @@ export function ContactForm({ preselect, submit = defaultSubmit }) {
 
       <div className="btn-row">
         <button type="submit" className="btn btn-primary" disabled={busy}>
-          {busy ? 'Sending…' : 'Send message'} <span aria-hidden="true">→</span>
+          {busy ? <><span className="spinner" aria-hidden="true" /> Sending…</> : <>Send message <span aria-hidden="true">→</span></>}
         </button>
+        {(values.name || values.message) && !busy && (
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => {
+              clearDraft()
+              attempted.current = false
+              setErrors({})
+              setValues((v) => ({ ...v, name: '', email: '', message: '', budget: BUDGETS[0], timeline: TIMELINES[0] }))
+            }}
+          >
+            Clear
+          </button>
+        )}
       </div>
       <p className="form-note">
-        Sent to our inbox via Web3Forms. We use what you enter only to reply to you. See the{' '}
-        <a href="/privacy">privacy policy</a>.
+        Sent to our inbox via Web3Forms. We use what you enter only to reply to you. Your draft
+        stays in this tab until you send or clear it. See the{' '}
+        <a href="/privacy" target="_blank" rel="noopener">privacy policy (opens in a new tab)</a>.
       </p>
     </form>
   )
@@ -211,12 +281,21 @@ async function defaultSubmit(values) {
   for (const k of ['name', 'email', 'interest', 'message', 'budget', 'timeline', 'botcheck']) body.append(k, values[k])
 
   let res
+  const ctl = new AbortController()
+  const t = setTimeout(() => ctl.abort(), TIMEOUT_MS)
   try {
-    res = await fetch(ENDPOINT, { method: 'POST', body, headers: { Accept: 'application/json' } })
-  } catch {
-    const err = new Error('We could not reach the form service. Check your connection and try again.')
-    err.code = 'network'
+    res = await fetch(ENDPOINT, { method: 'POST', body, headers: { Accept: 'application/json' }, signal: ctl.signal })
+  } catch (e) {
+    const timedOut = e?.name === 'AbortError'
+    const err = new Error(
+      timedOut
+        ? 'The form service did not respond within 15 seconds.'
+        : 'We could not reach the form service. Check your connection and try again.'
+    )
+    err.code = timedOut ? 'timeout' : 'network'
     throw err
+  } finally {
+    clearTimeout(t)
   }
   let data = null
   try { data = await res.json() } catch { /* non-JSON body: treated as failure below */ }

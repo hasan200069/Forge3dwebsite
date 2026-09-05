@@ -80,7 +80,12 @@ test('titles, descriptions and canonicals are present and unique', () => {
     const canon = html.match(/<link rel="canonical" href="([^"]+)"/)?.[1]
     assert.ok(title && title.length > 10, `${route} has no title`)
     assert.ok(desc && desc.length > 50, `${route} has no description`)
-    assert.ok(desc.length <= 320, `${route} description too long (${desc.length})`)
+    assert.ok(desc.length <= 165, `${route} description too long for search snippets (${desc.length})`)
+    const plainTitle = title.replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/&quot;/g, '"')
+    assert.ok(plainTitle.length <= 70, `${route} title too long for search results (${plainTitle.length}: ${plainTitle})`)
+    if (route !== '/404') assert.match(html, /<meta name="robots" content="index, follow, max-image-preview:large"/, `${route} robots`)
+    assert.match(html, /<meta property="og:image" content="https:\/\/www\.forgequbit\.co\.uk\/og\.png"/, `${route} og:image`)
+    assert.match(html, /<link rel="alternate" hreflang="en"/, `${route} hreflang`)
     const expected = route === '/404' ? `${SITE}/404` : route === '/' ? `${SITE}/` : SITE + route
     assert.equal(canon, expected, `${route} canonical`)
     assert.ok(!titles.has(title), `duplicate title "${title}" on ${route} and ${titles.get(title)}`)
@@ -228,4 +233,44 @@ test('no personal data fields are referenced in analytics props', () => {
   const calls = [...src.matchAll(/track\(([^)]*)\)/g)].map((m) => m[1])
   assert.ok(calls.length >= 3)
   for (const c of calls) assert.doesNotMatch(c, /values\.(name|email|message)/, `analytics call sends personal data: ${c}`)
+})
+
+
+/* ———— serve dist/ the way Vercel does and crawl it ———— */
+
+import { spawn } from 'node:child_process'
+
+test('every route and every internal link responds correctly through the server', async () => {
+  const port = 4300 + Math.floor(Math.random() * 300)
+  const srv = spawn(process.execPath, [join(ROOT, 'scripts', 'serve-dist.mjs'), String(port)], { stdio: 'ignore' })
+  const base = `http://localhost:${port}`
+  try {
+    // wait for the server
+    for (let i = 0; i < 50; i++) {
+      try { await fetch(base + '/'); break } catch { await new Promise((r) => setTimeout(r, 100)) }
+    }
+    const status = async (p) => (await fetch(base + p, { redirect: 'manual' })).status
+    for (const r of routes) assert.equal(await status(r), r === '/404' ? 200 : 200, `route ${r}`)
+    assert.equal(await status('/definitely-not-a-page'), 404)
+    assert.equal(await status('/blog/not-a-post'), 404)
+    for (const [src, dest] of redirects) {
+      const res = await fetch(base + src, { redirect: 'manual' })
+      assert.equal(res.status, 308, `redirect ${src}`)
+      assert.equal(res.headers.get('location'), dest, `redirect target ${src}`)
+    }
+    // every href on every page
+    const seen = new Set()
+    for (const { html } of pages) {
+      for (const m of html.matchAll(/\bhref="(\/[^"#?]*)/g)) seen.add(m[1])
+    }
+    for (const h of seen) assert.equal(await status(h), 200, `link ${h}`)
+    // chunks referenced by the shell exist
+    for (const { route, html } of pages) {
+      for (const m of html.matchAll(/src="(\/assets\/[^"]+)"/g)) assert.equal(await status(m[1]), 200, `${route} asset ${m[1]}`)
+    }
+    const csp = (await fetch(base + '/about')).headers.get('content-security-policy')
+    assert.ok(csp && csp.includes("default-src 'self'"), 'CSP header served')
+  } finally {
+    srv.kill()
+  }
 })

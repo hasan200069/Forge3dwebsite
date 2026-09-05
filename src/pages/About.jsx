@@ -3,9 +3,9 @@ import { PROCESS, ENGINEERING, TEAM, COMPANY } from '../data.js'
 import { Crumbs, EMAIL, Footer, CtaBand } from '../chrome.jsx'
 import { Seo, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
 
-const TITLE = 'About ForgeQubit — An Engineer-Led AI Studio'
+const TITLE = 'About ForgeQubit: An Engineer-Led AI Studio'
 const DESC =
-  'ForgeQubit is a UK-registered, engineer-led studio building voice and WhatsApp agents, workflow automation and custom AI products. How we work, who you deal with, and what we commit to.'
+  'A UK-registered, engineer-led studio building voice and WhatsApp agents, workflow automation and custom AI products. How we work and what we commit to.'
 
 const JSON_LD = graph(
   webPageLd({ path: '/about', title: TITLE, description: DESC, type: 'AboutPage' }),
@@ -157,7 +157,7 @@ export default function About() {
         </div>
       </section>
 
-      <section className="section alt" aria-labelledby="process-h">
+      <section className="section alt" aria-labelledby="process-h" id="process">
         <div className="shell">
           <div className="section-head">
             <p className="eyebrow">How a project runs</p>

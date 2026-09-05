@@ -95,6 +95,53 @@ icons and the social card from `scripts/gen-assets.mjs`.
     RSS regenerated, permanent redirects for plausible legacy service
     URLs, error boundary and helpful 404.
 
+### Fourth pass: audit follow-up
+
+- **Pages "not opening"**: server-side every route and link returned
+  200 in three separate crawls. The cause was client-side: after a
+  rebuild, an open tab requests chunk filenames that no longer exist,
+  which happens after every deployment too. Lazy routes now fall back
+  to a full reload of the target page once (guarded against loops),
+  verified by aborting a chunk request in headless Chrome.
+- **Hero demonstration** now tells one complete story: enquiry →
+  qualification → slot chosen → confirmed booking and CRM update, with
+  Play / Pause / Show result / Replay. Stages complete only when the
+  message that proves them is on screen. Every message is laid out from
+  the start, so playback never moves the layout. The finished state is
+  what is prerendered and what reduced-motion users see. Demonstrations
+  stop off screen, in hidden tabs, and if reduced motion is switched on
+  while the page is open.
+- **Workflow demonstration** plays node by node and stops at the
+  human decision; the visitor approves or queries the invoice and sees
+  the corresponding branch.
+- **Voice sample**: no recording exists, so none is faked. The written
+  call now plays at spoken pace with controls and states plainly that
+  it is text, not audio. A permission-cleared recording remains a
+  missing asset (see §7).
+- **Homepage** cut to six blocks; detailed responsibilities and
+  engineering practices live on About and the service pages. Mobile
+  height 15,967 → 9,592 px (−40%), desktop 8,665 → 5,672 px (−35%).
+- **Contact form**: draft kept in `sessionStorage` for the life of the
+  tab and cleared on success or Clear; privacy link opens in a new tab;
+  corrected fields clear their own error after the first attempt;
+  15-second timeout with a retry state that keeps the text; spinner in
+  the busy button; focus moves to the success heading; success copy
+  says the form service received it (not that an email was delivered).
+- **Service pages**: in-page nav marks the section in view with
+  `aria-current="location"` without moving focus; on narrow screens it
+  is a sticky "On this page" disclosure.
+- **Route loading**: a labelled progress bar appears only if a chunk
+  takes longer than 150 ms; the area reserves height.
+- **Motion polish**: FAQ answers ease in with the icon; hero light
+  settles once instead of drifting forever; the tool strip has a Pause
+  button; reveals limited to headings and demonstrations at 400 ms /
+  12 px with 50 ms stagger.
+- **SEO**: titles ≤ 70 and descriptions ≤ 165 characters on every page
+  (tested), `max-image-preview:large`, `og:image` and `hreflang` on
+  every page (tested), and a crawl test that starts the production-like
+  server and checks every route, link, chunk, redirect (308 with the
+  right target), unknown URL (404) and the CSP header.
+
 ## 3. Final design tokens
 
 | Token | Value | Use |
@@ -155,6 +202,8 @@ was confirmed in search results. Unknown URLs return 404.
 | Client-side navigation between chunks, title/canonical update | works, no console errors | Manually verified |
 | CSP: no violations on load, form endpoint reachable | no violations | Manually verified on the local production-like server |
 | 404 status for unknown URLs, 308 for legacy slugs | works | Measured on the local server; **Not tested** on Vercel until deployed |
+| Behaviour checks (`npm run verify`): hero play/pause/show-result/stable layout, workflow decision branch, draft persistence across navigation, error clearing, busy state, 15 s timeout with kept text, success focus, scrollspy, chunk-failure recovery | 17/17 pass | Measured in headless Chrome |
+| Vite dev server (`npm run dev`) serves every route | 200 | Measured |
 | Scroll reveals fire on every block on `/`, `/services`, `/services/ai-reception`, `/case-studies`, `/contact` at 1280 and 390 px (29/29, 10/10, 13/13, 4/4, 3/3) | works | Measured in headless Chrome via `scripts/shots.mjs` |
 | Enquiry-flow loop, workflow token, tool strip, logo pulse | running | Manually verified in Chromium |
 | Firefox, Safari/WebKit, physical devices | | **Not tested** (only Chromium was available) |

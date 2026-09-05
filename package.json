@@ -11,7 +11,9 @@
     "fonts": "node scripts/fetch-fonts.mjs",
     "test": "node --test scripts/check-dist.test.mjs",
     "check": "npm run build && npm test",
-    "serve": "node scripts/serve-dist.mjs 4180"
+    "serve": "node scripts/serve-dist.mjs 4180",
+    "verify": "node scripts/verify-behaviour.mjs",
+    "shots": "node scripts/shots.mjs"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",

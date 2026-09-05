@@ -3,9 +3,9 @@ import { SOLUTIONS, VOICE, CAPABILITIES, FAQS, contactHref } from '../data.js'
 import { Crumbs, Footer, Faq, CtaBand } from '../chrome.jsx'
 import { Seo, SITE_URL, orgRef, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
 
-const TITLE = 'Solutions — AI Reception, Workflow Automation & Custom AI Products | ForgeQubit'
+const TITLE = 'Solutions: AI Reception, Automation & AI Products | ForgeQubit'
 const DESC =
-  'Three things ForgeQubit builds end to end: voice and WhatsApp agents for reception and lead handling, workflow automation and integrations, and custom AI products. Plus avatar and blockchain work for specialist needs.'
+  'Three things we build end to end: voice and WhatsApp agents for reception, workflow automation and integrations, and custom AI products.'
 
 const JSON_LD = graph(
   webPageLd({ path: '/services', title: TITLE, description: DESC, type: 'CollectionPage' }),

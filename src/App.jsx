@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
-import { Component, Suspense, lazy, useEffect } from 'react'
+import { Component, Suspense, lazy, useEffect, useState } from 'react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { Analytics } from '@vercel/analytics/react'
 import { Nav, Footer, useReveal } from './chrome.jsx'
@@ -41,13 +41,35 @@ export function loaderFor(pathname) {
   return 'NotFound'
 }
 
+/* After a deploy, a tab that still has the old shell will ask for
+   chunk filenames that no longer exist. A full reload of the target
+   page fixes that; the sessionStorage flag stops it looping if the
+   reload fails for another reason. */
+function recoverable(load) {
+  return () =>
+    load().catch((err) => {
+      const key = 'fq-chunk-reload'
+      let tried = false
+      try { tried = sessionStorage.getItem(key) === '1' } catch { /* ignore */ }
+      if (!tried) {
+        try { sessionStorage.setItem(key, '1') } catch { /* ignore */ }
+        window.location.reload()
+        return new Promise(() => {}) // never resolves; the reload takes over
+      }
+      throw err
+    })
+}
+
 const lazyPages = Object.fromEntries(
-  Object.entries(PAGE_LOADERS).map(([k, load]) => [
-    k,
-    k === 'Legal'
-      ? { Privacy: lazy(() => load().then((m) => ({ default: m.Privacy }))), Terms: lazy(() => load().then((m) => ({ default: m.Terms }))) }
-      : lazy(load),
-  ])
+  Object.entries(PAGE_LOADERS).map(([k, raw]) => {
+    const load = recoverable(raw)
+    return [
+      k,
+      k === 'Legal'
+        ? { Privacy: lazy(() => load().then((m) => ({ default: m.Privacy }))), Terms: lazy(() => load().then((m) => ({ default: m.Terms }))) }
+        : lazy(load),
+    ]
+  })
 )
 
 /* Scroll to the top on route change, but honour in-page anchors so a
@@ -68,9 +90,25 @@ function ScrollManager() {
 }
 
 /* Shown only during a client-side navigation while a chunk loads. It
-   reserves height so the footer does not jump into view. */
+   reserves height so the footer does not jump into view, and shows a
+   labelled progress bar only if loading takes longer than 150 ms so
+   fast navigations are not delayed by an indicator. */
 function Loading() {
-  return <div className="page" style={{ minHeight: '70vh' }} aria-busy="true" />
+  const [slow, setSlow] = useState(false)
+  useEffect(() => {
+    const t = setTimeout(() => setSlow(true), 150)
+    return () => clearTimeout(t)
+  }, [])
+  return (
+    <div className="page" style={{ minHeight: '70vh' }} aria-busy="true">
+      {slow && (
+        <div className="route-progress" role="status" aria-live="polite">
+          <span className="sr-only">Loading page</span>
+          <i aria-hidden="true" />
+        </div>
+      )}
+    </div>
+  )
 }
 
 /* A rendering error on one page should not blank the whole site. */

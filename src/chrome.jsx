@@ -216,11 +216,11 @@ export function Footer() {
 
 /* ———————————————————— scroll reveals ———————————————————— */
 
+/* Only headings and demonstrations are introduced; running text, forms
+   and lists are readable immediately. */
 const REVEAL = [
-  '.section-head', '.card', '.solution', '.capability', '.step', '.approach-item',
-  '.feature > *', '.approach > .team-note', '.faq-grid > *', '.cta-band', '.demo',
-  '.svc-row', '.svc-section', '.about-grid > *', '.contact-grid > *', '.post-body > section',
-  '.strip',
+  '.section-head', '.solution', '.step', '.card', '.cta-band',
+  '.wf', '.call', '.transcript', '.demo', '.svc-row',
 ].join(', ')
 
 /* Adds .reveal to content blocks as they appear in the DOM and .in when
