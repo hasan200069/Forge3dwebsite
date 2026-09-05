@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { Component, Suspense, lazy, useEffect, useState } from 'react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { Analytics } from '@vercel/analytics/react'
-import { Nav, Footer, useReveal } from './chrome.jsx'
+import { Nav, Footer, Backdrop } from './chrome.jsx'
 import { SOLUTIONS } from './data.js'
 import { startClickTracking } from './analytics.js'
 import Home from './pages/Home.jsx'
@@ -144,7 +144,6 @@ class ErrorBoundary extends Component {
 
 function Boundary({ children }) {
   const { pathname } = useLocation()
-  useReveal(pathname)
   return <ErrorBoundary location={pathname}>{children}</ErrorBoundary>
 }
 
@@ -154,6 +153,7 @@ export function AppShell({ pages = lazyPages }) {
   const P = pages
   return (
     <div className="app">
+      <Backdrop />
       <a className="skip-link" href="#main">Skip to content</a>
       <Nav />
       <ScrollManager />

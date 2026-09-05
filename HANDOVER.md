@@ -142,6 +142,29 @@ icons and the social card from `scripts/gen-assets.mjs`.
   server and checks every route, link, chunk, redirect (308 with the
   right target), unknown URL (404) and the CSP header.
 
+### Fifth pass: glass redesign and the "blank areas" fix
+
+- **Blank areas on Vercel.** The live site worked in headless Chrome
+  (hydrated, animations running, every reveal firing), so the blanks
+  came from a browser or setting where the JavaScript-driven reveals
+  never fired. That mechanism is gone. Nothing on the site is hidden by
+  JavaScript any more; where the browser supports CSS scroll-driven
+  animations, blocks ease in from a slightly dimmed, offset state
+  (never from invisible), and elsewhere they are simply shown.
+- **Glass system** appended to `src/styles.css`: translucent surfaces
+  with inner highlight and soft cyan-tinted shadow; blur spent only on
+  the nav, hero card, CTA band, form and worked examples; gradient rims
+  on the signature pieces; a sheen that crosses cards on hover; a
+  floating hero card; a pointer-following spotlight on the hero (fine
+  pointers only); shimmering emphasised words; three slow lights and a
+  faint grid behind every page (`Backdrop` in `src/chrome.jsx`).
+  All of it is transform/opacity, switched off under
+  `prefers-reduced-motion`, and blur is removed under
+  `prefers-reduced-transparency`.
+- Text contrast on glass is unchanged in practice: the translucent
+  surfaces sit on the same dark ground, and every text token still
+  passes AA.
+
 ## 3. Final design tokens
 
 | Token | Value | Use |
@@ -204,6 +227,8 @@ was confirmed in search results. Unknown URLs return 404.
 | 404 status for unknown URLs, 308 for legacy slugs | works | Measured on the local server; **Not tested** on Vercel until deployed |
 | Behaviour checks (`npm run verify`): hero play/pause/show-result/stable layout, workflow decision branch, draft persistence across navigation, error clearing, busy state, 15 s timeout with kept text, success focus, scrollspy, chunk-failure recovery | 17/17 pass | Measured in headless Chrome |
 | Vite dev server (`npm run dev`) serves every route | 200 | Measured |
+| Live site (www.forgequbit.co.uk) before the fifth pass: hydrated, animations present, all reveals firing after scroll, no console errors | works | Measured in headless Chrome; the blanks you saw could not be reproduced there, hence the removal of the JS dependency |
+| Glass build: every page fully rendered in stitched full-page captures at 1280 and 390 px, no overflow | works | Measured in headless Chrome |
 | Scroll reveals fire on every block on `/`, `/services`, `/services/ai-reception`, `/case-studies`, `/contact` at 1280 and 390 px (29/29, 10/10, 13/13, 4/4, 3/3) | works | Measured in headless Chrome via `scripts/shots.mjs` |
 | Enquiry-flow loop, workflow token, tool strip, logo pulse | running | Manually verified in Chromium |
 | Firefox, Safari/WebKit, physical devices | | **Not tested** (only Chromium was available) |
