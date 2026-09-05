@@ -54,7 +54,11 @@ icons and the social card from `scripts/gen-assets.mjs`.
    field-level validation with error association, input limits,
    honeypot, duplicate-submission guard, loading state, success only on
    `success: true` from the service, and recoverable errors that keep
-   the entered text. Optional budget and timeline selects added.
+   the entered text. Optional budget and timeline selects added. Field
+   ids are literal (`cf-name` …) and the query-string preselection is
+   applied after hydration, so the prerendered and hydrated forms are
+   identical. On narrow screens the form comes before the process
+   steps.
 7. **Performance.** Route-level code splitting (Home in the shell, every
    other page a separate chunk warmed before hydration), stylesheet
    inlined into each prerendered page, font preloads reduced to the two
@@ -129,9 +133,11 @@ was confirmed in search results. Unknown URLs return 404.
 | Horizontal overflow at 360, 390, 768, 1280, 1920 px | none | Measured (Chromium emulation) |
 | 150% root font size at 390 px | no overflow, no clipped headings | Measured (Chromium emulation) |
 | Touch targets | all controls ≥ 24 px except one inline text link (exempt) | Measured |
-| Mobile menu: focus moves in, Escape closes, focus returns, scroll locked | works | Manually verified via scripted events in Chromium |
-| Contact form: validation, error association, focus to first error, error path keeps text, success only on `success: true`, triple-click sends once | works | Manually verified against a stubbed endpoint; nothing sent to the live inbox |
-| Legacy `?interest=Voice%20Agents` preselects "Voice Agent" | works | Manually verified |
+| Mobile menu: focus moves in, Tab and Shift+Tab wrap inside the menu, page behind is `inert`, Escape closes, focus returns, scroll locked | works | Manually verified via scripted events in Chromium |
+| Contact form on a direct load: field ids identical before and after hydration, no hydration warnings, invalid submit focuses the first invalid field (name → email → message), error text associated via `aria-describedby` | works | Manually verified in Chromium at 390 px |
+| Contact form: error path keeps text, success only on `success: true`, triple-click sends once | works | Manually verified against a stubbed endpoint; nothing sent to the live inbox |
+| Direct link `/contact?interest=Voice%20Agent` shows "Voice Agent" immediately after hydration; legacy `?interest=Voice%20Agents` maps to it | works | Manually verified |
+| Mobile contact layout: form starts at ~417 px on an 844 px viewport, before the process steps; "Jump to the form" link on narrow screens | works | Measured (Chromium emulation) |
 | Client-side navigation between chunks, title/canonical update | works, no console errors | Manually verified |
 | CSP: no violations on load, form endpoint reachable | no violations | Manually verified on the local production-like server |
 | 404 status for unknown URLs, 308 for legacy slugs | works | Measured on the local server; **Not tested** on Vercel until deployed |
@@ -148,8 +154,11 @@ deployment. **Inferred.**
 1. **No verifiable proof yet.** The site is honest but proof-light. The
    biggest credibility gain is one real case study with permission.
 2. **No named people.** The About page describes accountability
-   structurally. A founder name, photo and a professional link would
-   materially raise trust.
+   structurally. `TEAM` and `COMPANY` in `src/data.js` are wired up:
+   fill in names, roles, photos, links, the Companies House number and
+   registered office and the About page renders them (with a link to
+   the Companies House record). They are empty on purpose; a test
+   fails if placeholder people appear.
 3. **Response-time promise removed.** The old "within 24 hours" was
    unverified. Restore it in `src/data.js`/`Contact.jsx` only if it is
    a real commitment.

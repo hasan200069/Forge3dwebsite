@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { INTERESTS } from '../data.js'
 import { ACCESS_KEY, ENDPOINT, LIMITS, resolveInterest, validate, interpretResponse } from '../contact-logic.js'
@@ -33,12 +33,20 @@ const STEPS = [
 const BUDGETS = ['Not sure yet', 'Under £5k', '£5k – £15k', '£15k – £50k', 'Over £50k']
 const TIMELINES = ['Not sure yet', 'As soon as possible', 'Within 3 months', 'Later this year', 'Just researching']
 
+/* Field ids are literal: there is one form per page, and literal ids
+   are identical in the prerendered HTML and after hydration. useId()
+   is not used because the server and client trees are assembled
+   differently (static vs lazy pages) and its ids could drift. */
+const id = 'cf'
+
 export function ContactForm({ preselect, submit = defaultSubmit }) {
-  const id = useId()
   const [values, setValues] = useState({
     name: '',
     email: '',
-    interest: preselect,
+    /* the prerendered page has no query string, so the first render on
+       both server and client uses the default; the effect below applies
+       ?interest= after hydration without a mismatch */
+    interest: INTERESTS[0],
     message: '',
     budget: BUDGETS[0],
     timeline: TIMELINES[0],
@@ -50,6 +58,11 @@ export function ContactForm({ preselect, submit = defaultSubmit }) {
   const inFlight = useRef(false)
   const statusRef = useRef(null)
   const started = useRef(false)
+  const fields = useRef({})
+
+  useEffect(() => {
+    setValues((v) => ({ ...v, interest: preselect }))
+  }, [preselect])
 
   const set = (k) => (e) => setValues((v) => ({ ...v, [k]: e.target.value }))
 
@@ -67,8 +80,8 @@ export function ContactForm({ preselect, submit = defaultSubmit }) {
     const errs = validate(values)
     setErrors(errs)
     if (Object.keys(errs).length) {
-      const first = Object.keys(errs)[0]
-      document.getElementById(`${id}-${first}`)?.focus()
+      const first = ['name', 'email', 'message'].find((k) => errs[k])
+      fields.current[first]?.focus()
       return
     }
 
@@ -134,10 +147,10 @@ export function ContactForm({ preselect, submit = defaultSubmit }) {
     <form className="contact-form" onSubmit={onSubmit} onInput={onFirstInput} noValidate aria-busy={busy}>
       <div className="form-row">
         {field('name', 'Your name', (
-          <input id={`${id}-name`} name="name" type="text" autoComplete="name" maxLength={LIMITS.name} value={values.name} onChange={set('name')} aria-invalid={!!errors.name} aria-describedby={describedBy('name')} required />
+          <input id={`${id}-name`} ref={(el) => (fields.current.name = el)} name="name" type="text" autoComplete="name" maxLength={LIMITS.name} value={values.name} onChange={set('name')} aria-invalid={!!errors.name} aria-describedby={describedBy('name')} required />
         ))}
         {field('email', 'Work email', (
-          <input id={`${id}-email`} name="email" type="email" inputMode="email" autoComplete="email" maxLength={LIMITS.email} value={values.email} onChange={set('email')} aria-invalid={!!errors.email} aria-describedby={describedBy('email')} required />
+          <input id={`${id}-email`} ref={(el) => (fields.current.email = el)} name="email" type="email" inputMode="email" autoComplete="email" maxLength={LIMITS.email} value={values.email} onChange={set('email')} aria-invalid={!!errors.email} aria-describedby={describedBy('email')} required />
         ))}
       </div>
 
@@ -148,7 +161,7 @@ export function ContactForm({ preselect, submit = defaultSubmit }) {
       ))}
 
       {field('message', 'Brief description', (
-        <textarea id={`${id}-message`} name="message" rows="5" maxLength={LIMITS.message} value={values.message} onChange={set('message')} aria-invalid={!!errors.message} aria-describedby={describedBy('message', 'hint')} required />
+        <textarea id={`${id}-message`} ref={(el) => (fields.current.message = el)} name="message" rows="5" maxLength={LIMITS.message} value={values.message} onChange={set('message')} aria-invalid={!!errors.message} aria-describedby={describedBy('message', 'hint')} required />
       ), { hint: 'What happens today, which tools are involved, and what a good outcome would look like.' })}
 
       <div className="form-row">
@@ -219,7 +232,7 @@ export default function Contact() {
     <div className="page">
       <Seo title={TITLE} description={DESC} path="/contact" jsonLd={JSON_LD} />
       <div className="shell contact-grid">
-        <div className="contact-left">
+        <div className="contact-intro">
           <Crumbs trail={[{ label: 'Contact', to: '/contact' }]} />
           <p className="eyebrow">Contact</p>
           <h1>Discuss <span className="em">your project.</span></h1>
@@ -227,9 +240,15 @@ export default function Contact() {
             A few sentences about the enquiries, the process or the product you have in mind is
             enough to start. No pitch deck required.
           </p>
-          <a className="contact-email" href={`mailto:${EMAIL}`}>{EMAIL}</a>
+          <p className="contact-alt">
+            <a className="contact-email" href={`mailto:${EMAIL}`} data-track="contact-email">{EMAIL}</a>
+            <a className="jump-to-form" href="#cf-name">Jump to the form ↓</a>
+          </p>
+        </div>
+        <ContactForm preselect={preselect} />
+        <div className="contact-steps">
           <div className="next-steps">
-            <h2 className="sr-only">What happens after you send it</h2>
+            <h2>What happens after you send it</h2>
             {STEPS.map((s, i) => (
               <div key={s.t}>
                 <span className="n" aria-hidden="true">{i + 1}</span>
@@ -241,7 +260,6 @@ export default function Contact() {
             ))}
           </div>
         </div>
-        <ContactForm key={preselect} preselect={preselect} />
       </div>
       <Footer />
     </div>

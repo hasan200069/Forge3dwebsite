@@ -1674,21 +1674,61 @@ a.card:hover {
 .facts dd { color: var(--ink); }
 .facts dd a { color: var(--cyan); }
 
+.person img {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 16px;
+  border: 1px solid var(--line-strong);
+}
+
+.person .role { color: var(--cyan); font-size: 0.9rem; margin-bottom: 8px; }
+
+.person-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 12px;
+  list-style: none;
+}
+
+.person-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 0.92rem;
+}
+
 /* ———— contact ———— */
 
 .contact-grid {
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  gap: clamp(32px, 5vw, 72px);
+  grid-template-areas:
+    'intro form'
+    'steps form';
+  gap: 24px clamp(32px, 5vw, 72px);
   align-items: start;
   padding-block: clamp(48px, 7vw, 88px) 0;
 }
 
-.contact-left h1 { margin: 14px 0 16px; }
+.contact-intro { grid-area: intro; }
+.contact-form, .form-sent { grid-area: form; }
+.contact-steps { grid-area: steps; }
+
+.contact-intro h1 { margin: 14px 0 16px; }
+
+.contact-alt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 22px;
+  margin-top: 18px;
+}
 
 .contact-email {
   display: inline-flex;
-  margin: 20px 0 30px;
   font-size: 1.1rem;
   font-weight: 500;
   color: var(--cyan);
@@ -1697,11 +1737,25 @@ a.card:hover {
   align-items: center;
 }
 
+/* only useful when the form is out of the first screen */
+.jump-to-form {
+  display: none;
+  min-height: 44px;
+  align-items: center;
+  color: var(--ink-2);
+  font-size: 0.95rem;
+}
+
 .next-steps {
   display: grid;
   gap: 14px;
   border-top: 1px solid var(--line);
   padding-top: 24px;
+}
+
+.next-steps > h2 {
+  font-size: 1.05rem;
+  margin-bottom: 4px;
 }
 
 .next-steps > div {
@@ -1948,7 +2002,11 @@ a.card:hover {
   :root { --nav-h: 64px; }
   .nav-links { display: none; }
   .nav-toggle { display: flex; }
-  .contact-grid { grid-template-columns: 1fr; }
+  .contact-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'intro' 'form' 'steps';
+  }
+  .jump-to-form { display: inline-flex; }
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
   .capabilities { grid-template-columns: 1fr; }
 }

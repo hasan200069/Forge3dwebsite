@@ -55,16 +55,45 @@ export function Nav() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  /* lock the page behind the open menu and close it on Escape */
+  /* While the menu is open: the page behind it is inert (no focus, no
+     clicks, hidden from assistive tech), scrolling is locked, Escape
+     closes, and Tab wraps between the toggle button and the sheet so
+     focus can never land on obscured content. */
   useEffect(() => {
     if (!open) return
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    const onKey = (e) => e.key === 'Escape' && setOpen(false)
-    window.addEventListener('keydown', onKey)
+    const main = document.getElementById('main')
+    if (main) main.inert = true
+
+    const focusables = () => [
+      toggle.current,
+      ...(sheet.current?.querySelectorAll('a[href], button:not([disabled])') ?? []),
+    ].filter(Boolean)
+
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        setOpen(false)
+        return
+      }
+      if (e.key !== 'Tab') return
+      const list = focusables()
+      const first = list[0]
+      const last = list[list.length - 1]
+      const active = document.activeElement
+      if (e.shiftKey && (active === first || !list.includes(active))) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && (active === last || !list.includes(active))) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+    document.addEventListener('keydown', onKey)
     return () => {
       document.body.style.overflow = prev
-      window.removeEventListener('keydown', onKey)
+      if (main) main.inert = false
+      document.removeEventListener('keydown', onKey)
     }
   }, [open])
 

@@ -165,12 +165,29 @@ test('contact form validation and interest resolution', async () => {
   assert.ok(interpretResponse(true, null))
 })
 
-test('contact page markup preserves preselection support', () => {
+test('contact page markup preserves preselection support and uses stable field ids', () => {
   const html = pages.find((p) => p.route === '/contact').html
   assert.match(html, /<select[^>]*name="interest"/)
   assert.match(html, /name="botcheck"/)
-  assert.match(html, /<label for="[^"]+">Your name<\/label>/)
-  assert.match(html, /<label for="[^"]+">Work email<\/label>/)
+  // literal ids: identical before and after hydration, so error
+  // messages, labels and focus() always target the rendered element
+  for (const k of ['name', 'email', 'interest', 'message', 'budget', 'timeline']) {
+    assert.match(html, new RegExp(`<label for="cf-${k}"`), `label for cf-${k}`)
+    assert.match(html, new RegExp(`id="cf-${k}"`), `field cf-${k}`)
+  }
+  assert.doesNotMatch(html, /id="[^"]*:r[0-9a-z]+:/, 'useId-generated ids must not appear in the form')
+  // the form precedes the process steps in source order (mobile order)
+  assert.ok(html.indexOf('class="contact-form"') < html.indexOf('class="contact-steps"'))
+  assert.match(html, /href="#cf-name"/, 'jump-to-form link')
+})
+
+test('no placeholder people or company details are published', () => {
+  const about = pages.find((p) => p.route === '/about').html
+    .replace(/<style[\s\S]*?<\/style>/g, '')
+    .replace(/<script[\s\S]*?<\/script>/g, '')
+    .replace(/<[^>]+>/g, ' ')
+  assert.doesNotMatch(about, /lorem|placeholder|John Doe|Jane Smith|TODO|TBC/i)
+  assert.doesNotMatch(about, /class="person"/, 'team cards render only when TEAM has entries')
 })
 
 test('security headers and hosting config', () => {
