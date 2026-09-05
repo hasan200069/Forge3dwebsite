@@ -36,16 +36,29 @@ export default function Work() {
     <div className="page">
       <Seo title={TITLE} description={DESC} path="/case-studies" jsonLd={JSON_LD} />
 
-      <header className="shell page-hero">
-        <Crumbs trail={[{ label: 'Work', to: '/case-studies' }]} />
-        <p className="eyebrow">Work</p>
-        <h1>Worked examples of how a project <span className="em">is scoped and measured.</span></h1>
-        <p className="lede">
-          Each example below shows the context, the scope we would agree, the system as it would
-          behave, and the metrics we would define before launch, including the baseline and the
-          measurement period.
-        </p>
-        <div className="evidence-note" style={{ marginTop: 26 }}>
+      <header className="shell page-hero split">
+        <div className="page-hero-copy">
+          <Crumbs trail={[{ label: 'Work', to: '/case-studies' }]} />
+          <p className="eyebrow">Work</p>
+          <h1>Worked examples of how a project <span className="em">is scoped and measured.</span></h1>
+          <p className="lede">
+            Each example below shows the context, the scope we would agree, the system as it would
+            behave, and the metrics we would define before launch, including the baseline and the
+            measurement period.
+          </p>
+          <nav className="chooser" aria-label="Examples on this page" style={{ marginTop: 26 }}>
+            {DEMOS.map((d) => (
+              <a key={d.slug} className="chooser-item" href={`#${d.slug}`}>
+                <span className="chooser-num">{d.num}</span>
+                <span>
+                  <b>{d.title}</b>
+                  <small>{d.field}</small>
+                </span>
+              </a>
+            ))}
+          </nav>
+        </div>
+        <div className="evidence-note glance">
           <strong>About evidence on this page</strong>
           <span>
             These are illustrations, not client case studies. We publish client results only with
@@ -53,6 +66,7 @@ export default function Work() {
             Until those are published here, treat every figure you see elsewhere about our work as
             unverified and ask us for references on a call.
           </span>
+          <span className="label-illustrative" style={{ marginTop: 6 }}>Every example below is illustrative</span>
         </div>
       </header>
 

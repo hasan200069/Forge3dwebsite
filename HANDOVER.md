@@ -165,6 +165,24 @@ icons and the social card from `scripts/gen-assets.mjs`.
   surfaces sit on the same dark ground, and every text token still
   passes AA.
 
+### Sixth pass: inner pages brought up to the home page
+
+- Every inner page now opens with the same hero rhythm as the home:
+  breadcrumb pill, eyebrow, headline with gradient emphasis, staggered
+  entrance, a pool of light, and a glass visual beside the copy.
+  Solutions: a chooser that jumps to each solution. Service detail: an
+  "at a glance" card (built for, connects to, first demo, ownership).
+  Voice: the paced call sample in the hero and a "how it behaves" card.
+  Work: a chooser for the three examples and the evidence note as a
+  glass card. About: company facts beside the headline and a
+  commitments card.
+- A shared line-icon set (`src/icons.jsx`) marks each solution on the
+  home cards, the solutions overview, service heroes and capabilities;
+  tiles switch to the gradient on hover.
+- Inner heroes are clipped to the page so the decorative light can no
+  longer cause horizontal overflow (caught by the capture script and
+  fixed: 1280/390 px, no overflow on any page).
+
 ## 3. Final design tokens
 
 | Token | Value | Use |

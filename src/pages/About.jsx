@@ -36,15 +36,36 @@ export default function About() {
     <div className="page">
       <Seo title={TITLE} description={DESC} path="/about" jsonLd={JSON_LD} />
 
-      <header className="shell page-hero">
-        <Crumbs trail={[{ label: 'About', to: '/about' }]} />
-        <p className="eyebrow">About</p>
-        <h1>An engineer-led studio for AI systems <span className="em">that have to keep working.</span></h1>
-        <p className="lede">
-          ForgeQubit exists because too many AI projects end as demos. We build reception agents,
-          automations and products that are integrated with the tools you already use, tested
-          against real scenarios, and handed over properly.
-        </p>
+      <header className="shell page-hero split">
+        <div className="page-hero-copy">
+          <Crumbs trail={[{ label: 'About', to: '/about' }]} />
+          <p className="eyebrow">About</p>
+          <h1>An engineer-led studio for AI systems <span className="em">that have to keep working.</span></h1>
+          <p className="lede">
+            ForgeQubit exists because too many AI projects end as demos. We build reception agents,
+            automations and products that are integrated with the tools you already use, tested
+            against real scenarios, and handed over properly.
+          </p>
+        </div>
+        <dl className="facts glance" aria-label="Company facts">
+          <div><dt>Company</dt><dd>{COMPANY.legalName}, registered in the {COMPANY.registeredIn}</dd></div>
+          {COMPANY.companyNumber && (
+            <div>
+              <dt>Company no.</dt>
+              <dd>
+                <a href={`https://find-and-update.company-information.service.gov.uk/company/${COMPANY.companyNumber}`} rel="noopener">
+                  {COMPANY.companyNumber}
+                </a>
+              </dd>
+            </div>
+          )}
+          {COMPANY.registeredOffice && <div><dt>Registered office</dt><dd>{COMPANY.registeredOffice}</dd></div>}
+          {COMPANY.founded && <div><dt>Founded</dt><dd>{COMPANY.founded}</dd></div>}
+          <div><dt>Works with</dt><dd>Service businesses, operations teams, founders and product teams</dd></div>
+          <div><dt>Regions</dt><dd>United Kingdom, Europe, United States (remote)</dd></div>
+          <div><dt>Contact</dt><dd><a href={`mailto:${EMAIL}`}>{EMAIL}</a></dd></div>
+          <div><dt>Engagements</dt><dd>Fixed-scope proposals, weekly demos, deliverables assigned to you on payment</dd></div>
+        </dl>
       </header>
 
       <section className="section tight" aria-labelledby="who-h">
@@ -66,25 +87,20 @@ export default function About() {
               the United States, overlapping with both European and US business hours.
             </p>
           </div>
-          <dl className="facts" aria-label="Company facts">
-            <div><dt>Company</dt><dd>{COMPANY.legalName}, registered in the {COMPANY.registeredIn}</dd></div>
-            {COMPANY.companyNumber && (
+          <div className="glance">
+            <div className="glance-head">
               <div>
-                <dt>Company no.</dt>
-                <dd>
-                  <a href={`https://find-and-update.company-information.service.gov.uk/company/${COMPANY.companyNumber}`} rel="noopener">
-                    {COMPANY.companyNumber}
-                  </a>
-                </dd>
+                <b>What you can hold us to</b>
+                <small>In every proposal, in writing</small>
               </div>
-            )}
-            {COMPANY.registeredOffice && <div><dt>Registered office</dt><dd>{COMPANY.registeredOffice}</dd></div>}
-            {COMPANY.founded && <div><dt>Founded</dt><dd>{COMPANY.founded}</dd></div>}
-            <div><dt>Works with</dt><dd>Service businesses, operations teams, founders and product teams</dd></div>
-            <div><dt>Regions</dt><dd>United Kingdom, Europe, United States (remote)</dd></div>
-            <div><dt>Contact</dt><dd><a href={`mailto:${EMAIL}`}>{EMAIL}</a></dd></div>
-            <div><dt>Engagements</dt><dd>Fixed-scope proposals, weekly demos, deliverables assigned to you on payment</dd></div>
-          </dl>
+            </div>
+            <ul className="list check">
+              <li>A written scope and price before any invoice.</li>
+              <li>A working demo every week, tested against your examples.</li>
+              <li>A defined route to a person for every agent.</li>
+              <li>Accounts, code and documentation handed over in your name.</li>
+            </ul>
+          </div>
         </div>
       </section>
 

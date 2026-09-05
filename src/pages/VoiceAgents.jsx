@@ -3,6 +3,7 @@ import { VOICE, SOLUTIONS, contactHref } from '../data.js'
 import { Crumbs, Footer, Faq, CtaBand } from '../chrome.jsx'
 import { Seo, SITE_URL, orgRef, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
 import { CallSample } from '../visuals.jsx'
+import { ICONS, IconTile } from '../icons.jsx'
 
 const TITLE = 'AI Voice Agents for Phone Answering & Bookings | ForgeQubit'
 const DESC =
@@ -42,15 +43,18 @@ export default function VoiceAgents() {
     <div className="page">
       <Seo title={TITLE} description={DESC} path={VOICE.path} jsonLd={JSON_LD} />
 
-      <header className="shell page-hero">
-        <Crumbs trail={[{ label: 'Solutions', to: '/services' }, { label: VOICE.name }]} />
-        <p className="eyebrow">Part of AI Reception & Lead Handling</p>
-        <h1>Voice agents that answer the phone, <span className="em">and know when to pass it on.</span></h1>
-        <p className="lede">{VOICE.short}</p>
-        <div className="btn-row">
-          <Link className="btn btn-primary" to={contactHref(VOICE.interest)} data-track="service-hero-voice-agents">Discuss your project <span aria-hidden="true">→</span></Link>
-          <Link className="btn btn-secondary" to={reception.path}>See the full reception solution</Link>
+      <header className="shell page-hero split">
+        <div className="page-hero-copy">
+          <Crumbs trail={[{ label: 'Solutions', to: '/services' }, { label: VOICE.name }]} />
+          <p className="eyebrow"><IconTile icon={ICONS['voice-agents']} size="sm" /> Part of AI Reception & Lead Handling</p>
+          <h1>Voice agents that answer the phone, <span className="em">and know when to pass it on.</span></h1>
+          <p className="lede">{VOICE.short}</p>
+          <div className="btn-row">
+            <Link className="btn btn-primary" to={contactHref(VOICE.interest)} data-track="service-hero-voice-agents">Discuss your project <span aria-hidden="true">→</span></Link>
+            <Link className="btn btn-secondary" to={reception.path}>See the full reception solution</Link>
+          </div>
         </div>
+        <CallSample />
       </header>
 
       <section className="section tight" aria-labelledby="who-h">
@@ -75,7 +79,21 @@ export default function VoiceAgents() {
               your team, depending on what you decide during scoping.
             </p>
           </div>
-          <CallSample />
+          <div className="glance">
+            <div className="glance-head">
+              <IconTile icon={ICONS['voice-agents']} size="lg" />
+              <div>
+                <b>How it behaves</b>
+                <small>Same rules on every call</small>
+              </div>
+            </div>
+            <dl>
+              <div><dt>Introduces itself</dt><dd>As an automated assistant, on every call.</dd></div>
+              <div><dt>Answers within</dt><dd>The first ring, day or night.</dd></div>
+              <div><dt>Hands off</dt><dd>Live transfer with a spoken summary, a callback request, or a ticket to your team.</dd></div>
+              <div><dt>Records</dt><dd>Only if you decide it should, with the announcement your jurisdiction requires.</dd></div>
+            </dl>
+          </div>
         </div>
       </section>
 

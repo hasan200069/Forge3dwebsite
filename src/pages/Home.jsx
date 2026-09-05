@@ -4,6 +4,7 @@ import { SOLUTIONS, PROCESS, FAQS } from '../data.js'
 import { EMAIL, Footer, Faq, CtaBand } from '../chrome.jsx'
 import { Seo, SITE_URL, SITE_NAME, ORG_ID, orgRef, graph, webPageLd } from '../seo.jsx'
 import { EnquiryFlow, Workflow, ToolStrip } from '../visuals.jsx'
+import { ICONS, IconTile } from '../icons.jsx'
 
 const TITLE = 'ForgeQubit — AI Reception, Automation & Custom AI Products'
 const DESC =
@@ -157,7 +158,10 @@ export default function Home() {
           <div className="solutions">
             {SOLUTIONS.map((s) => (
               <article key={s.slug} className="solution" aria-labelledby={`sol-${s.slug}`}>
-                <span className="num">{s.num}</span>
+                <div className="solution-id">
+                  <IconTile icon={ICONS[s.slug]} />
+                  <span className="num">{s.num}</span>
+                </div>
                 <h3 id={`sol-${s.slug}`}>{s.name}</h3>
                 <p className="solution-problem">{s.problem}</p>
                 <p className="solution-build">{s.short}</p>
