@@ -3,20 +3,34 @@ import { useId } from 'react'
 /* ————————————————————————————————————————
    FORGEQUBIT · the mark
 
-   A hexagonal cell with a Q tail, a caret above a bar. The geometry is
-   unchanged from the original mark; only the colour has moved to the
-   cyan identity. Reads as "Q" at a glance and still resolves at 16px.
+   An open ring with a tail: a Q. The ring is broken at the top right and
+   a bright pulse sits in the opening — an answer leaving the loop, work
+   moving forward. On hover the pulse travels once around the ring.
+
+   Geometry (48×48 viewBox):
+     ring   centre (23, 23), radius 14.5, stroke 3.6
+            circumference 2π·14.5 ≈ 91.1; gap ≈ 15.5 centred at 315°
+     pulse  a 6-unit dash centred in the gap, same radius
+     tail   (27.5, 27.5) → (39.5, 39.5), crossing the bowl at 45°, so it
+            reads as a Q and not as a magnifying glass
+
+   SVG circles start at 3 o'clock and run clockwise on screen, so a
+   dash-offset of −(position along the path) places the dash start.
    ———————————————————————————————————————— */
 
-const HEX = 'M24 5 L39.59 14 L39.59 32 L24 41 L8.41 32 L8.41 14 Z'
-const CARET = 'M24 13 L32 23 L27.6 23 L24 18.6 L20.4 23 L16 23 Z'
+const C = 91.1
+const GAP = 15.5
+const DASH = C - GAP
+/* dash starts just after the gap (at 345.6°) and runs clockwise */
+const RING_OFFSET = -((315 + (GAP / C) * 180) / 360) * C
+/* the 6-unit pulse is centred at 315° */
+const PULSE_OFFSET = -((315 / 360) * C - 3)
 
 export function LogoMark({ size = 28, className = '', title }) {
-  /* every instance needs its own gradient ids — duplicated ids across
+  /* each instance needs its own gradient ids: duplicated ids across
      inlined SVGs make later copies inherit the first one's stops */
   const uid = useId().replace(/:/g, '')
-  const ring = `r${uid}`
-  const fill = `f${uid}`
+  const g = `g${uid}`
 
   return (
     <svg
@@ -32,41 +46,59 @@ export function LogoMark({ size = 28, className = '', title }) {
       focusable="false"
     >
       <defs>
-        <linearGradient id={ring} x1="8" y1="5" x2="40" y2="41" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#67E8F9" />
-          <stop offset="0.5" stopColor="#22D3EE" />
-          <stop offset="1" stopColor="#0891B2" />
-        </linearGradient>
-        <linearGradient id={fill} x1="16" y1="12" x2="34" y2="32" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#A5F0FA" />
-          <stop offset="0.5" stopColor="#22D3EE" />
-          <stop offset="1" stopColor="#0891B2" />
+        <linearGradient id={g} x1="8" y1="8" x2="42" y2="42" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#7DF0FF" />
+          <stop offset="0.55" stopColor="#22D3EE" />
+          <stop offset="1" stopColor="#0E7490" />
         </linearGradient>
       </defs>
 
-      {/* the cell */}
-      <path d={HEX} stroke={`url(#${ring})`} strokeWidth="2.6" strokeLinejoin="round" />
+      {/* the loop */}
+      <circle
+        className="logo-ring"
+        cx="23"
+        cy="23"
+        r="14.5"
+        stroke={`url(#${g})`}
+        strokeWidth="3.6"
+        strokeLinecap="round"
+        strokeDasharray={`${DASH} ${GAP}`}
+        strokeDashoffset={RING_OFFSET}
+      />
 
-      {/* the Q tail, breaking the lower-right edge */}
-      <path d="M29 34.7 L38 44" stroke={`url(#${fill})`} strokeWidth="4.4" strokeLinecap="round" />
+      {/* the tail that makes it a Q */}
+      <path d="M27.5 27.5 L39.5 39.5" stroke={`url(#${g})`} strokeWidth="3.6" strokeLinecap="round" />
 
-      {/* the caret */}
-      <path d={CARET} fill={`url(#${fill})`} />
-
-      {/* the bar */}
-      <rect x="16" y="26.6" width="16" height="4" rx="2" fill={`url(#${fill})`} />
+      {/* the pulse in the opening */}
+      <circle
+        className="logo-pulse"
+        cx="23"
+        cy="23"
+        r="14.5"
+        stroke="#B5F5FF"
+        strokeWidth="3.6"
+        strokeLinecap="round"
+        strokeDasharray={`6 ${C - 6}`}
+        strokeDashoffset={PULSE_OFFSET}
+      />
     </svg>
   )
 }
 
 /* the horizontal lockup used in the nav and footer */
+export function WordmarkText() {
+  return (
+    <span className="wordmark-text">
+      Forge<span className="wordmark-accent">Qubit</span>
+    </span>
+  )
+}
+
 export function Wordmark({ size = 28, className = '' }) {
   return (
     <span className={`wordmark ${className}`}>
       <LogoMark size={size} />
-      <span className="wordmark-text">
-        FORGE<span className="wordmark-accent">QUBIT</span>
-      </span>
+      <WordmarkText />
     </span>
   )
 }

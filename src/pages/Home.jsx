@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { SOLUTIONS, CAPABILITIES, PROCESS, ENGINEERING, FAQS, POSTS, contactHref } from '../data.js'
 import { EMAIL, Footer, Faq, CtaBand } from '../chrome.jsx'
 import { Seo, SITE_URL, SITE_NAME, ORG_ID, orgRef, graph, webPageLd } from '../seo.jsx'
-import { EnquiryFlow, Transcript, Workflow } from '../visuals.jsx'
+import { EnquiryFlow, Transcript, Workflow, ToolStrip } from '../visuals.jsx'
 
 const TITLE = 'ForgeQubit — AI Reception, Workflow Automation & Custom AI Products'
 const DESC =
@@ -76,8 +76,9 @@ export default function Home() {
 
       {/* ———— 1. hero ———— */}
       <section className="hero" aria-labelledby="hero-h">
+        <div className="hero-aurora" aria-hidden="true"><i /><i /></div>
         <div className="shell hero-grid">
-          <div>
+          <div className="hero-copy">
             <p className="eyebrow">Voice · WhatsApp · Automation · AI products</p>
             <h1 id="hero-h">
               AI systems that answer customers and <span className="em">move work forward.</span>
@@ -100,6 +101,14 @@ export default function Home() {
           </div>
           <EnquiryFlow />
         </div>
+      </section>
+
+      {/* ———— integrations strip ———— */}
+      <section className="section tight" aria-labelledby="tools-h" style={{ paddingBlock: 'clamp(28px, 4vw, 44px)' }}>
+        <div className="shell">
+          <h2 id="tools-h" className="eyebrow plain" style={{ marginBottom: 14 }}>Connects to the tools you already run</h2>
+        </div>
+        <ToolStrip />
       </section>
 
       {/* ———— 2. evidence: delivery practices ———— */}

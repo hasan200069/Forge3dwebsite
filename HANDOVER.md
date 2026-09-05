@@ -42,8 +42,20 @@ icons and the social card from `scripts/gen-assets.mjs`.
    step highlight) is disabled under `prefers-reduced-motion`.
 4. **Cyan design system** in `src/styles.css` with tokens for colour,
    gradient, type, spacing, container, radius, elevation, motion and
-   focus. Brand assets regenerated in cyan (favicon, PWA icons, Apple
-   touch icon, social card, manifest, theme colour).
+   focus. Third pass deepened the palette (blue-black ground with two
+   quiet pools of light, a teal partner in the gradient, one warm accent
+   for the human moments) and added motion: hero entrance, scroll
+   reveals with a scroll fallback, a looping enquiry-to-booking
+   animation, a workflow token, a tool strip, button sheen and a logo
+   pulse. All of it is transform/opacity, off under
+   `prefers-reduced-motion`, and the prerendered HTML is the finished
+   state so nothing depends on it.
+4a. **New logo.** An open ring with a tail (a Q) and a bright pulse in
+   the opening, in `src/logo.jsx` and mirrored in
+   `scripts/gen-assets.mjs`; the wordmark is now mixed-case
+   "ForgeQubit" in Space Grotesk, which let the Unbounded font (168 kB)
+   be removed. Favicon, PWA icons, Apple touch icon and social card
+   regenerated.
 5. **Service pages** for the three offers plus `/services/voice-agents`
    (previously a 404 that search engines had indexed). Each covers who
    it helps, problems, what is included, a concrete labelled example,
@@ -91,14 +103,16 @@ icons and the social card from `scripts/gen-assets.mjs`.
 | `--bg-alt` | `#091923` | alternate sections, footer |
 | `--surface` / `--surface-2` | `#102532` / `#153040` | cards, hover |
 | `--ink` / `--ink-2` / `--ink-3` | `#F2FAFD` / `#B4CAD4` / `#8AA7B4` | text (18.2 / 11.3 / 7.6 : 1 on `--bg`) |
-| `--cyan` / `--cyan-bright` / `--cyan-deep` | `#22D3EE` / `#67E8F9` / `#0891B2` | accents, focus, deep fills |
+| `--bg` / `--bg-alt` / `--surface` (final) | `#050D14` / `#081722` / `#0E2230` | deepened in the third pass |
+| `--cyan` / `--cyan-bright` / `--cyan-deep` | `#22D3EE` / `#7DF0FF` / `#0E7490` | accents, focus, deep fills |
+| `--teal` / `--warm` | `#2DD4BF` / `#FFB86B` | gradient partner; illustrative labels and exception nodes |
 | `--cyan-ink` | `#04141B` | text on the gradient (5.1:1 at the darkest stop) |
 | `--line` / `--line-strong` | `#254452` / `#3A6072` | decorative borders |
 | `--field-border` | `#4F7A8F` | form control boundaries (≥ 3:1 on field and card) |
 | `--ok` / `--warn` / `--err` | `#34D399` / `#FBBF24` / `#FB7185` | semantic states |
-| `--grad` | `linear-gradient(135deg, #67E8F9 0%, #22D3EE 48%, #0891B2 100%)` | primary buttons, signature graphics |
-| `--grad-text` | `linear-gradient(120deg, #9DF0FB, #22D3EE 55%, #0FB0D3)` | emphasised words only |
-| Type | Space Grotesk (body and headings), Instrument Serif italic (emphasis), Unbounded (wordmark, numerals) | |
+| `--grad` | `linear-gradient(135deg, #7DF0FF 0%, #22D3EE 40%, #14B8C9 70%, #0891B2 100%)` | primary buttons (dark text keeps ≥ 5:1 at every stop), signature graphics |
+| `--grad-text` | `linear-gradient(120deg, #B5F5FF, #22D3EE 50%, #2DD4BF)` | emphasised words only |
+| Type | Space Grotesk (body, headings, wordmark), Instrument Serif italic (emphasis) | |
 | Layout | `--shell: 1160px`, `--gutter: clamp(20px, 5vw, 56px)`, `--section: clamp(64px, 9vw, 112px)`, radii 16/10 px | |
 
 ## 4. Routes and redirects
@@ -141,6 +155,8 @@ was confirmed in search results. Unknown URLs return 404.
 | Client-side navigation between chunks, title/canonical update | works, no console errors | Manually verified |
 | CSP: no violations on load, form endpoint reachable | no violations | Manually verified on the local production-like server |
 | 404 status for unknown URLs, 308 for legacy slugs | works | Measured on the local server; **Not tested** on Vercel until deployed |
+| Scroll reveals fire on every block on `/`, `/services`, `/services/ai-reception`, `/case-studies`, `/contact` at 1280 and 390 px (29/29, 10/10, 13/13, 4/4, 3/3) | works | Measured in headless Chrome via `scripts/shots.mjs` |
+| Enquiry-flow loop, workflow token, tool strip, logo pulse | running | Manually verified in Chromium |
 | Firefox, Safari/WebKit, physical devices | | **Not tested** (only Chromium was available) |
 | Field Core Web Vitals | | **Not tested**; Speed Insights will report after deployment |
 | Live Web3Forms delivery | | **Not tested** on purpose; the key is unchanged from the working production form |

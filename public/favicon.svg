@@ -1,14 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
   <defs>
-    <linearGradient id="r" x1="8" y1="5" x2="40" y2="41" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#67E8F9"/><stop offset=".5" stop-color="#22D3EE"/><stop offset="1" stop-color="#0891B2"/>
-    </linearGradient>
-    <linearGradient id="f" x1="16" y1="12" x2="34" y2="32" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#A5F0FA"/><stop offset=".5" stop-color="#22D3EE"/><stop offset="1" stop-color="#0891B2"/>
+    <linearGradient id="g" x1="8" y1="8" x2="42" y2="42" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7DF0FF"/><stop offset=".55" stop-color="#22D3EE"/><stop offset="1" stop-color="#0E7490"/>
     </linearGradient>
   </defs>
-  <path d="M24 5 L39.59 14 L39.59 32 L24 41 L8.41 32 L8.41 14 Z" fill="none" stroke="url(#r)" stroke-width="2.6" stroke-linejoin="round"/>
-  <path d="M29 34.7 L38 44" stroke="url(#f)" stroke-width="4.4" stroke-linecap="round"/>
-  <path d="M24 13 L32 23 L27.6 23 L24 18.6 L20.4 23 L16 23 Z" fill="url(#f)"/>
-  <rect x="16" y="26.6" width="16" height="4" rx="2" fill="url(#f)"/>
+  <circle cx="23" cy="23" r="14.5" stroke="url(#g)" stroke-width="3.6" stroke-linecap="round" stroke-dasharray="75.6 15.5" stroke-dashoffset="-87.46"/>
+  <path d="M27.5 27.5 L39.5 39.5" stroke="url(#g)" stroke-width="3.6" stroke-linecap="round"/>
+  <circle cx="23" cy="23" r="14.5" stroke="#B5F5FF" stroke-width="3.6" stroke-linecap="round" stroke-dasharray="6 85.1" stroke-dashoffset="-76.71"/>
 </svg>

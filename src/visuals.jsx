@@ -2,9 +2,37 @@
    Illustrative visuals. Plain HTML and CSS — no canvas, no animation
    libraries. Every one of these carries a visible "illustrative" label
    because none of them is a screenshot of a production system.
+
+   Motion: the enquiry flow and the workflow diagram "play" on the
+   client (a message arrives, the steps light up, a token moves down the
+   workflow). The prerendered HTML is the finished state, so nothing is
+   hidden from a crawler or from anyone with JavaScript off, and under
+   prefers-reduced-motion the finished state is what stays on screen.
    ———————————————————————————————————————— */
 
 import { useEffect, useState } from 'react'
+
+const reduced = () =>
+  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+/* runs `fn(step)` on a schedule of delays, looping; returns a stop() */
+function play(steps, fn, loopPause) {
+  let i = 0
+  let t = 0
+  let stopped = false
+  const next = () => {
+    if (stopped) return
+    fn(i)
+    const delay = i === steps.length - 1 ? loopPause : steps[i + 1]
+    i = (i + 1) % steps.length
+    t = setTimeout(next, delay)
+  }
+  t = setTimeout(next, steps[0])
+  return () => {
+    stopped = true
+    clearTimeout(t)
+  }
+}
 
 const HERO_CHAT = [
   { who: 'Customer', me: false, text: 'Hi, do you have any availability for a boiler service next week?' },
@@ -19,17 +47,30 @@ const HERO_STEPS = [
   { t: 'Booked & recorded', d: 'Calendar slot, CRM updated, team notified' },
 ]
 
-/* The hero visual: an enquiry moving through qualification to booking.
-   Server-rendered with the final state so nothing depends on JS; the
-   client then cycles a highlight through the steps. */
+/* frames: how many messages are visible, whether a typing indicator
+   shows, and which step is live. The last frame is the finished state
+   and is what the server renders. */
+const HERO_FRAMES = [
+  { msgs: 1, typing: true, step: 0, delay: 900 },
+  { msgs: 2, typing: false, step: 0, delay: 1300 },
+  { msgs: 2, typing: true, step: 1, delay: 1800 },
+  { msgs: 3, typing: false, step: 1, delay: 1200 },
+  { msgs: 3, typing: true, step: 1, delay: 1600 },
+  { msgs: 4, typing: false, step: 2, delay: 1400 },
+  { msgs: 4, typing: false, step: 3, delay: 1000 },
+]
+const DONE = HERO_FRAMES.length - 1
+
 export function EnquiryFlow() {
-  const [live, setLive] = useState(2)
+  const [frame, setFrame] = useState(DONE)
 
   useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const id = setInterval(() => setLive((v) => (v + 1) % HERO_STEPS.length), 2600)
-    return () => clearInterval(id)
+    if (reduced()) return
+    return play(HERO_FRAMES.map((f) => f.delay), (i) => setFrame(i), 4200)
   }, [])
+
+  const f = HERO_FRAMES[frame]
+  const playing = frame !== DONE
 
   return (
     <figure className="flow" aria-label="Illustration of an enquiry being answered, qualified and booked">
@@ -41,18 +82,23 @@ export function EnquiryFlow() {
         <span className="label-illustrative">Illustrative</span>
       </div>
 
-      <div className="chat">
-        {HERO_CHAT.map((m, i) => (
-          <div key={i} className={`bubble ${m.me ? 'me' : 'them'}`}>
+      <div className="chat" aria-live="off">
+        {HERO_CHAT.slice(0, f.msgs).map((m, i) => (
+          <div key={i} className={`bubble ${m.me ? 'me' : 'them'} ${playing ? 'pop' : ''}`}>
             <span className="who">{m.who}</span>
             {m.text}
           </div>
         ))}
+        {f.typing && (
+          <div className={`bubble typing ${f.msgs % 2 ? 'me' : 'them'}`} aria-hidden="true">
+            <i /><i /><i />
+          </div>
+        )}
       </div>
 
       <ol className="flow-steps" aria-label="Steps">
         {HERO_STEPS.map((s, i) => (
-          <li key={s.t} className={`flow-step ${i < live ? 'done' : ''} ${i === live ? 'live' : ''}`}>
+          <li key={s.t} className={`flow-step ${i < f.step ? 'done' : ''} ${i === f.step ? 'live' : ''}`}>
             <b>{s.t}</b>
             {s.d}
           </li>
@@ -61,7 +107,7 @@ export function EnquiryFlow() {
 
       <figcaption className="flow-foot">
         <span>Sample conversation, not a production transcript.</span>
-        <span>Handoff to a person on request</span>
+        <span className="handoff">Handoff to a person on request</span>
       </figcaption>
     </figure>
   )
@@ -97,10 +143,22 @@ const KIND = {
 }
 
 export function Workflow({ flow, note }) {
+  /* -1 = finished state (server render); otherwise the active node */
+  const [active, setActive] = useState(-1)
+
+  useEffect(() => {
+    if (reduced()) return
+    const delays = flow.map((n) => (n.kind === 'human' ? 1900 : n.kind === 'decision' ? 1300 : 900))
+    return play(delays, (i) => setActive(i), 2600)
+  }, [flow])
+
   return (
     <figure className="wf" aria-label="Illustrative workflow diagram with a human approval step">
       {flow.map((n, i) => (
-        <div key={i} className={`wf-node ${n.kind}`}>
+        <div
+          key={i}
+          className={`wf-node ${n.kind} ${active === i ? 'active' : ''} ${active >= 0 && i < active ? 'passed' : ''}`}
+        >
           <span className="wf-icon" aria-hidden="true">{KIND[n.kind].icon}</span>
           <span>
             {n.label}
@@ -110,9 +168,9 @@ export function Workflow({ flow, note }) {
       ))}
       <figcaption>
         <div className="wf-legend">
-          <span><i style={{ background: 'var(--grad)' }} /> AI step with confidence threshold</span>
+          <span><i style={{ background: 'var(--cyan)' }} /> AI step with confidence threshold</span>
           <span><i style={{ background: 'var(--ok)' }} /> Human approval</span>
-          <span><i style={{ background: 'var(--warn)' }} /> Exception check</span>
+          <span><i style={{ background: 'var(--warm)' }} /> Exception check</span>
         </div>
         {note && <p className="transcript-note" style={{ marginTop: 12 }}>{note}</p>}
       </figcaption>
@@ -137,6 +195,7 @@ export function CallSample() {
     <figure className="call" aria-label="Illustrative phone call handled by a voice agent">
       <div className="flow-head" style={{ padding: 0 }}>
         <div className="flow-title">
+          <span className="live-dot" aria-hidden="true" />
           Rescheduling by phone
           <small>Dental practice, main number</small>
         </div>
@@ -150,5 +209,29 @@ export function CallSample() {
       ))}
       <figcaption className="transcript-note">Sample call written to show scope and handoff behaviour. Names are fictional.</figcaption>
     </figure>
+  )
+}
+
+/* ———— integrations strip ———— */
+
+export const TOOLS = [
+  'WhatsApp Business', 'Twilio', 'Vonage', 'Google Calendar', 'Microsoft 365', 'Calendly',
+  'HubSpot', 'Salesforce', 'Pipedrive', 'Zoho', 'Xero', 'QuickBooks', 'Zendesk', 'Intercom',
+  'Slack', 'Microsoft Teams', 'Notion', 'Airtable', 'Stripe', 'Postgres', 'AWS', 'Google Cloud',
+]
+
+/* Two copies of the list scroll as one loop; the second is hidden from
+   assistive tech so tool names are not announced twice. Under reduced
+   motion the strip stops and wraps instead. */
+export function ToolStrip() {
+  return (
+    <div className="strip" aria-label="Tools we integrate with">
+      <ul className="strip-track">
+        {TOOLS.map((t) => <li key={t}>{t}</li>)}
+      </ul>
+      <ul className="strip-track" aria-hidden="true">
+        {TOOLS.map((t) => <li key={t}>{t}</li>)}
+      </ul>
+    </div>
   )
 }

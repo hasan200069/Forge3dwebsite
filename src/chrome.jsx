@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
-import { LogoMark } from './logo.jsx'
+import { LogoMark, WordmarkText } from './logo.jsx'
 import { SOLUTIONS, VOICE } from './data.js'
 
 export const EMAIL = 'info@forgequbit.com'
@@ -101,10 +101,8 @@ export function Nav() {
     <>
       <nav className={`nav ${stuck || open ? 'stuck' : ''}`} aria-label="Primary">
         <Link className="wordmark" to="/" aria-label="ForgeQubit home">
-          <LogoMark size={30} />
-          <span className="wordmark-text">
-            FORGE<span className="wordmark-accent">QUBIT</span>
-          </span>
+          <LogoMark size={32} />
+          <WordmarkText />
         </Link>
 
         <div className="nav-links">
@@ -166,10 +164,8 @@ export function Footer() {
         <div className="site-footer-inner">
           <div className="footer-brand">
             <Link className="wordmark small" to="/" aria-label="ForgeQubit home">
-              <LogoMark size={26} />
-              <span className="wordmark-text">
-                FORGE<span className="wordmark-accent">QUBIT</span>
-              </span>
+              <LogoMark size={28} />
+              <WordmarkText />
             </Link>
             <p>
               ForgeQubit builds voice and WhatsApp agents, connects business tools, and
@@ -216,6 +212,97 @@ export function Footer() {
       </div>
     </footer>
   )
+}
+
+/* ———————————————————— scroll reveals ———————————————————— */
+
+const REVEAL = [
+  '.section-head', '.card', '.solution', '.capability', '.step', '.approach-item',
+  '.feature > *', '.approach > .team-note', '.faq-grid > *', '.cta-band', '.demo',
+  '.svc-row', '.svc-section', '.about-grid > *', '.contact-grid > *', '.post-body > section',
+  '.strip',
+].join(', ')
+
+/* Adds .reveal to content blocks as they appear in the DOM and .in when
+   they scroll into view. Elements already on screen are marked .in in
+   the same pass, so the first paint never hides anything; without
+   JavaScript nothing is touched at all. */
+export function useReveal(dep) {
+  useEffect(() => {
+    if (!('IntersectionObserver' in window)) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const main = document.getElementById('main')
+    if (!main) return
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue
+          e.target.classList.add('in')
+          io.unobserve(e.target)
+          pending.delete(e.target)
+        }
+      },
+      { rootMargin: '0px 0px -6% 0px', threshold: 0 }
+    )
+
+    const pending = new Set()
+
+    /* belt and braces: on scroll, anything pending that is on screen is
+       revealed immediately, so a fast flick can never leave a block
+       hidden if an observer notification is late */
+    let ticking = false
+    const sweep = () => {
+      ticking = false
+      const vh = window.innerHeight
+      for (const el of pending) {
+        const r = el.getBoundingClientRect()
+        if (r.top < vh * 0.96 && r.bottom > 0) {
+          el.classList.add('in')
+          io.unobserve(el)
+          pending.delete(el)
+        }
+      }
+    }
+    const onScroll = () => {
+      if (ticking || pending.size === 0) return
+      ticking = true
+      requestAnimationFrame(sweep)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll, { passive: true })
+
+    const scan = () => {
+      const els = main.querySelectorAll(REVEAL)
+      const vh = window.innerHeight
+      let stagger = 0
+      let lastParent = null
+      els.forEach((el) => {
+        if (el.classList.contains('reveal') || el.closest('.hero')) return
+        // siblings stagger; a new parent resets the count
+        stagger = el.parentElement === lastParent ? Math.min(stagger + 1, 5) : 0
+        lastParent = el.parentElement
+        el.style.setProperty('--i', stagger)
+        el.classList.add('reveal')
+        const r = el.getBoundingClientRect()
+        if (r.top < vh && r.bottom > 0) el.classList.add('in')
+        else {
+          pending.add(el)
+          io.observe(el)
+        }
+      })
+    }
+
+    scan()
+    const mo = new MutationObserver(scan)
+    mo.observe(main, { childList: true, subtree: true })
+    return () => {
+      mo.disconnect()
+      io.disconnect()
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+    }
+  }, [dep])
 }
 
 /* ———————————————————— breadcrumbs ———————————————————— */

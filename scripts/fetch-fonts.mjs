@@ -16,7 +16,7 @@ const UA =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 
 const HREF =
-  'https://fonts.googleapis.com/css2?family=Unbounded:wght@200..900&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@300..700&display=swap'
+  'https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@300..700&display=swap'
 
 const css = await (await fetch(HREF, { headers: { 'User-Agent': UA } })).text()
 

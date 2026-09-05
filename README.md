@@ -46,6 +46,7 @@ splitting, contact-form validation and analytics privacy.
 | Prerender, sitemap, RSS, robots | `scripts/prerender.mjs` |
 | Brand assets (favicon, icons, social card) | `scripts/gen-assets.mjs` → `npm run assets` |
 | Hosting: redirects, headers, CSP | `vercel.json` (Netlify mirror in `public/_redirects`) |
+| Full-page screenshots for visual checks | `scripts/shots.mjs` (needs Chrome and `puppeteer-core`; see file header) |
 
 ## Content rules
 

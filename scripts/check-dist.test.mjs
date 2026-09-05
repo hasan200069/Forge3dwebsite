@@ -121,7 +121,7 @@ test('forge and fire vocabulary is gone from public copy', () => {
     const text = html
       .replace(/<script[\s\S]*?<\/script>/g, '')
       .replace(/<[^>]+>/g, ' ')
-      .replace(/FORGE\s*QUBIT/g, ' ')
+      .replace(/Forge\s*Qubit/gi, ' ')
       .replace(/ForgeQubit/gi, ' ')
       .replace(/forgequbit\.co\.uk/gi, ' ')
       .replace(/forgequbit\.com/gi, ' ')
