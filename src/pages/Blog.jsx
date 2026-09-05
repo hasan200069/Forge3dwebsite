@@ -38,6 +38,7 @@ export default function Blog() {
     <div className="page">
       <Seo title={TITLE} description={DESC} path="/blog" jsonLd={JSON_LD} />
       <header className="shell page-hero">
+        <div className="page-hero-copy">
         <Crumbs trail={[{ label: 'Blog', to: '/blog' }]} />
         <p className="eyebrow">Blog</p>
         <h1>Notes for <span className="em">operators.</span></h1>
@@ -45,6 +46,7 @@ export default function Blog() {
           What we are learning while building reception agents, automations and AI products,
           written for founders and operations teams rather than researchers.
         </p>
+        </div>
       </header>
 
       <section className="section tight" aria-label="Posts">

@@ -214,95 +214,20 @@ export function Footer() {
   )
 }
 
-/* ———————————————————— scroll reveals ———————————————————— */
+/* ———————————————————— backdrop ———————————————————— */
 
-/* Only headings and demonstrations are introduced; running text, forms
-   and lists are readable immediately. */
-const REVEAL = [
-  '.section-head', '.solution', '.step', '.card', '.cta-band',
-  '.wf', '.call', '.transcript', '.demo', '.svc-row',
-].join(', ')
-
-/* Adds .reveal to content blocks as they appear in the DOM and .in when
-   they scroll into view. Elements already on screen are marked .in in
-   the same pass, so the first paint never hides anything; without
-   JavaScript nothing is touched at all. */
-export function useReveal(dep) {
-  useEffect(() => {
-    if (!('IntersectionObserver' in window)) return
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const main = document.getElementById('main')
-    if (!main) return
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (!e.isIntersecting) continue
-          e.target.classList.add('in')
-          io.unobserve(e.target)
-          pending.delete(e.target)
-        }
-      },
-      { rootMargin: '0px 0px -6% 0px', threshold: 0 }
-    )
-
-    const pending = new Set()
-
-    /* belt and braces: on scroll, anything pending that is on screen is
-       revealed immediately, so a fast flick can never leave a block
-       hidden if an observer notification is late */
-    let ticking = false
-    const sweep = () => {
-      ticking = false
-      const vh = window.innerHeight
-      for (const el of pending) {
-        const r = el.getBoundingClientRect()
-        if (r.top < vh * 0.96 && r.bottom > 0) {
-          el.classList.add('in')
-          io.unobserve(el)
-          pending.delete(el)
-        }
-      }
-    }
-    const onScroll = () => {
-      if (ticking || pending.size === 0) return
-      ticking = true
-      requestAnimationFrame(sweep)
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onScroll, { passive: true })
-
-    const scan = () => {
-      const els = main.querySelectorAll(REVEAL)
-      const vh = window.innerHeight
-      let stagger = 0
-      let lastParent = null
-      els.forEach((el) => {
-        if (el.classList.contains('reveal') || el.closest('.hero')) return
-        // siblings stagger; a new parent resets the count
-        stagger = el.parentElement === lastParent ? Math.min(stagger + 1, 5) : 0
-        lastParent = el.parentElement
-        el.style.setProperty('--i', stagger)
-        el.classList.add('reveal')
-        const r = el.getBoundingClientRect()
-        if (r.top < vh && r.bottom > 0) el.classList.add('in')
-        else {
-          pending.add(el)
-          io.observe(el)
-        }
-      })
-    }
-
-    scan()
-    const mo = new MutationObserver(scan)
-    mo.observe(main, { childList: true, subtree: true })
-    return () => {
-      mo.disconnect()
-      io.disconnect()
-      window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onScroll)
-    }
-  }, [dep])
+/* Three slow lights and a faint grid behind every page. Decorative,
+   fixed, hidden from assistive tech; motion is switched off under
+   prefers-reduced-motion in CSS. */
+export function Backdrop() {
+  return (
+    <div className="backdrop" aria-hidden="true">
+      <i className="orb-1" />
+      <i className="orb-2" />
+      <i className="orb-3" />
+      <span className="grid" />
+    </div>
+  )
 }
 
 /* ———————————————————— breadcrumbs ———————————————————— */

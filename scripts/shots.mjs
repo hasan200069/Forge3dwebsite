@@ -26,6 +26,9 @@ const SHOTS = [
   ['reception-mobile', 390, 844, '/services/ai-reception'],
   ['work-desktop', 1280, 800, '/case-studies'],
   ['contact-mobile', 390, 844, '/contact'],
+  ['about-desktop', 1280, 800, '/about'],
+  ['voice-desktop', 1280, 800, '/services/voice-agents'],
+  ['blog-mobile', 390, 844, '/blog'],
 ]
 
 const browser = await pc.launch({ executablePath: CHROME, headless: true, args: ['--no-first-run', '--hide-scrollbars'] })

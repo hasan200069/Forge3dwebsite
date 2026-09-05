@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { SOLUTIONS, VOICE, CAPABILITIES, FAQS, contactHref } from '../data.js'
 import { Crumbs, Footer, Faq, CtaBand } from '../chrome.jsx'
 import { Seo, SITE_URL, orgRef, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
+import { ICONS, IconTile } from '../icons.jsx'
 
 const TITLE = 'Solutions: AI Reception, Automation & AI Products | ForgeQubit'
 const DESC =
@@ -43,24 +44,50 @@ export default function Services() {
     <div className="page">
       <Seo title={TITLE} description={DESC} path="/services" jsonLd={JSON_LD} />
 
-      <header className="shell page-hero">
-        <Crumbs trail={[{ label: 'Solutions', to: '/services' }]} />
-        <p className="eyebrow">Solutions</p>
-        <h1>Three things we build, and two we add <span className="em">when they fit.</span></h1>
-        <p className="lede">
-          Each solution below is delivered as a working, integrated system with a written scope,
-          weekly demos and a proper handover. Pick the one closest to your problem; the discovery
-          call sorts out the rest.
-        </p>
+      <header className="shell page-hero split">
+        <div className="page-hero-copy">
+          <Crumbs trail={[{ label: 'Solutions', to: '/services' }]} />
+          <p className="eyebrow">Solutions</p>
+          <h1>Three things we build, and two we add <span className="em">when they fit.</span></h1>
+          <p className="lede">
+            Each solution below is delivered as a working, integrated system with a written scope,
+            weekly demos and a proper handover. Pick the one closest to your problem; the discovery
+            call sorts out the rest.
+          </p>
+        </div>
+        <nav className="chooser" aria-label="Choose a solution">
+          {SOLUTIONS.map((s) => {
+            const Icon = ICONS[s.slug]
+            return (
+              <a key={s.slug} className="chooser-item" href={`#svc-${s.slug}`}>
+                <IconTile icon={Icon} />
+                <span>
+                  <b>{s.name}</b>
+                  <small>{s.tagline}</small>
+                </span>
+              </a>
+            )
+          })}
+          <a className="chooser-item" href="#svc-voice">
+            <IconTile icon={ICONS['voice-agents']} />
+            <span>
+              <b>{VOICE.name}</b>
+              <small>Just the phone line, done properly</small>
+            </span>
+          </a>
+        </nav>
       </header>
 
       <section className="section tight" aria-label="Primary solutions">
         <div className="shell svc-overview">
           {SOLUTIONS.map((s) => (
-            <article key={s.slug} className="svc-row" aria-labelledby={`svc-${s.slug}`}>
-              <span className="num">{s.num}</span>
+            <article key={s.slug} className="svc-row" id={`svc-${s.slug}`} aria-labelledby={`svc-${s.slug}-h`}>
+              <div className="svc-row-id">
+                <IconTile icon={ICONS[s.slug]} size="lg" />
+                <span className="num">{s.num}</span>
+              </div>
               <div>
-                <h2 id={`svc-${s.slug}`}>{s.name}</h2>
+                <h2 id={`svc-${s.slug}-h`}>{s.name}</h2>
                 <p>{s.short}</p>
                 <Link className="link-cta" to={s.path}>Read the full page <span aria-hidden="true">→</span></Link>
               </div>
@@ -70,10 +97,13 @@ export default function Services() {
             </article>
           ))}
 
-          <article className="svc-row" aria-labelledby="svc-voice">
-            <span className="num">01a</span>
+          <article className="svc-row" id="svc-voice" aria-labelledby="svc-voice-h">
+            <div className="svc-row-id">
+              <IconTile icon={ICONS['voice-agents']} size="lg" />
+              <span className="num">01a</span>
+            </div>
             <div>
-              <h2 id="svc-voice">{VOICE.name}</h2>
+              <h2 id="svc-voice-h">{VOICE.name}</h2>
               <p>{VOICE.short} Part of AI Reception, with its own page for teams whose problem is the phone line specifically.</p>
               <Link className="link-cta" to={VOICE.path}>Read about voice agents <span aria-hidden="true">→</span></Link>
             </div>
@@ -97,7 +127,7 @@ export default function Services() {
           <div className="capabilities" style={{ marginTop: 0 }}>
             {CAPABILITIES.map((c) => (
               <div key={c.id} className="capability" id={c.id}>
-                <span className="tag">Specialist</span>
+                <IconTile icon={ICONS[c.id]} />
                 <div>
                   <h3>{c.name}</h3>
                   <p>{c.short}</p>

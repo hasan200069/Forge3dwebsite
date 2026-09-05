@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
 import { SOLUTIONS, PROCESS, FAQS } from '../data.js'
 import { EMAIL, Footer, Faq, CtaBand } from '../chrome.jsx'
 import { Seo, SITE_URL, SITE_NAME, ORG_ID, orgRef, graph, webPageLd } from '../seo.jsx'
 import { EnquiryFlow, Workflow, ToolStrip } from '../visuals.jsx'
+import { ICONS, IconTile } from '../icons.jsx'
 
 const TITLE = 'ForgeQubit — AI Reception, Automation & Custom AI Products'
 const DESC =
@@ -71,13 +73,41 @@ const workflow = SOLUTIONS[1]
 
 /* ———————————————————— page ———————————————————— */
 
+/* A soft light that follows a fine pointer across the hero. Written to
+   CSS variables directly, so nothing re-renders; off for touch and for
+   reduced motion. */
+function useSpotlight() {
+  const ref = useRef(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    if (!window.matchMedia('(pointer: fine)').matches) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const move = (e) => {
+      const r = el.getBoundingClientRect()
+      el.style.setProperty('--mx', `${e.clientX - r.left}px`)
+      el.style.setProperty('--my', `${e.clientY - r.top}px`)
+      el.style.setProperty('--spot', '1')
+    }
+    const leave = () => el.style.setProperty('--spot', '0')
+    el.addEventListener('pointermove', move, { passive: true })
+    el.addEventListener('pointerleave', leave, { passive: true })
+    return () => {
+      el.removeEventListener('pointermove', move)
+      el.removeEventListener('pointerleave', leave)
+    }
+  }, [])
+  return ref
+}
+
 export default function Home() {
+  const hero = useSpotlight()
   return (
     <div className="home">
       <Seo title={TITLE} description={DESC} path="/" jsonLd={JSON_LD} />
 
       {/* ———— 1. promise and demonstration ———— */}
-      <section className="hero" aria-labelledby="hero-h">
+      <section className="hero" aria-labelledby="hero-h" ref={hero}>
         <div className="hero-aurora" aria-hidden="true"><i /><i /></div>
         <div className="shell hero-grid">
           <div className="hero-copy">
@@ -128,7 +158,10 @@ export default function Home() {
           <div className="solutions">
             {SOLUTIONS.map((s) => (
               <article key={s.slug} className="solution" aria-labelledby={`sol-${s.slug}`}>
-                <span className="num">{s.num}</span>
+                <div className="solution-id">
+                  <IconTile icon={ICONS[s.slug]} />
+                  <span className="num">{s.num}</span>
+                </div>
                 <h3 id={`sol-${s.slug}`}>{s.name}</h3>
                 <p className="solution-problem">{s.problem}</p>
                 <p className="solution-build">{s.short}</p>

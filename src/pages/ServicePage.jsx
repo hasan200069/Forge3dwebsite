@@ -4,6 +4,7 @@ import { SOLUTIONS, VOICE, contactHref } from '../data.js'
 import { Crumbs, Footer, Faq, CtaBand } from '../chrome.jsx'
 import { Seo, SITE_URL, orgRef, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
 import { Transcript, Workflow } from '../visuals.jsx'
+import { ICONS, IconTile } from '../icons.jsx'
 
 const SECTIONS = [
   ['who', 'Who it helps'],
@@ -125,15 +126,48 @@ export default function ServicePage({ solution: s }) {
     <div className="page">
       <Seo title={meta.title} description={meta.description} path={s.path} jsonLd={jsonLd} />
 
-      <header className="shell page-hero">
-        <Crumbs trail={[{ label: 'Solutions', to: '/services' }, { label: s.name }]} />
-        <p className="eyebrow">Solution {s.num}</p>
-        <h1>{s.name}</h1>
-        <p className="lede">{s.short}</p>
-        <div className="btn-row">
-          <Link className="btn btn-primary" to={contactHref(s.interest)} data-track={`service-hero-${s.slug}`}>Discuss your project <span aria-hidden="true">→</span></Link>
-          <a className="btn btn-secondary" href="#example">See the example</a>
+      <header className="shell page-hero split">
+        <div className="page-hero-copy">
+          <Crumbs trail={[{ label: 'Solutions', to: '/services' }, { label: s.name }]} />
+          <p className="eyebrow"><IconTile icon={ICONS[s.slug]} size="sm" /> Solution {s.num}</p>
+          <h1>{s.name}</h1>
+          <p className="lede">{s.short}</p>
+          <div className="btn-row">
+            <Link className="btn btn-primary" to={contactHref(s.interest)} data-track={`service-hero-${s.slug}`}>Discuss your project <span aria-hidden="true">→</span></Link>
+            <a className="btn btn-secondary" href="#example">See the example</a>
+          </div>
         </div>
+        <aside className="glance" aria-label="At a glance">
+          <div className="glance-head">
+            <IconTile icon={ICONS[s.slug]} size="lg" />
+            <div>
+              <b>At a glance</b>
+              <small>{s.tagline}</small>
+            </div>
+          </div>
+          <dl>
+            <div>
+              <dt>Built for</dt>
+              <dd>{s.who[0]}</dd>
+            </div>
+            <div>
+              <dt>Connects to</dt>
+              <dd>
+                <ul className="pill-list compact">
+                  {s.integrations.slice(0, 4).map((i) => <li key={i}>{i.split(' (')[0]}</li>)}
+                </ul>
+              </dd>
+            </div>
+            <div>
+              <dt>First demo</dt>
+              <dd>{s.delivery.expectation.split('. ')[0]}.</dd>
+            </div>
+            <div>
+              <dt>You own</dt>
+              <dd>Code, prompts, workflows and every third-party account, set up in your name.</dd>
+            </div>
+          </dl>
+        </aside>
       </header>
 
       <div className="shell svc-layout" style={{ paddingTop: 12 }}>

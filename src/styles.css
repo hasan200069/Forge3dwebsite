@@ -1470,7 +1470,7 @@ a.card:hover {
    inner pages
    ———————————————————————————————————————— */
 
-.page { padding-top: var(--nav-h); }
+.page { padding-top: var(--nav-h); overflow-x: clip; }
 
 .page-hero {
   padding-block: clamp(48px, 7vw, 88px) clamp(28px, 4vw, 48px);
@@ -2169,30 +2169,9 @@ a.card:hover {
   to { opacity: 1; transform: none; }
 }
 
-/* scroll reveals: the class is added by JavaScript, so without it
-   everything is simply visible */
-.reveal {
-  opacity: 0;
-  transform: translate3d(0, 12px, 0);
-  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
-  transition-delay: calc(var(--i, 0) * 50ms);
-}
-
-.reveal.in {
-  opacity: 1;
-  transform: none;
-}
-
-/* the eyebrow rule draws in with its section */
-.reveal .eyebrow::before,
-.reveal.eyebrow::before {
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.6s var(--ease) 0.15s;
-}
-
-.reveal.in .eyebrow::before,
-.reveal.in.eyebrow::before { transform: scaleX(1); }
+/* scroll reveals are CSS-only (see the glass system below): nothing is
+   ever hidden by JavaScript, so a browser that cannot animate simply
+   shows the page */
 
 /* chat: messages pop in, a typing indicator breathes */
 @keyframes pop {
@@ -2521,7 +2500,6 @@ a.card:hover,
     scroll-behavior: auto !important;
   }
 
-  .reveal { opacity: 1; transform: none; }
   .hero-aurora { display: none; }
   .strip { mask-image: none; -webkit-mask-image: none; }
   .strip-track { animation: none; flex-wrap: wrap; }
@@ -2530,3 +2508,553 @@ a.card:hover,
   .bubble.pending, .wf-node.pending, .call-line.pending { visibility: visible; }
   .strip-pause { display: none; }
 }
+
+/* ————————————————————————————————————————
+   GLASS SYSTEM
+   Translucent surfaces over a slow, deep gradient field. Declared after
+   the components so it overrides their flat backgrounds. Blur is spent
+   only where it is seen against the light: nav, hero card, CTA band,
+   form, worked examples.
+   ———————————————————————————————————————— */
+
+:root {
+  --glass: rgba(255, 255, 255, 0.045);
+  --glass-2: rgba(255, 255, 255, 0.075);
+  --glass-strong: rgba(10, 24, 34, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.11);
+  --glass-border-hot: rgba(125, 240, 255, 0.45);
+  --glass-blur: 18px;
+  --glass-shadow:
+    0 30px 70px -36px rgba(0, 0, 0, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  --glass-glow: 0 0 0 1px var(--glass-border-hot), 0 28px 70px -28px rgba(34, 211, 238, 0.55);
+}
+
+/* ———— the field: three slow lights and a faint grid behind everything ———— */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.backdrop i {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform;
+  filter: blur(2px);
+}
+
+.backdrop .orb-1 {
+  width: 62vw;
+  height: 62vw;
+  max-width: 980px;
+  max-height: 980px;
+  top: -28vw;
+  right: -18vw;
+  background: radial-gradient(circle at 50% 50%, rgba(34, 211, 238, 0.34), rgba(34, 211, 238, 0.08) 45%, transparent 70%);
+  animation: orb-1 34s ease-in-out infinite alternate;
+}
+
+.backdrop .orb-2 {
+  width: 46vw;
+  height: 46vw;
+  max-width: 720px;
+  max-height: 720px;
+  bottom: -22vw;
+  left: -16vw;
+  background: radial-gradient(circle at 50% 50%, rgba(45, 212, 191, 0.26), rgba(45, 212, 191, 0.06) 45%, transparent 70%);
+  animation: orb-2 40s ease-in-out infinite alternate;
+}
+
+.backdrop .orb-3 {
+  width: 38vw;
+  height: 38vw;
+  max-width: 600px;
+  max-height: 600px;
+  top: 40%;
+  left: 38%;
+  background: radial-gradient(circle at 50% 50%, rgba(37, 99, 235, 0.2), rgba(37, 99, 235, 0.04) 45%, transparent 70%);
+  animation: orb-3 46s ease-in-out infinite alternate;
+}
+
+.backdrop .grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(125, 240, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(125, 240, 255, 0.05) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(70% 55% at 50% 0%, #000 20%, transparent 100%);
+  -webkit-mask-image: radial-gradient(70% 55% at 50% 0%, #000 20%, transparent 100%);
+}
+
+@keyframes orb-1 {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(-10vw, 14vw, 0) scale(1.15); }
+}
+
+@keyframes orb-2 {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(12vw, -10vw, 0) scale(1.1); }
+}
+
+@keyframes orb-3 {
+  from { transform: translate3d(0, 0, 0) scale(0.9); }
+  to { transform: translate3d(-14vw, -12vw, 0) scale(1.2); }
+}
+
+/* content floats above the field */
+.app { position: relative; z-index: 1; }
+
+body {
+  background:
+    radial-gradient(90% 60% at 100% -10%, rgba(14, 116, 144, 0.16), transparent 60%),
+    var(--bg);
+  background-attachment: scroll;
+}
+
+/* ———— glass surfaces ———— */
+
+.card, .solution, .step, .svc-row, .demo, .facts, .kv > div, .capability, .team-note,
+.wf, .call, .transcript, .example, .form-sent, .contact-form, .flow, .cta-band,
+.svc-nav-mobile, .strip-track li, .evidence-note {
+  background: var(--glass);
+  border-color: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.flow, .cta-band, .contact-form, .form-sent, .demo, .wf, .call, .transcript {
+  background: var(--glass-strong);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.5);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.5);
+}
+
+.nav {
+  background: rgba(5, 13, 20, 0.55);
+  backdrop-filter: blur(16px) saturate(1.5);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.nav.stuck {
+  background: rgba(5, 13, 20, 0.7);
+  border-bottom-color: rgba(125, 240, 255, 0.14);
+}
+
+.nav-sheet {
+  background: rgba(5, 13, 20, 0.86);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+}
+
+.section.alt {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.01));
+  border-block-color: rgba(255, 255, 255, 0.06);
+}
+
+.site-footer {
+  background: rgba(255, 255, 255, 0.02);
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.chat { background: rgba(5, 13, 20, 0.55); border-color: rgba(255, 255, 255, 0.06); }
+.bubble { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.09); }
+.bubble.me { background: rgba(34, 211, 238, 0.14); border-color: rgba(34, 211, 238, 0.32); }
+.wf-node { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.09); }
+.flow-step { background: rgba(5, 13, 20, 0.5); border-color: rgba(255, 255, 255, 0.07); }
+.label-illustrative { background: rgba(5, 13, 20, 0.6); border-color: rgba(255, 255, 255, 0.14); }
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.btn-secondary:hover {
+  background: rgba(125, 240, 255, 0.1);
+  border-color: var(--glass-border-hot);
+}
+
+.field input, .field select, .field textarea {
+  background: rgba(5, 13, 20, 0.6);
+}
+
+/* ———— light on the edge: hover and focus ———— */
+
+.card, .solution, .step, .svc-row, .demo, .kv > div, .capability {
+  overflow: hidden;
+  transition: border-color var(--dur-ui) ease, transform 0.3s var(--ease), box-shadow 0.3s ease, background-color var(--dur-ui) ease;
+}
+
+/* a sheen that crosses the surface once on hover */
+.card::after, .solution::after, .step::after, .svc-row::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.07) 50%, transparent 65%);
+  transform: translate3d(-110%, 0, 0);
+  transition: transform 0.9s var(--ease);
+}
+
+a.card:hover, .solution:has(.stretch:hover), .solution:focus-within, .step:hover, .svc-row:hover {
+  border-color: var(--glass-border-hot);
+  background: var(--glass-2);
+  box-shadow: var(--glass-shadow), var(--glass-glow);
+}
+
+a.card:hover::after, .solution:has(.stretch:hover)::after, .step:hover::after, .svc-row:hover::after {
+  transform: translate3d(110%, 0, 0);
+}
+
+/* ———— the hero: a floating glass card, a spotlight that follows the pointer ———— */
+
+.hero::before { display: none; }
+
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: var(--spot, 0);
+  background: radial-gradient(360px circle at var(--mx, 50%) var(--my, 50%), rgba(125, 240, 255, 0.12), transparent 60%);
+  transition: opacity 0.4s ease;
+}
+
+.hero-grid > .flow {
+  animation: rise 0.8s var(--ease) 0.25s both, float 7s ease-in-out 1.2s infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -7px, 0); }
+}
+
+/* the primary call to action breathes, gently */
+.hero .btn-primary { animation: glow 3.4s ease-in-out infinite; }
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(103, 232, 249, 0.25), 0 14px 44px -16px rgba(34, 211, 238, 0.55); }
+  50% { box-shadow: 0 0 0 1px rgba(103, 232, 249, 0.45), 0 18px 56px -14px rgba(34, 211, 238, 0.85); }
+}
+
+/* emphasised words shimmer slowly */
+.em {
+  background-size: 200% 100%;
+  animation: shimmer 7s ease-in-out infinite alternate;
+}
+
+@keyframes shimmer {
+  from { background-position: 0% 50%; }
+  to { background-position: 100% 50%; }
+}
+
+/* inner pages fade up on arrival; the hero has its own entrance */
+.page { animation: page-in 0.35s var(--ease) both; }
+
+@keyframes page-in {
+  from { opacity: 0; translate: 0 8px; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+/* ———— scroll-driven reveals: CSS only, animate `translate` so hover
+   transforms still compose; unsupported browsers just see the page ———— */
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .section-head, .solution, .step, .card, .cta-band, .svc-row, .capability, .kv > div {
+      animation: reveal-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+    .solution:nth-child(2), .step:nth-child(2) { animation-range: entry 8% entry 48%; }
+    .solution:nth-child(3), .step:nth-child(3) { animation-range: entry 16% entry 56%; }
+    .step:nth-child(4) { animation-range: entry 24% entry 64%; }
+  }
+}
+
+/* never from fully invisible: if a browser leaves the timeline at its
+   start (a non-scrolling viewport, print, an unsupported range), the
+   worst case is a slightly dimmed block, not a blank one */
+@keyframes reveal-in {
+  from { opacity: 0.7; translate: 0 18px; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+/* ———— reduced motion and small screens ———— */
+
+@media (max-width: 860px) {
+  .backdrop .orb-3 { display: none; }
+  .backdrop .orb-1, .backdrop .orb-2 { animation-duration: 50s; }
+  .hero::after { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop i { animation: none; }
+  .hero-grid > .flow, .hero .btn-primary, .em, .page { animation: none; }
+  .hero::after { display: none; }
+  .card::after, .solution::after, .step::after, .svc-row::after { display: none; }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .flow, .cta-band, .contact-form, .form-sent, .demo, .wf, .call, .transcript, .nav, .nav-sheet, .btn-secondary {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: var(--surface);
+  }
+}
+
+/* ———— gradient rims on the signature glass pieces ———— */
+
+.flow::before, .cta-band::after, .contact-form::before, .demo::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(125, 240, 255, 0.55), rgba(45, 212, 191, 0.18) 38%, rgba(255, 255, 255, 0.05) 68%, rgba(125, 240, 255, 0.4));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.contact-form, .demo { position: relative; }
+.cta-band > * { position: relative; z-index: 1; }
+
+/* a hairline of light under the glass nav */
+.nav.stuck::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(125, 240, 255, 0.5), transparent);
+}
+
+/* ————————————————————————————————————————
+   inner-page heroes, icon tiles, choosers and glance cards
+   ———————————————————————————————————————— */
+
+.page-hero { position: relative; }
+
+.page-hero.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: clamp(28px, 5vw, 64px);
+  align-items: center;
+}
+
+.page-hero.split h1 { max-width: none; }
+
+/* the same staggered entrance as the home hero */
+.page-hero-copy > * { animation: rise 0.6s var(--ease) both; }
+.page-hero-copy > :nth-child(1) { animation-delay: 0.04s; }
+.page-hero-copy > :nth-child(2) { animation-delay: 0.1s; }
+.page-hero-copy > :nth-child(3) { animation-delay: 0.18s; }
+.page-hero-copy > :nth-child(4) { animation-delay: 0.26s; }
+.page-hero-copy > :nth-child(5) { animation-delay: 0.34s; }
+.page-hero.split > :last-child { animation: rise 0.7s var(--ease) 0.22s both; }
+
+/* one pool of light behind every inner hero */
+.page-hero::before {
+  content: '';
+  position: absolute;
+  inset: -40px 0 auto;
+  height: 70%;
+  pointer-events: none;
+  background: radial-gradient(50% 60% at 78% 20%, rgba(34, 211, 238, 0.12), transparent 70%);
+  z-index: -1;
+}
+
+.crumbs {
+  display: inline-flex;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+}
+
+/* icon tiles */
+.icon-tile {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  background: linear-gradient(160deg, rgba(125, 240, 255, 0.16), rgba(45, 212, 191, 0.06));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 10px 24px -14px rgba(34, 211, 238, 0.6);
+  color: var(--cyan-bright);
+  vertical-align: middle;
+}
+
+.icon-tile svg { width: 22px; height: 22px; }
+.icon-tile.sm { width: 28px; height: 28px; border-radius: 8px; margin-right: 4px; }
+.icon-tile.sm svg { width: 15px; height: 15px; }
+.icon-tile.lg { width: 56px; height: 56px; border-radius: 16px; }
+.icon-tile.lg svg { width: 28px; height: 28px; }
+
+.eyebrow .icon-tile { color: var(--cyan-bright); }
+
+.solution-id, .svc-row-id {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.solution-id .num, .svc-row-id .num { margin: 0; }
+.svc-row-id { flex-direction: column; align-items: flex-start; }
+
+.svc-row { grid-template-columns: 96px minmax(0, 1.1fr) minmax(0, 1fr); }
+
+.solution:has(.stretch:hover) .icon-tile, .svc-row:hover .icon-tile, .chooser-item:hover .icon-tile {
+  color: var(--cyan-ink);
+  background: var(--grad);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* chooser: a compact list of glass rows that jump to the detail */
+.chooser {
+  display: grid;
+  gap: 10px;
+}
+
+.chooser-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  box-shadow: var(--glass-shadow);
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color var(--dur-ui) ease, background-color var(--dur-ui) ease, transform 0.25s var(--ease);
+}
+
+.chooser-item:hover, .chooser-item:focus-visible {
+  border-color: var(--glass-border-hot);
+  background: var(--glass-2);
+  transform: translateX(4px);
+  color: var(--ink);
+}
+
+.chooser-item b { display: block; font-weight: 600; font-size: 0.98rem; }
+.chooser-item small { display: block; color: var(--ink-3); font-size: 0.82rem; }
+
+.chooser-num {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  color: var(--cyan);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+}
+
+/* glance card: the facts a buyer scans first */
+.glance {
+  position: relative;
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-strong);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.5);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.5);
+}
+
+.glance::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(125, 240, 255, 0.5), rgba(45, 212, 191, 0.16) 40%, rgba(255, 255, 255, 0.05) 70%, rgba(125, 240, 255, 0.35));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.glance-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.glance-head b { display: block; font-weight: 600; }
+.glance-head small { display: block; color: var(--ink-3); font-size: 0.85rem; }
+
+.glance dl { display: grid; gap: 12px; }
+
+.glance dl > div {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 0.93rem;
+}
+
+.glance dt {
+  color: var(--ink-3);
+  font-weight: 600;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding-top: 3px;
+}
+
+.glance dd { color: var(--ink-2); }
+.glance .list { font-size: 0.95rem; }
+
+.facts.glance { gap: 0; padding: 8px 0; overflow: hidden; }
+.facts.glance div { border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
+.facts.glance div:last-child { border-bottom: 0; }
+
+.evidence-note.glance { color: var(--ink-2); }
+
+.pill-list.compact { gap: 6px; }
+.pill-list.compact li { padding: 5px 10px; font-size: 0.8rem; }
+.pill-list li { background: var(--glass); border-color: var(--glass-border); }
+
+.capability { align-items: center; }
+
+@media (max-width: 960px) {
+  .page-hero.split { grid-template-columns: 1fr; }
+  .page-hero.split > :last-child { animation-delay: 0.3s; }
+}
+
+@media (max-width: 600px) {
+  .svc-row { grid-template-columns: 1fr; }
+  .svc-row-id { flex-direction: row; }
+  .glance dl > div { grid-template-columns: 1fr; gap: 4px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-hero-copy > *, .page-hero.split > :last-child { animation: none; }
+}
+
+/* the breadcrumb pill takes its own line above the eyebrow */
+.page-hero .crumbs { margin-bottom: 18px; }
+.page-hero .eyebrow, .contact-intro .eyebrow { display: flex; }
