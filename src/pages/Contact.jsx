@@ -1,12 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
+import { useId, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { SERVICES } from '../data.js'
-import { Crumbs, EMAIL, Footer, useReveal } from '../chrome.jsx'
+import { INTERESTS } from '../data.js'
+import { ACCESS_KEY, ENDPOINT, LIMITS, resolveInterest, validate, interpretResponse } from '../contact-logic.js'
+import { Crumbs, EMAIL, Footer } from '../chrome.jsx'
+import { track } from '../analytics.js'
 import { Seo, SITE_URL, orgRef, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
 
-const TITLE = 'Contact ForgeQubit — Start Your AI Project'
+const TITLE = 'Contact ForgeQubit — Discuss an AI Reception, Automation or Product Project'
 const DESC =
-  'Tell us the raw idea — WhatsApp automation, a voice agent, a custom AI build or a full SaaS. We reply within 24 hours with a fixed-scope plan.'
+  'Tell us about the enquiries, process or product you have in mind. We reply by email to arrange a short call, then send a written scope and price before any work starts.'
 
 const JSON_LD = graph(
   webPageLd({ path: '/contact', title: TITLE, description: DESC, type: 'ContactPage' }),
@@ -22,127 +24,224 @@ const JSON_LD = graph(
   }
 )
 
-const INTERESTS = [...SERVICES.map((s) => s.interest), 'Something Else']
-
 const STEPS = [
-  { n: '01', t: 'The Spark', d: 'Tell us the raw idea. We reply within 24 hours with the questions that matter.' },
-  { n: '02', t: 'The Blueprint', d: 'A scoped proposal in days, not weeks — fixed outcomes, honest timelines, no mystery invoices.' },
-  { n: '03', t: 'The Forging', d: 'Weekly demos of the real thing. Your first working prototype lands before onboarding paperwork would.' },
+  { t: 'We read it and reply by email', d: 'A person replies to arrange a short call, or asks a couple of questions first if the brief is clear enough to skip one.' },
+  { t: 'A 30-minute call', d: 'We go through the enquiries, process or product, the tools involved, and what a good outcome looks like.' },
+  { t: 'A written scope and price', d: 'Fixed scope, defined outcomes, price, timeline and an estimate of ongoing third-party costs. Nothing starts until you sign.' },
 ]
 
-const ACCESS_KEY = 'b32d30de-6cc7-406d-b5fe-7f84bd709bd3'
+const BUDGETS = ['Not sure yet', 'Under £5k', '£5k – £15k', '£15k – £50k', 'Over £50k']
+const TIMELINES = ['Not sure yet', 'As soon as possible', 'Within 3 months', 'Later this year', 'Just researching']
 
-function ContactForm({ preselect }) {
-  const [sent, setSent] = useState(false)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState(null)
-  const select = useRef(null)
+export function ContactForm({ preselect, submit = defaultSubmit }) {
+  const id = useId()
+  const [values, setValues] = useState({
+    name: '',
+    email: '',
+    interest: preselect,
+    message: '',
+    budget: BUDGETS[0],
+    timeline: TIMELINES[0],
+    botcheck: '',
+  })
+  const [errors, setErrors] = useState({})
+  const [status, setStatus] = useState('idle') // idle | busy | sent | error
+  const [serverError, setServerError] = useState('')
+  const inFlight = useRef(false)
+  const statusRef = useRef(null)
+  const started = useRef(false)
 
-  /* The prerendered /contact file has no query string, so its markup
-     always carries the first option. Assign the real one after mount so
-     a ?interest= link lands on the right choice. */
-  useEffect(() => {
-    if (select.current) select.current.value = preselect
-  }, [preselect, sent])
+  const set = (k) => (e) => setValues((v) => ({ ...v, [k]: e.target.value }))
+
+  /* one "form started" event per form instance, on the first keystroke */
+  const onFirstInput = () => {
+    if (started.current) return
+    started.current = true
+    track('form_start', { interest: values.interest })
+  }
 
   const onSubmit = async (e) => {
     e.preventDefault()
-    setBusy(true)
-    setError(null)
+    if (inFlight.current) return
 
-    const body = new FormData(e.currentTarget)
-    body.append('access_key', ACCESS_KEY)
-    body.append('subject', `New project inquiry from ${body.get('name')}`)
+    const errs = validate(values)
+    setErrors(errs)
+    if (Object.keys(errs).length) {
+      const first = Object.keys(errs)[0]
+      document.getElementById(`${id}-${first}`)?.focus()
+      return
+    }
 
+    inFlight.current = true
+    setStatus('busy')
+    setServerError('')
     try {
-      const res = await fetch('https://api.web3forms.com/submit', { method: 'POST', body })
-      if (!res.ok) throw new Error(String(res.status))
-      setSent(true)
-    } catch {
-      setError('That didn’t send. Try again, or email us directly at ' + EMAIL + '.')
+      await submit(values)
+      setStatus('sent')
+      track('form_submit_accepted', { interest: values.interest, budget: values.budget, timeline: values.timeline })
+    } catch (err) {
+      setStatus('error')
+      setServerError(err?.message || 'That did not send.')
+      track('form_submit_failed', { interest: values.interest, reason: err?.code || 'rejected' })
+      // the entered text is kept in state, so nothing is lost
+      requestAnimationFrame(() => statusRef.current?.focus())
     } finally {
-      setBusy(false)
+      inFlight.current = false
     }
   }
 
-  if (sent) {
+  if (status === 'sent') {
     return (
-      <div className="contact-form form-sent rise">
-        <span className="form-sent-spark" aria-hidden="true" />
-        <h3>The spark is struck.</h3>
-        <p>Your message is in our inbox. We’ll reply within 24 hours.</p>
-        <p className="form-note">
-          Need to add something? Write to us at <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
+      <div className="form-sent" role="status" aria-live="polite">
+        <span className="tick" aria-hidden="true">✓</span>
+        <h2>Thanks, your message is in our inbox.</h2>
+        <p>
+          A person will reply by email to <strong>{values.email}</strong> to arrange a short call.
+          If you do not hear from us, write to <a href={`mailto:${EMAIL}`}>{EMAIL}</a>.
         </p>
-        <button type="button" className="btn btn-ghost btn-sm" onClick={() => setSent(false)}>
-          Send another <span>→</span>
-        </button>
+        <div>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={() => {
+              setValues((v) => ({ ...v, message: '' }))
+              setStatus('idle')
+            }}
+          >
+            Send another message
+          </button>
+        </div>
       </div>
     )
   }
 
+  const busy = status === 'busy'
+  const field = (k, label, control, { hint, optional } = {}) => (
+    <div className={`field ${errors[k] ? 'invalid' : ''}`}>
+      <label htmlFor={`${id}-${k}`}>
+        {label}{optional && <span className="optional"> (optional)</span>}
+      </label>
+      {control}
+      {hint && !errors[k] && <span className="field-hint" id={`${id}-${k}-hint`}>{hint}</span>}
+      {errors[k] && <span className="field-error" id={`${id}-${k}-err`} role="alert">{errors[k]}</span>}
+    </div>
+  )
+
+  const describedBy = (k, hint) =>
+    errors[k] ? `${id}-${k}-err` : hint ? `${id}-${k}-hint` : undefined
+
   return (
-    <form className="contact-form rise d2" onSubmit={onSubmit}>
+    <form className="contact-form" onSubmit={onSubmit} onInput={onFirstInput} noValidate aria-busy={busy}>
       <div className="form-row">
-        <label className="field">
-          <span>Your name</span>
-          <input name="name" type="text" autoComplete="name" placeholder="Jane Smith" required />
-        </label>
-        <label className="field">
-          <span>Email</span>
-          <input name="email" type="email" autoComplete="email" placeholder="jane@company.com" required />
-        </label>
+        {field('name', 'Your name', (
+          <input id={`${id}-name`} name="name" type="text" autoComplete="name" maxLength={LIMITS.name} value={values.name} onChange={set('name')} aria-invalid={!!errors.name} aria-describedby={describedBy('name')} required />
+        ))}
+        {field('email', 'Work email', (
+          <input id={`${id}-email`} name="email" type="email" inputMode="email" autoComplete="email" maxLength={LIMITS.email} value={values.email} onChange={set('email')} aria-invalid={!!errors.email} aria-describedby={describedBy('email')} required />
+        ))}
       </div>
-      <label className="field">
-        <span>What shall we forge?</span>
-        <select name="interest" ref={select} defaultValue={preselect}>
+
+      {field('interest', 'Area of interest', (
+        <select id={`${id}-interest`} name="interest" value={values.interest} onChange={set('interest')}>
           {INTERESTS.map((o) => <option key={o}>{o}</option>)}
         </select>
-      </label>
-      <label className="field">
-        <span>The raw idea</span>
-        <textarea name="message" rows="5" placeholder="Tell us what keeps you up at night…" required />
-      </label>
-      <button type="submit" className="btn btn-primary form-submit" disabled={busy}>
-        {busy ? 'Sending…' : 'Ignite the Project'} <span>→</span>
-      </button>
-      {error && <p className="form-error" role="alert">{error}</p>}
-      <p className="form-note">Or write to us directly at {EMAIL}</p>
+      ))}
+
+      {field('message', 'Brief description', (
+        <textarea id={`${id}-message`} name="message" rows="5" maxLength={LIMITS.message} value={values.message} onChange={set('message')} aria-invalid={!!errors.message} aria-describedby={describedBy('message', 'hint')} required />
+      ), { hint: 'What happens today, which tools are involved, and what a good outcome would look like.' })}
+
+      <div className="form-row">
+        {field('budget', 'Budget range', (
+          <select id={`${id}-budget`} name="budget" value={values.budget} onChange={set('budget')}>
+            {BUDGETS.map((o) => <option key={o}>{o}</option>)}
+          </select>
+        ), { optional: true })}
+        {field('timeline', 'Timeline', (
+          <select id={`${id}-timeline`} name="timeline" value={values.timeline} onChange={set('timeline')}>
+            {TIMELINES.map((o) => <option key={o}>{o}</option>)}
+          </select>
+        ), { optional: true })}
+      </div>
+
+      {/* honeypot: hidden from people, filled by bots, checked by Web3Forms */}
+      <div className="honeypot" aria-hidden="true">
+        <label htmlFor={`${id}-botcheck`}>Leave this field empty</label>
+        <input id={`${id}-botcheck`} name="botcheck" type="text" tabIndex={-1} autoComplete="off" value={values.botcheck} onChange={set('botcheck')} />
+      </div>
+
+      {status === 'error' && (
+        <div className="form-status error" role="alert" tabIndex={-1} ref={statusRef}>
+          {serverError} Your message is still here. Try again, or email us directly at{' '}
+          <a href={`mailto:${EMAIL}`}>{EMAIL}</a>.
+        </div>
+      )}
+
+      <div className="btn-row">
+        <button type="submit" className="btn btn-primary" disabled={busy}>
+          {busy ? 'Sending…' : 'Send message'} <span aria-hidden="true">→</span>
+        </button>
+      </div>
+      <p className="form-note">
+        Sent to our inbox via Web3Forms. We use what you enter only to reply to you. See the{' '}
+        <a href="/privacy">privacy policy</a>.
+      </p>
     </form>
   )
 }
 
+async function defaultSubmit(values) {
+  const body = new FormData()
+  body.append('access_key', ACCESS_KEY)
+  body.append('subject', `New enquiry from ${values.name} — ${values.interest}`)
+  body.append('from_name', 'forgequbit.co.uk contact form')
+  for (const k of ['name', 'email', 'interest', 'message', 'budget', 'timeline', 'botcheck']) body.append(k, values[k])
+
+  let res
+  try {
+    res = await fetch(ENDPOINT, { method: 'POST', body, headers: { Accept: 'application/json' } })
+  } catch {
+    const err = new Error('We could not reach the form service. Check your connection and try again.')
+    err.code = 'network'
+    throw err
+  }
+  let data = null
+  try { data = await res.json() } catch { /* non-JSON body: treated as failure below */ }
+  const problem = interpretResponse(res.ok, data)
+  if (problem) throw new Error(problem)
+}
+
 export default function Contact() {
-  const ref = useReveal()
   const [params] = useSearchParams()
-  const fromLink = params.get('interest')
-  const preselect = INTERESTS.includes(fromLink) ? fromLink : INTERESTS[0]
+  const preselect = resolveInterest(params.get('interest'))
 
   return (
-    <div className="page" ref={ref}>
+    <div className="page">
       <Seo title={TITLE} description={DESC} path="/contact" jsonLd={JSON_LD} />
-      <div className="page-inner">
-        <div className="contact-grid">
-          <div className="contact-left">
-            <Crumbs trail={[{ label: 'Contact', to: '/contact' }]} />
-            <p className="page-kicker rise">Final Chamber</p>
-            <h1 className="page-title rise d1">The forge <span className="ember-text">is lit.</span></h1>
-            <p className="page-sub rise d2">Bring us the raw idea. Leave with the weapon.</p>
-            <a className="contact-email rise d2" href={`mailto:${EMAIL}`}>{EMAIL}</a>
-            <div className="steps rise d3">
-              {STEPS.map((s) => (
-                <div key={s.n} className="step">
-                  <span className="step-num">{s.n}</span>
-                  <div>
-                    <h3>{s.t}</h3>
-                    <p>{s.d}</p>
-                  </div>
+      <div className="shell contact-grid">
+        <div className="contact-left">
+          <Crumbs trail={[{ label: 'Contact', to: '/contact' }]} />
+          <p className="eyebrow">Contact</p>
+          <h1>Discuss <span className="em">your project.</span></h1>
+          <p className="lede">
+            A few sentences about the enquiries, the process or the product you have in mind is
+            enough to start. No pitch deck required.
+          </p>
+          <a className="contact-email" href={`mailto:${EMAIL}`}>{EMAIL}</a>
+          <div className="next-steps">
+            <h2 className="sr-only">What happens after you send it</h2>
+            {STEPS.map((s, i) => (
+              <div key={s.t}>
+                <span className="n" aria-hidden="true">{i + 1}</span>
+                <div>
+                  <h3>{s.t}</h3>
+                  <p>{s.d}</p>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
-          <ContactForm key={preselect} preselect={preselect} />
         </div>
+        <ContactForm key={preselect} preselect={preselect} />
       </div>
       <Footer />
     </div>

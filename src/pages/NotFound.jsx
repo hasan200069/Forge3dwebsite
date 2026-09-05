@@ -7,19 +7,22 @@ export default function NotFound() {
     <div className="page">
       <Seo
         title="Page Not Found | ForgeQubit"
-        description="This page never made it out of the forge."
+        description="That page does not exist. Find our solutions, worked examples and contact details from the homepage."
         path="/404"
         robots="noindex, follow"
       />
-      <div className="page-inner nf-inner">
-        <p className="page-kicker rise">Lost in the Dark</p>
-        <h1 className="nf-code rise d1 ember-text">404</h1>
-        <p className="page-sub rise d2">
-          This page never made it out of the forge. The road you want is back at the start.
+      <div className="shell nf">
+        <p className="eyebrow">Not found</p>
+        <p className="nf-code" aria-hidden="true">404</p>
+        <h1>That page does not exist.</h1>
+        <p className="lede">
+          The address may have changed. The solutions, worked examples and contact form are all
+          one click away.
         </p>
-        <div className="btn-row rise d3">
-          <Link className="btn btn-primary" to="/">Return to the Forge <span>→</span></Link>
-          <Link className="btn btn-ghost" to="/services">Browse the Services <span>→</span></Link>
+        <div className="btn-row">
+          <Link className="btn btn-primary" to="/">Go to the homepage</Link>
+          <Link className="btn btn-secondary" to="/services">See our solutions</Link>
+          <Link className="btn btn-secondary" to="/contact">Contact us</Link>
         </div>
       </div>
       <Footer />

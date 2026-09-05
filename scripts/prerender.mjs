@@ -13,12 +13,12 @@
 import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { POSTS } from '../src/data.js'
+import { POSTS, SOLUTIONS, VOICE } from '../src/data.js'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const DIST = join(ROOT, 'dist')
 const SSR = join(ROOT, '.ssr')
-const SITE = 'https://forgequbit.co.uk'
+const SITE = 'https://www.forgequbit.co.uk'
 
 const { render } = await import(pathToFileURL(join(SSR, 'entry-server.js')).href)
 
@@ -27,7 +27,9 @@ const { render } = await import(pathToFileURL(join(SSR, 'entry-server.js')).href
 const ROUTES = [
   { path: '/', changefreq: 'weekly', priority: '1.0' },
   { path: '/services', changefreq: 'monthly', priority: '0.9' },
-  { path: '/case-studies', changefreq: 'monthly', priority: '0.9' },
+  ...SOLUTIONS.map((s) => ({ path: s.path, changefreq: 'monthly', priority: '0.9' })),
+  { path: VOICE.path, changefreq: 'monthly', priority: '0.8' },
+  { path: '/case-studies', changefreq: 'monthly', priority: '0.8' },
   { path: '/blog', changefreq: 'weekly', priority: '0.8' },
   ...POSTS.map((p) => ({ path: `/blog/${p.slug}`, lastmod: p.iso, changefreq: 'yearly', priority: '0.7' })),
   { path: '/about', changefreq: 'monthly', priority: '0.7' },
@@ -46,7 +48,16 @@ const esc = (s) =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
 
-const template = readFileSync(join(DIST, 'index.html'), 'utf8')
+let template = readFileSync(join(DIST, 'index.html'), 'utf8')
+
+/* Inline the stylesheet. It is ~7 kB gzipped, and a <link> costs a full
+   round trip before anything can paint; with every page prerendered the
+   first paint then depends on the HTML alone. Client-side navigations
+   never refetch CSS, so nothing is lost. */
+template = template.replace(
+  /<link rel="stylesheet"[^>]*href="(\/assets\/[^"]+\.css)"[^>]*>/,
+  (_, href) => `<style>${readFileSync(join(DIST, href), 'utf8').replace(/<\/style/g, '<\\/style')}</style>`
+)
 
 /* Replace an attribute value in place, or append the whole tag if the
    template doesn't carry it yet. */
@@ -140,9 +151,9 @@ const rss =
   `<?xml version="1.0" encoding="UTF-8"?>\n` +
   `<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n` +
   `<channel>\n` +
-  `  <title>ForgeQubit — Notes from the Forge</title>\n` +
+  `  <title>ForgeQubit blog</title>\n` +
   `  <link>${SITE}/blog</link>\n` +
-  `  <description>Practical writing on WhatsApp automation, voice agents and shipping AI products.</description>\n` +
+  `  <description>Practical writing on AI reception, workflow automation and building AI products.</description>\n` +
   `  <language>en-gb</language>\n` +
   `  <atom:link href="${SITE}/rss.xml" rel="self" type="application/rss+xml" />\n` +
   POSTS.map(
@@ -168,5 +179,7 @@ writeFileSync(
 )
 
 rmSync(SSR, { recursive: true, force: true })
+
+writeFileSync(join(DIST, 'routes.json'), JSON.stringify(ROUTES.map((r) => r.path), null, 2))
 
 console.log(`prerendered ${ROUTES.length} routes, ${POSTS.length} feed items`)

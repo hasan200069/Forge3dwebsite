@@ -1,84 +1,154 @@
 import { Link } from 'react-router-dom'
-import { VALUES, PROCESS } from '../data.js'
-import { Crumbs, Footer, useReveal } from '../chrome.jsx'
+import { PROCESS, ENGINEERING } from '../data.js'
+import { Crumbs, EMAIL, Footer, CtaBand } from '../chrome.jsx'
 import { Seo, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
 
-const TITLE = 'About ForgeQubit — The AI Agency That Ships Working Agents'
+const TITLE = 'About ForgeQubit — An Engineer-Led AI Studio'
 const DESC =
-  'ForgeQubit is an AI agency built by engineers, not account managers. Learn how we forge WhatsApp agents, voice agents and AI products — weekly demos, fixed scope, measurable results.'
+  'ForgeQubit is a UK-registered, engineer-led studio building voice and WhatsApp agents, workflow automation and custom AI products. How we work, who you deal with, and what we commit to.'
 
 const JSON_LD = graph(
   webPageLd({ path: '/about', title: TITLE, description: DESC, type: 'AboutPage' }),
   breadcrumbLd([{ label: 'About', path: '/about' }])
 )
 
+const COMMITMENTS = [
+  {
+    t: 'We tell you when AI is the wrong tool',
+    d: 'Some problems are a process problem or a staffing problem. If discovery shows that, we say so and stop before a proposal.',
+  },
+  {
+    t: 'Everything is measured against a definition you agreed',
+    d: 'Before launch we write down the metric, the baseline and the measurement period. Results are reported against that, not against a headline.',
+  },
+  {
+    t: 'Your accounts, your code, your data',
+    d: 'Third-party services are set up in your name. Deliverables are assigned to you on payment. Nothing is designed to lock you in.',
+  },
+  {
+    t: 'People stay in the loop',
+    d: 'Every agent has limits and a route to a person. Automations send uncertain cases to a named approver rather than guessing.',
+  },
+]
+
 export default function About() {
-  const ref = useReveal()
   return (
-    <div className="page" ref={ref}>
+    <div className="page">
       <Seo title={TITLE} description={DESC} path="/about" jsonLd={JSON_LD} />
-      <div className="page-inner">
-        <header className="page-hero">
-          <Crumbs trail={[{ label: 'About', to: '/about' }]} />
-          <p className="page-kicker rise">The Forge Itself</p>
-          <h1 className="page-title rise d1">Built by <span className="ember-text">builders.</span></h1>
-          <p className="page-sub rise d2">
-            ForgeQubit exists because too many AI projects end as demos.
-            Ours end as systems that answer the phone at 3&nbsp;a.m.
-          </p>
-        </header>
 
-        <div className="about-body rise d3">
-          <p>
-            We are an AI agency run by engineers, not account managers. Since our first
-            commission we have had one obsession: <strong>agents that work while the world
-            sleeps</strong> — WhatsApp agents that qualify leads in eight seconds, voice agents
-            that resolve four calls in five without a human, SaaS platforms that go from
-            napkin sketch to paying users in six weeks.
-          </p>
-          <p>
-            The name is the method. Every great product begins as raw ore — an idea,
-            unshaped. We heat it with research, strike it with engineering, and quench it
-            in production. What leaves our forge is not software for a slide. It is leverage
-            you can measure on a dashboard.
-          </p>
+      <header className="shell page-hero">
+        <Crumbs trail={[{ label: 'About', to: '/about' }]} />
+        <p className="eyebrow">About</p>
+        <h1>An engineer-led studio for AI systems <span className="em">that have to keep working.</span></h1>
+        <p className="lede">
+          ForgeQubit exists because too many AI projects end as demos. We build reception agents,
+          automations and products that are integrated with the tools you already use, tested
+          against real scenarios, and handed over properly.
+        </p>
+      </header>
+
+      <section className="section tight" aria-labelledby="who-h">
+        <div className="shell about-grid">
+          <div className="about-body">
+            <h2 id="who-h" style={{ marginBottom: 16 }}>Who you deal with</h2>
+            <p>
+              The engineers who scope your project are the ones who build it. From the first call
+              to handover you have one named engineer as your point of contact, who is accountable
+              for the scope, the weekly demos and the handover checklist.
+            </p>
+            <p>
+              We are model-agnostic and platform-agnostic. Language models, telephony providers
+              and workflow tools are chosen per project for quality, latency and cost, and set up
+              in accounts you control.
+            </p>
+            <p>
+              We are UK-registered and work remotely with clients in the United Kingdom, Europe and
+              the United States, overlapping with both European and US business hours.
+            </p>
+          </div>
+          <dl className="facts" aria-label="Company facts">
+            <div><dt>Company</dt><dd>ForgeQubit, registered in the United Kingdom</dd></div>
+            <div><dt>Works with</dt><dd>Service businesses, operations teams, founders and product teams</dd></div>
+            <div><dt>Regions</dt><dd>United Kingdom, Europe, United States (remote)</dd></div>
+            <div><dt>Contact</dt><dd><a href={`mailto:${EMAIL}`}>{EMAIL}</a></dd></div>
+            <div><dt>Engagements</dt><dd>Fixed-scope proposals, weekly demos, deliverables assigned to you on payment</dd></div>
+          </dl>
         </div>
+      </section>
 
-        <section className="section-block" aria-labelledby="laws-h">
-          <p className="page-kicker reveal">What We Believe</p>
-          <h2 className="section-title reveal" id="laws-h">The four <span className="ember-text">laws.</span></h2>
+      <section className="section alt" aria-labelledby="commit-h">
+        <div className="shell">
+          <div className="section-head">
+            <p className="eyebrow">Commitments</p>
+            <h2 id="commit-h">What we hold ourselves to.</h2>
+          </div>
           <div className="grid-2">
-            {VALUES.map((v, i) => (
-              <div key={v.t} className={`card value-card reveal d${(i % 2) + 1}`}>
-                <h3>{v.t}</h3>
-                <p>{v.d}</p>
+            {COMMITMENTS.map((c, i) => (
+              <div key={c.t} className="card">
+                <span className="num">0{i + 1}</span>
+                <h3>{c.t}</h3>
+                <p>{c.d}</p>
               </div>
             ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="section-block" aria-labelledby="process-h">
-          <p className="page-kicker reveal">How We Work</p>
-          <h2 className="section-title reveal" id="process-h">From ore <span className="ember-text">to weapon.</span></h2>
-          <div className="rail reveal d1">
+      <section className="section" aria-labelledby="eng-h">
+        <div className="shell">
+          <div className="section-head split">
+            <div>
+              <p className="eyebrow">Engineering approach</p>
+              <h2 id="eng-h">How systems are integrated, tested, monitored and handed over.</h2>
+            </div>
+            <p className="lede">The unglamorous work is what makes an AI system dependable. It is written into every scope.</p>
+          </div>
+          <div className="approach-list">
+            {ENGINEERING.map((e, i) => (
+              <div key={e.t} className="approach-item">
+                <span className="k" aria-hidden="true">0{i + 1}</span>
+                <div>
+                  <h3>{e.t}</h3>
+                  <p>{e.d}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="section alt" aria-labelledby="process-h">
+        <div className="shell">
+          <div className="section-head">
+            <p className="eyebrow">How a project runs</p>
+            <h2 id="process-h">Discover, scope, build, launch and support.</h2>
+          </div>
+          <ol className="process" aria-label="Delivery stages">
             {PROCESS.map((s) => (
-              <div key={s.n} className="rail-step">
+              <li key={s.n} className="step">
                 <span className="n">{s.n}</span>
                 <h3>{s.t}</h3>
                 <p>{s.d}</p>
-              </div>
+                <dl>
+                  <div><dt>You</dt><dd>{s.you}</dd></div>
+                  <div><dt>We</dt><dd>{s.we}</dd></div>
+                  <div><dt>Deliverable</dt><dd>{s.out}</dd></div>
+                </dl>
+              </li>
             ))}
-          </div>
-        </section>
-
-        <div className="page-cta reveal">
-          <h2>See what leaves <span className="ember-text">the fire.</span></h2>
-          <div className="btn-row">
-            <Link className="btn btn-primary" to="/case-studies">See the Work <span>→</span></Link>
-            <Link className="btn btn-ghost" to="/contact">Start a Project <span>→</span></Link>
-          </div>
+          </ol>
+          <p className="muted" style={{ marginTop: 22 }}>
+            See <Link to="/case-studies">worked examples</Link> of how this plays out for reception,
+            voice and automation projects.
+          </p>
         </div>
-      </div>
+      </section>
+
+      <CtaBand
+        title="Start with a short conversation."
+        body="Describe the problem in a few sentences. We reply by email to set up a call, and if we are not the right fit we will say so."
+        secondary={{ to: '/services', label: 'All solutions' }}
+      />
       <Footer />
     </div>
   )

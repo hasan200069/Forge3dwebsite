@@ -1,18 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { LogoMark } from './logo.jsx'
+import { SOLUTIONS, VOICE } from './data.js'
 
 export const EMAIL = 'info@forgequbit.com'
 
 export const NAV = [
-  { to: '/services', label: 'Services', note: '01' },
+  { to: '/services', label: 'Solutions', note: '01' },
   { to: '/case-studies', label: 'Work', note: '02' },
-  { to: '/blog', label: 'Blog', note: '03' },
-  { to: '/about', label: 'About', note: '04' },
+  { to: '/about', label: 'About', note: '03' },
+  { to: '/blog', label: 'Blog', note: '04' },
   { to: '/contact', label: 'Contact', note: '05' },
 ]
 
 const isActive = ({ isActive }) => (isActive ? 'active' : undefined)
+const sheetLink = ({ isActive }) => `sheet-link ${isActive ? 'active' : ''}`
 
 /* ———————————————————— nav ———————————————————— */
 
@@ -20,14 +22,28 @@ export function Nav() {
   const [open, setOpen] = useState(false)
   const [stuck, setStuck] = useState(false)
   const { pathname } = useLocation()
+  const toggle = useRef(null)
+  const sheet = useRef(null)
+  const wasOpen = useRef(false)
 
   useEffect(() => setOpen(false), [pathname])
+
+  /* move focus into the menu when it opens and back to the button when
+     it closes, so keyboard and screen-reader users are never stranded */
+  useEffect(() => {
+    if (open) {
+      sheet.current?.querySelector('a')?.focus()
+    } else if (wasOpen.current) {
+      toggle.current?.focus()
+    }
+    wasOpen.current = open
+  }, [open])
 
   useEffect(() => {
     let ticking = false
     const read = () => {
       ticking = false
-      setStuck(window.scrollY > 24)
+      setStuck(window.scrollY > 12)
     }
     const onScroll = () => {
       if (ticking) return
@@ -39,8 +55,7 @@ export function Nav() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  /* lock the page behind the menu without the classic jump-to-top:
-     position:fixed on body would reset scrollY, so just stop overflow */
+  /* lock the page behind the open menu and close it on Escape */
   useEffect(() => {
     if (!open) return
     const prev = document.body.style.overflow
@@ -55,8 +70,8 @@ export function Nav() {
 
   return (
     <>
-      <nav className={`nav ${stuck ? 'stuck' : ''}`} aria-label="Primary">
-        <Link className="wordmark" to="/" aria-label="ForgeQubit — home">
+      <nav className={`nav ${stuck || open ? 'stuck' : ''}`} aria-label="Primary">
+        <Link className="wordmark" to="/" aria-label="ForgeQubit home">
           <LogoMark size={30} />
           <span className="wordmark-text">
             FORGE<span className="wordmark-accent">QUBIT</span>
@@ -65,13 +80,16 @@ export function Nav() {
 
         <div className="nav-links">
           {NAV.slice(0, -1).map((l) => (
-            <NavLink key={l.to} to={l.to} className={isActive}>{l.label}</NavLink>
+            <NavLink key={l.to} to={l.to} className={isActive} end={l.to === '/services' ? false : undefined}>
+              {l.label}
+            </NavLink>
           ))}
-          <Link className="nav-cta" to="/contact">Start a Project</Link>
+          <Link className="btn btn-primary btn-sm" to="/contact" data-track="nav-cta">Discuss your project</Link>
         </div>
 
         <button
           type="button"
+          ref={toggle}
           className="nav-toggle"
           aria-expanded={open}
           aria-controls="nav-sheet"
@@ -84,16 +102,26 @@ export function Nav() {
 
       {/* inert keeps the closed sheet out of the tab order and out of
           the accessibility tree without a display:none transition */}
-      <div className={`nav-sheet ${open ? 'open' : ''}`} id="nav-sheet" inert={!open}>
+      <div className={`nav-sheet ${open ? 'open' : ''}`} id="nav-sheet" ref={sheet} inert={!open}>
         {NAV.map((l) => (
-          <NavLink key={l.to} to={l.to} className={isActive}>
-            {l.label}
-            <span>{l.note}</span>
-          </NavLink>
+          <span key={l.to} style={{ display: 'contents' }}>
+            <NavLink to={l.to} className={sheetLink} end={l.to === '/services'}>
+              {l.label}
+              <span>{l.note}</span>
+            </NavLink>
+            {l.to === '/services' && (
+              <div className="nav-sheet-sub">
+                {SOLUTIONS.map((s) => (
+                  <NavLink key={s.slug} to={s.path} className={isActive}>{s.name}</NavLink>
+                ))}
+                <NavLink to={VOICE.path} className={isActive}>{VOICE.name}</NavLink>
+              </div>
+            )}
+          </span>
         ))}
         <div className="nav-sheet-foot">
           <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
-          <Link className="btn btn-primary" to="/contact">Start a Project <span>→</span></Link>
+          <Link className="btn btn-primary" to="/contact" data-track="menu-cta">Discuss your project <span aria-hidden="true">→</span></Link>
         </div>
       </div>
     </>
@@ -105,167 +133,60 @@ export function Nav() {
 export function Footer() {
   return (
     <footer className="site-footer">
-      <div className="site-footer-inner">
-        <div className="footer-brand">
-          <Link className="wordmark small" to="/">
-            <LogoMark size={26} />
-            <span className="wordmark-text">
-              FORGE<span className="wordmark-accent">QUBIT</span>
-            </span>
-          </Link>
-          <p>
-            A UK-registered AI agency building WhatsApp automation, voice agents and
-            AI-powered products for teams across the UK, Europe and the United States.
-          </p>
-          <a className="link-cta" href={`mailto:${EMAIL}`}>{EMAIL} <span>→</span></a>
+      <div className="shell">
+        <div className="site-footer-inner">
+          <div className="footer-brand">
+            <Link className="wordmark small" to="/" aria-label="ForgeQubit home">
+              <LogoMark size={26} />
+              <span className="wordmark-text">
+                FORGE<span className="wordmark-accent">QUBIT</span>
+              </span>
+            </Link>
+            <p>
+              ForgeQubit builds voice and WhatsApp agents, connects business tools, and
+              develops custom AI products. UK-registered, working with clients in the UK,
+              Europe and the United States.
+            </p>
+            <a className="link-cta" href={`mailto:${EMAIL}`} data-track="footer-email">{EMAIL} <span aria-hidden="true">→</span></a>
+          </div>
+
+          <div className="footer-cols">
+            <div className="footer-col">
+              <h3>Solutions</h3>
+              <ul>
+                {SOLUTIONS.map((s) => (
+                  <li key={s.slug}><Link to={s.path}>{s.name}</Link></li>
+                ))}
+                <li><Link to={VOICE.path}>{VOICE.name}</Link></li>
+                <li><Link to="/services#capabilities">Avatars &amp; blockchain</Link></li>
+              </ul>
+            </div>
+            <div className="footer-col">
+              <h3>Company</h3>
+              <ul>
+                <li><Link to="/about">About</Link></li>
+                <li><Link to="/case-studies">Work</Link></li>
+                <li><Link to="/blog">Blog</Link></li>
+                <li><Link to="/contact">Contact</Link></li>
+              </ul>
+            </div>
+            <div className="footer-col">
+              <h3>Legal</h3>
+              <ul>
+                <li><Link to="/privacy">Privacy Policy</Link></li>
+                <li><Link to="/terms">Terms of Service</Link></li>
+              </ul>
+            </div>
+          </div>
         </div>
 
-        <div className="footer-cols">
-          <div className="footer-col">
-            <h4>Services</h4>
-            <ul>
-              <li><Link to="/services">WhatsApp Automation</Link></li>
-              <li><Link to="/services">Voice Agents</Link></li>
-              <li><Link to="/services">Avatar Agents</Link></li>
-              <li><Link to="/services">Custom AI Agents</Link></li>
-              <li><Link to="/services">AI-Powered SaaS</Link></li>
-              <li><Link to="/services">AI × Blockchain</Link></li>
-            </ul>
-          </div>
-          <div className="footer-col">
-            <h4>Company</h4>
-            <ul>
-              <li><Link to="/about">About</Link></li>
-              <li><Link to="/case-studies">Case Studies</Link></li>
-              <li><Link to="/blog">Blog</Link></li>
-              <li><Link to="/contact">Contact</Link></li>
-            </ul>
-          </div>
-          <div className="footer-col">
-            <h4>Legal</h4>
-            <ul>
-              <li><Link to="/privacy">Privacy Policy</Link></li>
-              <li><Link to="/terms">Terms of Service</Link></li>
-            </ul>
-          </div>
+        <div className="footer-base">
+          <span>© {new Date().getFullYear()} ForgeQubit. Registered in the United Kingdom.</span>
+          <span>United Kingdom · Europe · United States</span>
         </div>
-      </div>
-
-      <div className="footer-base">
-        <span>ForgeQubit © 2026 — Forged Worldwide</span>
-        <span>United Kingdom · Europe · United States</span>
       </div>
     </footer>
   )
-}
-
-/* ———————————————————— cursor ———————————————————— */
-
-/* Writes transforms straight to the DOM — no React state, so the tree
-   never re-renders while the mouse moves. */
-export function Cursor() {
-  const dot = useRef(null)
-  const ring = useRef(null)
-
-  useEffect(() => {
-    const fine = window.matchMedia('(pointer: fine)').matches
-    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (!fine || still) return
-
-    document.documentElement.classList.add('has-custom-cursor')
-
-    // both parts start parked off-screen, so there's nothing to reveal
-    // and nothing to strand — they simply arrive with the first move
-    const pos = { x: -100, y: -100 }
-    const ringPos = { x: -100, y: -100 }
-    let last = performance.now()
-    let raf = 0
-
-    /* Written on the event rather than on the next frame, so the dot
-       stays locked to the real pointer 1:1.
-
-       Note this sets the `translate` property, not `transform`: the
-       composite order is translate × rotate × scale × transform, so a
-       position written to `transform` lands inside the hover `scale`
-       and gets multiplied by it. `translate` sits outside the scale. */
-    const onMove = (e) => {
-      pos.x = e.clientX
-      pos.y = e.clientY
-      if (dot.current) dot.current.style.translate = `${pos.x}px ${pos.y}px`
-    }
-
-    /* hover state comes from pointerover, not from a hit-test on every
-       move — `closest()` per move was measurable on long pages */
-    const HOT = 'a, button, summary, input, select, textarea, [data-hot]'
-    const onOver = (e) => {
-      const hot = !!(e.target instanceof Element && e.target.closest(HOT))
-      dot.current?.classList.toggle('is-hot', hot)
-      ring.current?.classList.toggle('is-hot', hot)
-    }
-
-    // only the ring is smoothed; the dot is exact
-    const tick = (now) => {
-      const dt = Math.min((now - last) / 1000, 0.05)
-      last = now
-      // framerate-independent, so the trail is identical at 60 and 120 Hz
-      const k = 1 - Math.exp(-13 * dt)
-      ringPos.x += (pos.x - ringPos.x) * k
-      ringPos.y += (pos.y - ringPos.y) * k
-      if (ring.current) ring.current.style.translate = `${ringPos.x}px ${ringPos.y}px`
-      raf = requestAnimationFrame(tick)
-    }
-
-    window.addEventListener('pointermove', onMove, { passive: true })
-    document.addEventListener('pointerover', onOver, { passive: true })
-    raf = requestAnimationFrame(tick)
-
-    return () => {
-      document.documentElement.classList.remove('has-custom-cursor')
-      window.removeEventListener('pointermove', onMove)
-      document.removeEventListener('pointerover', onOver)
-      cancelAnimationFrame(raf)
-    }
-  }, [])
-
-  return (
-    <>
-      <div className="cursor" ref={dot} aria-hidden="true" style={{ translate: '-100px -100px' }} />
-      <div className="cursor-ring" ref={ring} aria-hidden="true" style={{ translate: '-100px -100px' }} />
-    </>
-  )
-}
-
-/* ———————————————————— reveal ———————————————————— */
-
-/* Observes .reveal descendants and adds .visible once — unlike the old
-   toggle, elements don't re-animate when they scroll back into view,
-   which was both distracting and extra compositor work. */
-export function useReveal() {
-  const ref = useRef(null)
-  useEffect(() => {
-    const root = ref.current
-    if (!root) return
-
-    const targets = root.querySelectorAll('.reveal')
-    if (!('IntersectionObserver' in window)) {
-      targets.forEach((el) => el.classList.add('visible'))
-      return
-    }
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (!e.isIntersecting) continue
-          e.target.classList.add('visible')
-          io.unobserve(e.target)
-        }
-      },
-      { rootMargin: '0px 0px -12% 0px', threshold: 0.12 }
-    )
-    targets.forEach((el) => io.observe(el))
-    return () => io.disconnect()
-  }, [])
-  return ref
 }
 
 /* ———————————————————— breadcrumbs ———————————————————— */
@@ -283,5 +204,49 @@ export function Crumbs({ trail }) {
         </span>
       ))}
     </nav>
+  )
+}
+
+/* ———————————————————— shared blocks ———————————————————— */
+
+export function Faq({ items, id = 'faq' }) {
+  return (
+    <div className="faq-list" id={id}>
+      {items.map((f) => (
+        <details key={f.q} className="faq">
+          <summary>{f.q}</summary>
+          <p>{f.a}</p>
+        </details>
+      ))}
+    </div>
+  )
+}
+
+export function CtaBand({
+  eyebrow = 'Next step',
+  title,
+  body = 'Tell us what you are dealing with. We reply by email to arrange a short call, then send a written scope and price before any work starts.',
+  interest,
+  secondary,
+}) {
+  const to = interest ? `/contact?interest=${encodeURIComponent(interest)}` : '/contact'
+  return (
+    <section className="section tight" aria-labelledby="cta-h">
+      <div className="shell">
+        <div className="cta-band">
+          <div>
+            <p className="eyebrow">{eyebrow}</p>
+            <h2 id="cta-h">{title}</h2>
+            <p>{body}</p>
+          </div>
+          <div className="btn-row">
+            <Link className="btn btn-primary" to={to} data-track="cta-band">Discuss your project <span aria-hidden="true">→</span></Link>
+            {secondary && (secondary.to.startsWith('mailto:')
+              ? <a className="btn btn-secondary" href={secondary.to} data-track="cta-band-email">{secondary.label}</a>
+              : <Link className="btn btn-secondary" to={secondary.to}>{secondary.label}</Link>)}
+          </div>
+        </div>
+      </div>
+    </section>
   )
 }

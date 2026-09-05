@@ -1,12 +1,12 @@
 {
-  "name": "ForgeQubit — AI Agency",
+  "name": "ForgeQubit",
   "short_name": "ForgeQubit",
-  "description": "UK-registered AI agency building WhatsApp automation, voice agents, avatar agents, custom AI agents and AI-powered SaaS.",
+  "description": "AI systems that answer customers and move work forward: voice and WhatsApp agents, workflow automation, and custom AI products.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#07040a",
-  "theme_color": "#07040a",
+  "background_color": "#061017",
+  "theme_color": "#061017",
   "lang": "en-GB",
   "categories": ["business", "productivity", "developer"],
   "icons": [

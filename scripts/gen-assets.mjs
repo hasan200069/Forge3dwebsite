@@ -212,15 +212,14 @@ const bboxOf = (pts, pad) => [
 /* ————————————————————————— palette ————————————————————————— */
 
 const C = {
-  bg: hex('#07040A'),
-  bgLift: hex('#150A18'),
-  ember: hex('#E2560F'),
-  emberHot: hex('#FFA84A'),
-  emberPale: hex('#FFD5A0'),
-  emberDeep: hex('#8F2606'),
-  violet: hex('#5C2E7A'),
-  ink: hex('#F5EDE4'),
-  inkDim: hex('#A08F84'),
+  bg: hex('#061017'),
+  bgLift: hex('#102532'),
+  cyan: hex('#22D3EE'),
+  cyanBright: hex('#67E8F9'),
+  cyanPale: hex('#A5F0FA'),
+  cyanDeep: hex('#0891B2'),
+  ink: hex('#F2FAFD'),
+  inkDim: hex('#B4CAD4'),
 }
 
 /* linear gradient colour function between two points */
@@ -249,17 +248,17 @@ function drawMark(c, ox, oy, s) {
   const hexPts = [[24, 5], [39.59, 14], [39.59, 32], [24, 41], [8.41, 32], [8.41, 14]].map(([x, y]) => P(x, y))
   const caretPts = [[24, 13], [32, 23], [27.6, 23], [24, 18.6], [20.4, 23], [16, 23]].map(([x, y]) => P(x, y))
 
-  const g1 = lin(...P(8, 5), ...P(40, 41), [[0, C.emberHot], [0.45, hex('#C23A0B')], [1, C.violet]])
-  const g2 = lin(...P(16, 12), ...P(34, 32), [[0, C.emberPale], [0.5, C.emberHot], [1, C.ember]])
+  const g1 = lin(...P(8, 5), ...P(40, 41), [[0, C.cyanBright], [0.5, C.cyan], [1, C.cyanDeep]])
+  const g2 = lin(...P(16, 12), ...P(34, 32), [[0, C.cyanPale], [0.5, C.cyan], [1, C.cyanDeep]])
 
-  // heat bleeding out of the cell
+  // a restrained pool of light behind the cell
   const [gx, gy] = P(24, 23)
   const gr = 19 * s
   draw(c, {
     sdf: (x, y) => Math.hypot(x - gx, y - gy) - gr,
     color: (x, y) => {
       const t = clamp01(Math.hypot(x - gx, y - gy) / gr)
-      return C.emberDeep.map((v) => v * (1 - t) * (1 - t) * 0.85)
+      return C.cyanDeep.map((v) => v * (1 - t) * (1 - t) * 0.35)
     },
     bbox: [gx - gr, gy - gr, gx + gr, gy + gr],
     additive: true,
@@ -395,10 +394,10 @@ function drawText(c, text, x, y, size, { weight = 0.08, tracking = 0.16, color }
 const FAVICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
   <defs>
     <linearGradient id="r" x1="8" y1="5" x2="40" y2="41" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#F5811F"/><stop offset=".45" stop-color="#C23A0B"/><stop offset="1" stop-color="#5C2E7A"/>
+      <stop offset="0" stop-color="#67E8F9"/><stop offset=".5" stop-color="#22D3EE"/><stop offset="1" stop-color="#0891B2"/>
     </linearGradient>
     <linearGradient id="f" x1="16" y1="12" x2="34" y2="32" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#FFD5A0"/><stop offset=".5" stop-color="#F5811F"/><stop offset="1" stop-color="#E2560F"/>
+      <stop offset="0" stop-color="#A5F0FA"/><stop offset=".5" stop-color="#22D3EE"/><stop offset="1" stop-color="#0891B2"/>
     </linearGradient>
   </defs>
   <path d="M24 5 L39.59 14 L39.59 32 L24 41 L8.41 32 L8.41 14 Z" fill="none" stroke="url(#r)" stroke-width="2.6" stroke-linejoin="round"/>
@@ -433,40 +432,37 @@ function ogCard() {
   const H = 630
   const c = createCanvas(W, H)
 
-  // base: cool violet-black lifting toward the ember horizon
+  // base: deep sea lifting slightly, one pool of cyan light top-right
   paint(c, (x, y) => {
-    const v = mix(C.bg, C.bgLift, clamp01(y / H) * 0.9)
-    // heat pooling in the lower-left, where the mark sits
-    const d1 = Math.hypot(x - 250, y - 700) / 620
-    const d2 = Math.hypot(x - 1050, y - 40) / 700
-    const g1 = Math.max(0, 1 - d1) ** 2.2
-    const g2 = Math.max(0, 1 - d2) ** 2.4
+    const v = mix(C.bg, C.bgLift, clamp01(y / H) * 0.6)
+    const d1 = Math.hypot(x - 1080, y - 60) / 720
+    const g1 = Math.max(0, 1 - d1) ** 2.4
     return [
-      v[0] + C.ember[0] * g1 * 0.4 + C.violet[0] * g2 * 0.5,
-      v[1] + C.ember[1] * g1 * 0.4 + C.violet[1] * g2 * 0.5,
-      v[2] + C.ember[2] * g1 * 0.4 + C.violet[2] * g2 * 0.5,
+      v[0] + C.cyanDeep[0] * g1 * 0.22,
+      v[1] + C.cyanDeep[1] * g1 * 0.22,
+      v[2] + C.cyanDeep[2] * g1 * 0.22,
     ]
   })
 
-  // top hairline of heat
+  // top hairline in the signature gradient
   draw(c, {
     sdf: (x, y) => Math.abs(y - 3) - 3,
-    color: lin(0, 0, W, 0, [[0, C.emberDeep], [0.5, C.emberHot], [1, C.violet]]),
+    color: lin(0, 0, W, 0, [[0, C.cyanBright], [0.48, C.cyan], [1, C.cyanDeep]]),
     bbox: [0, 0, W, 8],
   })
 
   drawMark(c, 96, 96, 2.5) // 48 * 2.5 = 120px mark
 
-  const gText = lin(96, 250, 900, 340, [[0, C.emberPale], [0.55, C.emberHot], [1, C.ember]])
+  const gText = lin(96, 250, 900, 340, [[0, C.cyanPale], [0.5, C.cyan], [1, C.cyanDeep]])
   const M = 96 // left margin
   const COL = W - M * 2 // usable column
 
   drawText(c, 'FORGEQUBIT', 250, 118, 42, { weight: 0.14, tracking: 0.16, color: gText })
-  drawText(c, 'AI AGENCY', 252, 178, 15, { weight: 0.15, tracking: 0.6, color: flat(C.inkDim) })
+  drawText(c, 'AI SYSTEMS FOR BUSINESS', 252, 178, 15, { weight: 0.15, tracking: 0.6, color: flat(C.inkDim) })
 
   // headline — two lines, sized together so they share one optical weight
-  const l1 = 'AGENTS THAT WORK'
-  const l2 = 'WHILE THE WORLD SLEEPS'
+  const l1 = 'AI SYSTEMS THAT ANSWER CUSTOMERS'
+  const l2 = 'AND MOVE WORK FORWARD'
   const cap = Math.min(fit(l1, COL, 0.12, 62), fit(l2, COL, 0.12, 62))
   drawText(c, l1, M, 292, cap, { weight: 0.12, tracking: 0.12, color: flat(C.ink) })
   drawText(c, l2, M, 292 + cap * 1.55, cap, { weight: 0.12, tracking: 0.12, color: gText })
@@ -474,11 +470,11 @@ function ogCard() {
   // rule
   draw(c, {
     sdf: (x, y) => Math.abs(y - 508) - 1,
-    color: lin(M, 0, 760, 0, [[0, C.ember], [1, [0.06, 0.03, 0.08]]]),
+    color: lin(M, 0, 760, 0, [[0, C.cyan], [1, [0.06, 0.1, 0.13]]]),
     bbox: [M, 503, 800, 515],
   })
 
-  const strip = 'WHATSAPP · VOICE · AVATAR · CUSTOM AI · SAAS'
+  const strip = 'AI RECEPTION · WORKFLOW AUTOMATION · CUSTOM AI PRODUCTS'
   drawText(c, strip, M, 546, fit(strip, COL, 0.3, 19), {
     weight: 0.14,
     tracking: 0.3,

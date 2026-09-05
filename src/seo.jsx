@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-export const SITE_URL = 'https://forgequbit.co.uk'
+export const SITE_URL = 'https://www.forgequbit.co.uk'
 export const SITE_NAME = 'ForgeQubit'
 export const OG_IMAGE = `${SITE_URL}/og.png`
 export const ORG_ID = `${SITE_URL}/#organization`
@@ -53,7 +53,7 @@ export function Seo({
   type = 'website',
   robots = 'index, follow',
   image = OG_IMAGE,
-  imageAlt = 'ForgeQubit — AI agents that work while the world sleeps',
+  imageAlt = 'ForgeQubit: AI systems that answer customers and move work forward',
   publishedTime,
   modifiedTime,
   jsonLd = null,

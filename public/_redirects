@@ -1,3 +1,13 @@
-# Netlify: prerendered routes are served as real files;
-# anything else (unknown URLs) falls back to the SPA shell
-/*  /index.html  200
+# Netlify equivalent of the redirects in vercel.json
+/services/whatsapp-automation  /services/ai-reception          301
+/services/whatsapp-agents      /services/ai-reception          301
+/services/avatar-agents        /services#capabilities          301
+/services/custom-ai-agents     /services/custom-ai-products    301
+/services/custom-agents        /services/custom-ai-products    301
+/services/ai-powered-saas      /services/custom-ai-products    301
+/services/ai-saas              /services/custom-ai-products    301
+/services/ai-blockchain        /services#capabilities          301
+/work                          /case-studies                   301
+/solutions                     /services                       301
+# every real route is a prerendered file; anything else is a real 404
+/*  /404.html  404
