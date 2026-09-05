@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom'
 import { VOICE, SOLUTIONS, contactHref } from '../data.js'
 import { Crumbs, Footer, Faq, CtaBand } from '../chrome.jsx'
-import { Seo, SITE_URL, orgRef, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
+import { Seo, SITE_URL, ogFor, orgRef, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
 import { CallSample } from '../visuals.jsx'
 import { ICONS, IconTile } from '../icons.jsx'
 
-const TITLE = 'AI Voice Agents for Phone Answering & Bookings | ForgeQubit'
+const TITLE = 'AI Voice Agents for Phone Answering & Bookings (UK) | ForgeQubit'
 const DESC =
   'Voice agents that answer on the first ring, book and reschedule appointments, answer common questions and transfer to your team with context. Works with your number.'
 
@@ -41,7 +41,7 @@ const reception = SOLUTIONS[0]
 export default function VoiceAgents() {
   return (
     <div className="page">
-      <Seo title={TITLE} description={DESC} path={VOICE.path} jsonLd={JSON_LD} />
+      <Seo title={TITLE} description={DESC} path={VOICE.path} jsonLd={JSON_LD} image={ogFor('voice-agents')} imageAlt="ForgeQubit voice agents that answer the phone" />
 
       <header className="shell page-hero split">
         <div className="page-hero-copy">

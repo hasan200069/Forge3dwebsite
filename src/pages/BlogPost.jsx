@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
-import { POSTS } from '../data.js'
+import { POSTS, SOLUTIONS, VOICE } from '../data.js'
 import { Crumbs, Footer, CtaBand } from '../chrome.jsx'
 import { Seo, SITE_URL, OG_IMAGE, orgRef, graph, breadcrumbLd } from '../seo.jsx'
 import NotFound from './NotFound.jsx'
@@ -16,6 +16,7 @@ export default function BlogPost() {
   if (!post) return <NotFound />
 
   const others = POSTS.filter((p) => p.slug !== slug).slice(0, 2)
+  const related = post.tag === 'Voice Agents' ? VOICE : SOLUTIONS.find((s) => s.shortName === post.tag) || SOLUTIONS[0]
   const url = `${SITE_URL}/blog/${post.slug}`
 
   const jsonLd = graph(
@@ -73,6 +74,18 @@ export default function BlogPost() {
                 <p>{s.p}</p>
               </section>
             ))}
+            <aside className="glance" style={{ marginTop: 36 }} aria-label="Related solution">
+              <div className="glance-head">
+                <div>
+                  <b>How we build this</b>
+                  <small>{related.name}</small>
+                </div>
+              </div>
+              <p className="muted">{related.short}</p>
+              <div>
+                <Link className="link-cta" to={related.path}>Read about {related.name} <span aria-hidden="true">→</span></Link>
+              </div>
+            </aside>
           </div>
 
           {others.length > 0 && (

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { PROCESS, ENGINEERING, TEAM, COMPANY } from '../data.js'
 import { Crumbs, EMAIL, Footer, CtaBand } from '../chrome.jsx'
-import { Seo, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
+import { Seo, ogFor, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
 
 const TITLE = 'About ForgeQubit: An Engineer-Led AI Studio'
 const DESC =
@@ -34,7 +34,7 @@ const COMMITMENTS = [
 export default function About() {
   return (
     <div className="page">
-      <Seo title={TITLE} description={DESC} path="/about" jsonLd={JSON_LD} />
+      <Seo title={TITLE} description={DESC} path="/about" jsonLd={JSON_LD} image={ogFor('about')} imageAlt="About ForgeQubit, an engineer-led AI studio" />
 
       <header className="shell page-hero split">
         <div className="page-hero-copy">

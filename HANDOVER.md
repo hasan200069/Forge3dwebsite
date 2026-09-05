@@ -183,6 +183,19 @@ icons and the social card from `scripts/gen-assets.mjs`.
   longer cause horizontal overflow (caught by the capture script and
   fixed: 1280/390 px, no overflow on any page).
 
+### Seventh pass: search and AI discoverability
+
+See `SEO.md` for the full table. Added: a distinct social card per
+page; `llms.txt` and `llms-full.txt` generated from the content at
+build; `robots.txt` explicitly allowing the AI crawlers; FAQ structured
+data on the home page; keyword-aware titles (AI receptionist, WhatsApp
+and voice agents, automation, UK); a related-solution link from every
+blog post; three new build tests covering all of it. `SEO.md` also
+lists the seven things only the business can do (Search Console, Google
+Business Profile, company facts, real profiles for `sameAs`, evidence,
+writing, earned links) and states plainly that no technique guarantees
+a first position.
+
 ## 3. Final design tokens
 
 | Token | Value | Use |

@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom'
 import { SOLUTIONS, VOICE, CAPABILITIES, FAQS, contactHref } from '../data.js'
 import { Crumbs, Footer, Faq, CtaBand } from '../chrome.jsx'
-import { Seo, SITE_URL, orgRef, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
+import { Seo, SITE_URL, ogFor, orgRef, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
 import { ICONS, IconTile } from '../icons.jsx'
 
-const TITLE = 'Solutions: AI Reception, Automation & AI Products | ForgeQubit'
+const TITLE = 'AI Agency Solutions: Reception, Automation & AI Products | ForgeQubit'
 const DESC =
   'Three things we build end to end: voice and WhatsApp agents for reception, workflow automation and integrations, and custom AI products.'
 
@@ -42,7 +42,7 @@ const JSON_LD = graph(
 export default function Services() {
   return (
     <div className="page">
-      <Seo title={TITLE} description={DESC} path="/services" jsonLd={JSON_LD} />
+      <Seo title={TITLE} description={DESC} path="/services" jsonLd={JSON_LD} image={ogFor('services')} imageAlt="ForgeQubit solutions: three things we build, start to finish" />
 
       <header className="shell page-hero split">
         <div className="page-hero-copy">
