@@ -84,7 +84,7 @@ test('titles, descriptions and canonicals are present and unique', () => {
     const plainTitle = title.replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/&quot;/g, '"')
     assert.ok(plainTitle.length <= 70, `${route} title too long for search results (${plainTitle.length}: ${plainTitle})`)
     if (route !== '/404') assert.match(html, /<meta name="robots" content="index, follow, max-image-preview:large"/, `${route} robots`)
-    assert.match(html, /<meta property="og:image" content="https:\/\/www\.forgequbit\.co\.uk\/og\.png"/, `${route} og:image`)
+    assert.match(html, /<meta property="og:image" content="https:\/\/www\.forgequbit\.co\.uk\/og(-[a-z-]+)?\.png"/, `${route} og:image`)
     assert.match(html, /<link rel="alternate" hreflang="en"/, `${route} hreflang`)
     const expected = route === '/404' ? `${SITE}/404` : route === '/' ? `${SITE}/` : SITE + route
     assert.equal(canon, expected, `${route} canonical`)
@@ -272,5 +272,40 @@ test('every route and every internal link responds correctly through the server'
     assert.ok(csp && csp.includes("default-src 'self'"), 'CSP header served')
   } finally {
     srv.kill()
+  }
+})
+
+
+test('machine-readable layers for search and AI crawlers', () => {
+  const robots = readFileSync(join(DIST, 'robots.txt'), 'utf8')
+  for (const ua of ['GPTBot', 'ClaudeBot', 'PerplexityBot', 'Google-Extended', 'Bingbot']) assert.match(robots, new RegExp(`User-agent: ${ua}\\nAllow: /`), ua)
+  assert.match(robots, /Sitemap: https:\/\/www\.forgequbit\.co\.uk\/sitemap\.xml/)
+  const llms = readFileSync(join(DIST, 'llms.txt'), 'utf8')
+  assert.match(llms, /^# ForgeQubit/)
+  for (const r of routes.filter((x) => !['/404', '/privacy', '/terms'].includes(x))) assert.ok(llms.includes(SITE + (r === '/' ? '/' : r)), `llms.txt links ${r}`)
+  const full = readFileSync(join(DIST, 'llms-full.txt'), 'utf8')
+  assert.ok(full.length > 15000, 'llms-full.txt carries the site text')
+  assert.match(full, /illustrative/i)
+})
+
+test('every page has its own social card and it exists', () => {
+  const seen = new Map()
+  for (const { route, html } of pages) {
+    const img = html.match(/<meta property="og:image" content="([^"]+)"/)[1]
+    const path = img.replace(SITE, '')
+    assert.ok(distFiles.has(path), `${route} og image ${path} missing from dist`)
+    if (!route.startsWith('/blog/') && !['/privacy', '/terms', '/404'].includes(route)) {
+      assert.ok(!seen.has(img), `${route} shares a social card with ${seen.get(img)}`)
+      seen.set(img, route)
+    }
+    assert.match(html, /<meta property="og:image:alt" content="[^"]{10,}"/, `${route} og:image:alt`)
+  }
+})
+
+test('home page carries FAQ structured data and blog posts link to a solution', () => {
+  const home = pages.find((p) => p.route === '/').html
+  assert.match(home, /"@type":"FAQPage"/)
+  for (const { route, html } of pages.filter((p) => p.route.startsWith('/blog/'))) {
+    assert.match(html, /href="\/services\/[a-z-]+"/, `${route} links to a solution page`)
   }
 })

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { SOLUTIONS, VOICE, contactHref } from '../data.js'
 import { Crumbs, Footer, Faq, CtaBand } from '../chrome.jsx'
-import { Seo, SITE_URL, orgRef, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
+import { Seo, SITE_URL, ogFor, orgRef, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
 import { Transcript, Workflow } from '../visuals.jsx'
 import { ICONS, IconTile } from '../icons.jsx'
 
@@ -19,12 +19,12 @@ const SECTIONS = [
 
 const META = {
   'ai-reception': {
-    title: 'AI Reception & Lead Handling: Voice & WhatsApp Agents | ForgeQubit',
+    title: 'AI Receptionist & Lead Handling: Voice & WhatsApp Agents | ForgeQubit',
     description:
       'Voice and WhatsApp agents that answer enquiries in seconds, qualify prospects, book into your calendar and hand off to your team. Built on your number.',
   },
   'workflow-automation': {
-    title: 'Workflow Automation & Integrations | ForgeQubit',
+    title: 'Workflow Automation & Integrations Agency (UK) | ForgeQubit',
     description:
       'Connected workflows across CRMs, accounting, helpdesks and internal tools. AI only where judgement is needed, with a person approving anything uncertain.',
   },
@@ -124,7 +124,7 @@ export default function ServicePage({ solution: s }) {
 
   return (
     <div className="page">
-      <Seo title={meta.title} description={meta.description} path={s.path} jsonLd={jsonLd} />
+      <Seo title={meta.title} description={meta.description} path={s.path} jsonLd={jsonLd} image={ogFor(s.slug)} imageAlt={`ForgeQubit: ${s.name}`} />
 
       <header className="shell page-hero split">
         <div className="page-hero-copy">

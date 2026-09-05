@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 export const SITE_URL = 'https://www.forgequbit.co.uk'
 export const SITE_NAME = 'ForgeQubit'
 export const OG_IMAGE = `${SITE_URL}/og.png`
+export const ogFor = (name) => `${SITE_URL}/og-${name}.png`
 export const ORG_ID = `${SITE_URL}/#organization`
 export const EMAIL = 'info@forgequbit.com'
 

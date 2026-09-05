@@ -4,7 +4,7 @@ import { INTERESTS } from '../data.js'
 import { ACCESS_KEY, ENDPOINT, LIMITS, resolveInterest, validate, interpretResponse } from '../contact-logic.js'
 import { Crumbs, EMAIL, Footer } from '../chrome.jsx'
 import { track } from '../analytics.js'
-import { Seo, SITE_URL, orgRef, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
+import { Seo, SITE_URL, ogFor, orgRef, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
 
 const TITLE = 'Contact ForgeQubit: Discuss Your AI Project'
 const DESC =
@@ -309,7 +309,7 @@ export default function Contact() {
 
   return (
     <div className="page">
-      <Seo title={TITLE} description={DESC} path="/contact" jsonLd={JSON_LD} />
+      <Seo title={TITLE} description={DESC} path="/contact" jsonLd={JSON_LD} image={ogFor('contact')} imageAlt="Contact ForgeQubit to discuss your project" />
       <div className="shell contact-grid">
         <div className="contact-intro">
           <Crumbs trail={[{ label: 'Contact', to: '/contact' }]} />

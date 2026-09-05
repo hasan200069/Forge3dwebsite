@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { POSTS } from '../data.js'
 import { Crumbs, Footer, CtaBand } from '../chrome.jsx'
-import { Seo, SITE_URL, OG_IMAGE, orgRef, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
+import { Seo, SITE_URL, OG_IMAGE, ogFor, orgRef, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
 
 const TITLE = 'Blog: Notes on AI Reception, Automation & Products | ForgeQubit'
 const DESC =
@@ -36,7 +36,7 @@ const JSON_LD = graph(
 export default function Blog() {
   return (
     <div className="page">
-      <Seo title={TITLE} description={DESC} path="/blog" jsonLd={JSON_LD} />
+      <Seo title={TITLE} description={DESC} path="/blog" jsonLd={JSON_LD} image={ogFor('blog')} imageAlt="ForgeQubit blog: notes for operators" />
       <header className="shell page-hero">
         <div className="page-hero-copy">
         <Crumbs trail={[{ label: 'Blog', to: '/blog' }]} />

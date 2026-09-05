@@ -415,7 +415,7 @@ writeFileSync(join(PUB, 'icon-512.png'), icon(512))
 writeFileSync(join(PUB, 'apple-touch-icon.png'), icon(180, { pad: 0.2 }))
 
 /* --- og:image --- */
-function ogCard() {
+function ogCard({ l1, l2, strip, kicker = 'AI SYSTEMS FOR BUSINESS' } = {}) {
   const W = 1200
   const H = 630
   const c = createCanvas(W, H)
@@ -446,11 +446,11 @@ function ogCard() {
   const COL = W - M * 2 // usable column
 
   drawText(c, 'FORGEQUBIT', 250, 118, 42, { weight: 0.14, tracking: 0.16, color: gText })
-  drawText(c, 'AI SYSTEMS FOR BUSINESS', 252, 178, 15, { weight: 0.15, tracking: 0.6, color: flat(C.inkDim) })
+  drawText(c, kicker, 252, 178, 15, { weight: 0.15, tracking: 0.6, color: flat(C.inkDim) })
 
   // headline — two lines, sized together so they share one optical weight
-  const l1 = 'AI SYSTEMS THAT ANSWER CUSTOMERS'
-  const l2 = 'AND MOVE WORK FORWARD'
+  l1 = l1 || 'AI SYSTEMS THAT ANSWER CUSTOMERS'
+  l2 = l2 || 'AND MOVE WORK FORWARD'
   const cap = Math.min(fit(l1, COL, 0.12, 62), fit(l2, COL, 0.12, 62))
   drawText(c, l1, M, 292, cap, { weight: 0.12, tracking: 0.12, color: flat(C.ink) })
   drawText(c, l2, M, 292 + cap * 1.55, cap, { weight: 0.12, tracking: 0.12, color: gText })
@@ -462,7 +462,7 @@ function ogCard() {
     bbox: [M, 503, 800, 515],
   })
 
-  const strip = 'AI RECEPTION · WORKFLOW AUTOMATION · CUSTOM AI PRODUCTS'
+  strip = strip || 'AI RECEPTION · WORKFLOW AUTOMATION · CUSTOM AI PRODUCTS'
   drawText(c, strip, M, 546, fit(strip, COL, 0.3, 19), {
     weight: 0.14,
     tracking: 0.3,
@@ -474,4 +474,18 @@ function ogCard() {
 
 writeFileSync(join(PUB, 'og.png'), ogCard())
 
-console.log('generated favicon.svg, icon-192/512, apple-touch-icon, og.png')
+/* one card per page, so shares and previews name the page, not just the site */
+const CARDS = {
+  'og-services.png': { l1: 'THREE THINGS WE BUILD,', l2: 'START TO FINISH', kicker: 'SOLUTIONS' },
+  'og-ai-reception.png': { l1: 'AI RECEPTION', l2: 'AND LEAD HANDLING', kicker: 'VOICE AND WHATSAPP AGENTS', strip: 'ANSWER · QUALIFY · BOOK · HAND OFF TO A PERSON' },
+  'og-workflow-automation.png': { l1: 'WORKFLOW AUTOMATION', l2: 'AND INTEGRATIONS', kicker: 'CRMS · CALENDARS · HELPDESKS · ACCOUNTING', strip: 'AI ONLY WHERE JUDGEMENT IS NEEDED · A PERSON APPROVES' },
+  'og-custom-ai-products.png': { l1: 'CUSTOM AI PRODUCT', l2: 'DEVELOPMENT', kicker: 'APPLICATIONS · AGENTS · SAAS', strip: 'DESIGN · ENGINEERING · EVALUATION FROM DAY ONE' },
+  'og-voice-agents.png': { l1: 'VOICE AGENTS THAT', l2: 'ANSWER THE PHONE', kicker: 'PART OF AI RECEPTION', strip: 'FIRST RING · BOOKINGS · HANDOFF WITH CONTEXT' },
+  'og-work.png': { l1: 'WORKED EXAMPLES,', l2: 'SCOPED AND MEASURED', kicker: 'WORK', strip: 'ILLUSTRATIVE EXAMPLES · NOT CLIENT CASE STUDIES' },
+  'og-about.png': { l1: 'AN ENGINEER-LED', l2: 'AI STUDIO', kicker: 'ABOUT', strip: 'UK-REGISTERED · UK · EUROPE · UNITED STATES' },
+  'og-contact.png': { l1: 'DISCUSS YOUR', l2: 'PROJECT', kicker: 'CONTACT', strip: 'A PERSON REPLIES · A SHORT CALL · A WRITTEN SCOPE' },
+  'og-blog.png': { l1: 'NOTES FOR', l2: 'OPERATORS', kicker: 'BLOG', strip: 'AI RECEPTION · AUTOMATION · AI PRODUCTS' },
+}
+for (const [file, opts] of Object.entries(CARDS)) writeFileSync(join(PUB, file), ogCard(opts))
+
+console.log(`generated favicon.svg, icon-192/512, apple-touch-icon, og.png and ${Object.keys(CARDS).length} page cards`)

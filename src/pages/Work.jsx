@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { DEMOS, SOLUTIONS, contactHref } from '../data.js'
 import { Crumbs, Footer, CtaBand } from '../chrome.jsx'
-import { Seo, SITE_URL, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
+import { Seo, SITE_URL, ogFor, graph, webPageLd, breadcrumbLd } from '../seo.jsx'
 import { Transcript, Workflow, CallSample } from '../visuals.jsx'
 
 const TITLE = 'Work: Worked Examples of AI Reception & Automation | ForgeQubit'
@@ -34,7 +34,7 @@ function Visual({ demo }) {
 export default function Work() {
   return (
     <div className="page">
-      <Seo title={TITLE} description={DESC} path="/case-studies" jsonLd={JSON_LD} />
+      <Seo title={TITLE} description={DESC} path="/case-studies" jsonLd={JSON_LD} image={ogFor('work')} imageAlt="ForgeQubit worked examples, scoped and measured" />
 
       <header className="shell page-hero split">
         <div className="page-hero-copy">

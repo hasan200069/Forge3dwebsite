@@ -6,7 +6,7 @@ import { Seo, SITE_URL, SITE_NAME, ORG_ID, orgRef, graph, webPageLd } from '../s
 import { EnquiryFlow, Workflow, ToolStrip } from '../visuals.jsx'
 import { ICONS, IconTile } from '../icons.jsx'
 
-const TITLE = 'ForgeQubit — AI Reception, Automation & Custom AI Products'
+const TITLE = 'ForgeQubit | AI Receptionist, WhatsApp & Voice Agents, Automation (UK)'
 const DESC =
   'Voice and WhatsApp agents that answer customers, automations that connect your tools, and custom AI products. UK-registered, serving the UK, Europe and the US.'
 
@@ -63,7 +63,16 @@ const JSON_LD = graph(
     inLanguage: 'en-GB',
     publisher: orgRef,
   },
-  webPageLd({ path: '/', title: TITLE, description: DESC })
+  webPageLd({ path: '/', title: TITLE, description: DESC }),
+  {
+    '@type': 'FAQPage',
+    '@id': `${SITE_URL}/#faq`,
+    mainEntity: [0, 1, 2, 4, 5].map((i) => ({
+      '@type': 'Question',
+      name: FAQS[i].q,
+      acceptedAnswer: { '@type': 'Answer', text: FAQS[i].a },
+    })),
+  }
 )
 
 /* the five buying questions, drawn from the full list */
