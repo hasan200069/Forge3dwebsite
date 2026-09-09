@@ -21,7 +21,7 @@ const MQ = '(prefers-reduced-motion: reduce)'
 
 /* ———— a small player: frames with per-frame durations ———— */
 
-function usePlayer(durations, { onStart, onComplete } = {}) {
+function usePlayer(durations, { onStart, onComplete, autoplay = false } = {}) {
   const last = durations.length - 1
   const [index, setIndex] = useState(last) // finished state first
   const [playing, setPlaying] = useState(false)
@@ -30,6 +30,7 @@ function usePlayer(durations, { onStart, onComplete } = {}) {
   const visible = useRef(true)
   const ref = useRef(null)
   const timer = useRef(0)
+  const autoDone = useRef(false)
   const cb = useRef({ onStart, onComplete })
   cb.current = { onStart, onComplete }
 
@@ -48,7 +49,10 @@ function usePlayer(durations, { onStart, onComplete } = {}) {
     return () => mq.removeEventListener('change', apply)
   }, [last])
 
-  /* pause while off screen or in a hidden tab */
+  /* pause while off screen or in a hidden tab; with `autoplay`, run the
+     example once the first time it is on screen (never under reduced
+     motion, and the finished state is what the HTML ships with, so a
+     visitor who scrolls past sees the result either way) */
   useEffect(() => {
     const el = ref.current
     const onVis = () => {
@@ -56,18 +60,33 @@ function usePlayer(durations, { onStart, onComplete } = {}) {
     }
     document.addEventListener('visibilitychange', onVis)
     let io
+    let auto = 0
     if (el && 'IntersectionObserver' in window) {
       io = new IntersectionObserver(([e]) => {
         visible.current = e.isIntersecting
-        if (!e.isIntersecting) setPlaying(false)
+        if (!e.isIntersecting) {
+          setPlaying(false)
+          clearTimeout(auto)
+          return
+        }
+        if (autoplay && !autoDone.current && !window.matchMedia(MQ).matches && !document.hidden) {
+          autoDone.current = true
+          auto = setTimeout(() => {
+            setIndex(0)
+            setStarted(true)
+            setPlaying(true)
+            cb.current.onStart?.()
+          }, 1400)
+        }
       })
       io.observe(el)
     }
     return () => {
+      clearTimeout(auto)
       document.removeEventListener('visibilitychange', onVis)
       io?.disconnect()
     }
-  }, [])
+  }, [autoplay])
 
   /* the schedule */
   useEffect(() => {
@@ -156,10 +175,10 @@ const HERO_FRAMES = [
   { msgs: 7, typing: null, done: 4, ms: 0 },
 ]
 
-export function EnquiryFlow() {
+export function EnquiryFlow({ autoplay = false }) {
   const p = usePlayer(
     HERO_FRAMES.map((f) => f.ms),
-    { onStart: () => track('demo_start', { id: 'hero' }), onComplete: () => track('demo_complete', { id: 'hero' }) }
+    { autoplay, onStart: () => track('demo_start', { id: 'hero' }), onComplete: () => track('demo_complete', { id: 'hero' }) }
   )
   const f = HERO_FRAMES[p.index]
 
@@ -167,6 +186,7 @@ export function EnquiryFlow() {
     <figure className="flow" ref={p.ref} aria-label="Illustration of an enquiry being answered, qualified, booked and recorded">
       <div className="flow-head">
         <div className="flow-title">
+          <span className="flow-live" aria-hidden="true" />
           Enquiry to booking
           <small>Heating engineer, WhatsApp channel</small>
         </div>

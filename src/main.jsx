@@ -4,6 +4,11 @@ import './styles.css'
 
 const root = document.getElementById('root')
 
+/* Motion that hides anything is scoped to html.js in the stylesheet, so
+   the prerendered page is complete for every visitor and the entrances
+   only run where the script that finishes them is running too. */
+document.documentElement.classList.add('js')
+
 /* Every route is prerendered to real HTML. The page's own chunk is
    fetched before hydration so React adopts the markup in one pass
    instead of suspending on a lazy import; Home ships in the main

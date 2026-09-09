@@ -5,6 +5,7 @@ import { EMAIL, Footer, Faq, CtaBand } from '../chrome.jsx'
 import { Seo, SITE_URL, SITE_NAME, ORG_ID, orgRef, graph, webPageLd } from '../seo.jsx'
 import { EnquiryFlow, Workflow, ToolStrip } from '../visuals.jsx'
 import { ICONS, IconTile } from '../icons.jsx'
+import { HeroField, Magnetic, Reveal, Stagger, Tilt, Words, useSpotlightGroup } from '../motion.jsx'
 
 const TITLE = 'ForgeQubit | AI Receptionist, WhatsApp & Voice Agents, Automation (UK)'
 const DESC =
@@ -111,92 +112,131 @@ function useSpotlight() {
 
 export default function Home() {
   const hero = useSpotlight()
+  const solutionsRef = useSpotlightGroup('.solution')
+  const stepsRef = useSpotlightGroup('.step')
+
   return (
     <div className="home">
       <Seo title={TITLE} description={DESC} path="/" jsonLd={JSON_LD} />
 
-      {/* ———— 1. promise and demonstration ———— */}
-      <section className="hero" aria-labelledby="hero-h" ref={hero}>
-        <div className="hero-aurora" aria-hidden="true"><i /><i /></div>
+      {/* ———— 1. the full-page hero: promise and demonstration ———— */}
+      <section className="hero hero-full" aria-labelledby="hero-h" ref={hero}>
+        <div className="hero-scene" aria-hidden="true">
+          <div className="hero-aurora"><i /><i /><i /></div>
+          <div className="hero-floor"><i /></div>
+          <HeroField />
+          <div className="hero-vignette" />
+        </div>
+
         <div className="shell hero-grid">
           <div className="hero-copy">
-            <p className="eyebrow">Voice · WhatsApp · Automation · AI products</p>
-            <h1 id="hero-h">
-              AI systems that answer customers and <span className="em">move work forward.</span>
+            <p className="eyebrow pill">
+              <i className="dot" aria-hidden="true" />
+              Voice · WhatsApp · Automation · AI products
+            </p>
+            <h1 id="hero-h" className="hero-title">
+              <Words text="AI systems that answer customers and" />
+              <span className="em"><Words text="move work forward." offset={6} /></span>
             </h1>
             <p className="lede">
               ForgeQubit builds voice and WhatsApp agents that answer enquiries and book
               appointments, connects the tools your team already uses, and develops custom AI
               products when off-the-shelf software is not enough.
             </p>
-            <div className="btn-row">
-              <Link className="btn btn-primary" to="/contact" data-track="hero-primary">Discuss your project <span aria-hidden="true">→</span></Link>
-              <Link className="btn btn-secondary" to="/services" data-track="hero-secondary">Explore our solutions</Link>
+            <div className="btn-row hero-actions">
+              <Magnetic>
+                <Link className="btn btn-primary btn-lg" to="/contact" data-track="hero-primary">
+                  Discuss your project <span aria-hidden="true">→</span>
+                </Link>
+              </Magnetic>
+              <Magnetic strength={0.18}>
+                <Link className="btn btn-secondary btn-lg" to="/services" data-track="hero-secondary">
+                  Explore our solutions
+                </Link>
+              </Magnetic>
             </div>
-            <ul className="hero-strip" aria-label="How we work">
+            <ul className="hero-strip chips" aria-label="How we work">
               <li>Fixed-scope proposals</li>
               <li>Weekly working demos</li>
               <li>You own the code and accounts</li>
             </ul>
           </div>
-          <EnquiryFlow />
+
+          <div className="hero-visual">
+            <Tilt max={6}>
+              <EnquiryFlow autoplay />
+            </Tilt>
+            <div className="hero-orbit" aria-hidden="true">
+              <span className="orbit-chip a">Calendar updated</span>
+              <span className="orbit-chip b">CRM contact created</span>
+              <span className="orbit-chip c">Handoff on request</span>
+            </div>
+          </div>
         </div>
+
+        <a className="scroll-cue" href="#solutions" aria-label="Scroll to the solutions">
+          <span>Scroll</span>
+          <i aria-hidden="true" />
+        </a>
       </section>
 
       <section className="section tight strip-section" aria-labelledby="tools-h">
         <div className="shell">
-          <h2 id="tools-h" className="eyebrow plain">Connects to the tools you already run</h2>
+          <Reveal as="h2" id="tools-h" className="eyebrow plain">Connects to the tools you already run</Reveal>
         </div>
         <ToolStrip />
       </section>
 
       {/* ———— 2. three solutions, short ———— */}
-      <section className="section" aria-labelledby="solutions-h">
+      <section className="section" id="solutions" aria-labelledby="solutions-h">
         <div className="shell">
           <div className="section-head split">
-            <div>
+            <Reveal>
               <p className="eyebrow">Solutions</p>
-              <h2 id="solutions-h">Which one is your problem?</h2>
-            </div>
-            <p className="lede">
+              <h2 id="solutions-h">Which one is <span className="em">your</span> problem?</h2>
+            </Reveal>
+            <Reveal as="p" className="lede" delay={120}>
               Service businesses usually start with reception. Operations teams add automation.
               Founders and product teams come for the third.
-            </p>
+            </Reveal>
           </div>
 
-          <div className="solutions">
-            {SOLUTIONS.map((s) => (
-              <article key={s.slug} className="solution" aria-labelledby={`sol-${s.slug}`}>
-                <div className="solution-id">
-                  <IconTile icon={ICONS[s.slug]} />
-                  <span className="num">{s.num}</span>
-                </div>
-                <h3 id={`sol-${s.slug}`}>{s.name}</h3>
-                <p className="solution-problem">{s.problem}</p>
-                <p className="solution-build">{s.short}</p>
-                <Link className="link-cta stretch" to={s.path} data-track={`solution-${s.slug}`}>
-                  How {s.shortName} works <span aria-hidden="true">→</span>
-                </Link>
-              </article>
-            ))}
-          </div>
-          <p className="muted small" style={{ marginTop: 18 }}>
+          <Stagger step={110}>
+            <div className="solutions" ref={solutionsRef}>
+              {SOLUTIONS.map((s) => (
+                <article key={s.slug} className="solution" aria-labelledby={`sol-${s.slug}`}>
+                  <span className="solution-watermark" aria-hidden="true">{s.num}</span>
+                  <div className="solution-id">
+                    <IconTile icon={ICONS[s.slug]} />
+                    <span className="num">{s.num}</span>
+                  </div>
+                  <h3 id={`sol-${s.slug}`}>{s.name}</h3>
+                  <p className="solution-problem">{s.problem}</p>
+                  <p className="solution-build">{s.short}</p>
+                  <Link className="link-cta stretch" to={s.path} data-track={`solution-${s.slug}`}>
+                    How {s.shortName} works <span aria-hidden="true">→</span>
+                  </Link>
+                </article>
+              ))}
+            </div>
+          </Stagger>
+          <Reveal as="p" className="muted small" style={{ marginTop: 18 }} delay={200}>
             Also available when a project needs them: <Link to="/services#capabilities">avatar agents and AI × blockchain engineering</Link>.
-          </p>
+          </Reveal>
         </div>
       </section>
 
       {/* ———— 3. strongest available evidence ———— */}
       <section className="section alt" aria-labelledby="proof-h">
         <div className="shell approach">
-          <div>
+          <Reveal>
             <p className="eyebrow">What you can check</p>
             <h2 id="proof-h">Practices you can hold us to, <span className="em">not promises.</span></h2>
             <p className="lede" style={{ marginTop: 14 }}>
               Published case studies are coming with client permission. Until then, every
               engagement includes these, in writing.
             </p>
-            <ul className="list check" style={{ marginTop: 22 }}>
+            <ul className="list check big" style={{ marginTop: 22 }}>
               <li><strong>A written scope and price</strong> before any invoice, with an estimate of ongoing third-party costs.</li>
               <li><strong>A working demo every week</strong>, tested against real examples you supply.</li>
               <li><strong>A defined route to a person</strong> for every agent, and an approver for every uncertain automation step.</li>
@@ -206,11 +246,11 @@ export default function Home() {
               <Link className="btn btn-secondary" to="/case-studies">See worked examples</Link>
               <Link className="link-cta" to="/about">How we work <span aria-hidden="true">→</span></Link>
             </div>
-          </div>
-          <div>
+          </Reveal>
+          <Reveal delay={150} className="approach-visual">
             <p className="eyebrow" style={{ marginBottom: 12 }}>Try the approval step</p>
             <Workflow flow={workflow.example.flow} note="Illustrative automation. Uncertain cases go to a person, never guessed. Play it and make the decision yourself." />
-          </div>
+          </Reveal>
         </div>
       </section>
 
@@ -218,39 +258,43 @@ export default function Home() {
       <section className="section" aria-labelledby="process-h">
         <div className="shell">
           <div className="section-head split">
-            <div>
+            <Reveal>
               <p className="eyebrow">How a project runs</p>
-              <h2 id="process-h">Four stages, each with something you can see.</h2>
-            </div>
-            <p className="lede">
+              <h2 id="process-h">Four stages, each with <span className="em">something you can see.</span></h2>
+            </Reveal>
+            <Reveal as="p" className="lede" delay={120}>
               If discovery shows AI is the wrong tool for your problem, we say so and stop there.{' '}
               <Link to="/about#process">Responsibilities at each stage →</Link>
-            </p>
+            </Reveal>
           </div>
-          <ol className="process compact" aria-label="Delivery stages">
-            {PROCESS.map((s) => (
-              <li key={s.n} className="step">
-                <span className="n">{s.n}</span>
-                <h3>{s.t}</h3>
-                <p>{s.d}</p>
-                <p className="step-out"><b>You get:</b> {s.out}</p>
-              </li>
-            ))}
-          </ol>
+          <Stagger step={120}>
+            <ol className="process compact timeline" aria-label="Delivery stages" ref={stepsRef}>
+              {PROCESS.map((s) => (
+                <li key={s.n} className="step">
+                  <span className="n">{s.n}</span>
+                  <h3>{s.t}</h3>
+                  <p>{s.d}</p>
+                  <p className="step-out"><b>You get:</b> {s.out}</p>
+                </li>
+              ))}
+            </ol>
+          </Stagger>
         </div>
       </section>
 
       {/* ———— 5. essential buying questions ———— */}
       <section className="section alt" aria-labelledby="faq-h">
         <div className="shell faq-grid">
-          <div>
+          <Reveal>
             <p className="eyebrow">Before you enquire</p>
             <h2 id="faq-h">Cost, time, integrations, ownership, <span className="em">and what happens when it fails.</span></h2>
             <div className="btn-row" style={{ marginTop: 22 }}>
               <Link className="btn btn-secondary" to="/services#faq">All questions</Link>
             </div>
-          </div>
-          <Faq items={HOME_FAQS} />
+          </Reveal>
+          <Reveal delay={120}>
+            <Faq items={HOME_FAQS} />
+          </Reveal>
         </div>
       </section>
 
