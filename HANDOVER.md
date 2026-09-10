@@ -236,6 +236,33 @@ a first position.
 - `scripts/verify-behaviour.mjs` now accounts for the hero autoplay
   (jumps to the finished state before its playback checks).
 
+### Ninth pass: continuity ("no refreshes")
+
+- **Route transitions** (`RouteView` in `src/App.jsx`): the outgoing
+  page fades for 240 ms, the swap happens inside `startTransition` so a
+  page that still has to suspend keeps the old one on screen instead of
+  dropping to the loading fallback, and the incoming page fades up.
+  Scroll resets at the swap, not at the click. A hash-only change is
+  left to the browser's smooth scroll. The old per-page `page-in`
+  animation is retired in favour of this.
+- **Every page chunk is warmed on idle** after hydration (`main.jsx`),
+  so a navigation never waits on the network. Measured: 12 chunks
+  loaded within 3 s of arrival, no fallback ever shown on navigation.
+- **Inertia scrolling** (`useSmoothScroll` in `src/motion.jsx`): wheel
+  input on fine pointers eases toward its target with `window.scrollTo`,
+  so scroll timelines, observers, sticky elements and anchors keep
+  working. Off for touch, reduced motion, an open menu, and over
+  elements that scroll themselves (the hero chat); keyboard, scrollbar
+  and anchor scrolling stay native and cancel the easing.
+- **Hero canvas** no longer re-rolls its points on resize (a phone's
+  address bar used to reseed the whole scene); points are scaled into
+  the new box and the count topped up or trimmed.
+- **Nav pill** uses hysteresis (28 px on, 6 px off).
+- The chunk-recovery reload (see the fourth pass) still exists: after a
+  deploy, a tab holding the old shell reloads once when it asks for a
+  chunk that no longer exists. That is the only full reload the site
+  performs, and only ever once per tab.
+
 ## 3. Final design tokens
 
 | Token | Value | Use |

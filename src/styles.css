@@ -4097,3 +4097,25 @@ html.js [data-reveal].in {
   }
   .hero-full .hero-copy { animation-range: 0 60vh; }
 }
+
+/* ———— route transitions: a soft cross-fade instead of a hard cut ———— */
+
+.route-view { min-height: 60vh; }
+.route-view.route-out { animation: route-out 0.24s ease forwards; }
+/* no fill: once it has played, the wrapper carries no transform and so
+   never becomes a containing block for fixed children */
+.route-view.route-in { animation: route-in 0.55s var(--ease-out); }
+.page, .home { animation: none; }
+
+@keyframes route-out {
+  to { opacity: 0; translate: 0 -10px; }
+}
+
+@keyframes route-in {
+  from { opacity: 0; translate: 0 14px; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-view.route-out, .route-view.route-in { animation: none; }
+}

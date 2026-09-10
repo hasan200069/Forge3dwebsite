@@ -1,10 +1,11 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
-import { Component, Suspense, lazy, useEffect, useState } from 'react'
+import { Component, Suspense, lazy, startTransition, useEffect, useRef, useState } from 'react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { Analytics } from '@vercel/analytics/react'
 import { Nav, Footer, Backdrop } from './chrome.jsx'
 import { SOLUTIONS } from './data.js'
 import { startClickTracking } from './analytics.js'
+import { useSmoothScroll } from './motion.jsx'
 import Home from './pages/Home.jsx'
 
 /* ————————————————————————————————————————
@@ -72,21 +73,66 @@ const lazyPages = Object.fromEntries(
   })
 )
 
-/* Scroll to the top on route change, but honour in-page anchors so a
-   link to /services#capabilities lands where it says. */
-function ScrollManager() {
-  const { pathname, hash } = useLocation()
+/* Route transitions without a hard cut. The outgoing page fades for a
+   moment while the incoming page's chunk (already warmed on idle by
+   main.jsx) is ready; the swap happens inside startTransition, so a
+   page that still has to suspend keeps the old one on screen rather
+   than dropping to the loading fallback. Scroll position is reset at
+   the swap, not at the click, so the old page never jumps to the top
+   while it is still visible. A change of hash alone is left to the
+   browser, whose smooth scroll-behavior handles the anchor. */
+function RouteView({ children }) {
+  const location = useLocation()
+  const [shown, setShown] = useState(location)
+  const [stage, setStage] = useState('in')
+  const timer = useRef(0)
+  const first = useRef(true)
+
   useEffect(() => {
-    if (hash) {
-      const el = document.getElementById(hash.slice(1))
-      if (el) {
-        el.scrollIntoView({ behavior: 'instant', block: 'start' })
-        return
-      }
+    if (location.pathname === shown.pathname) {
+      if (location !== shown) setShown(location)
+      return
     }
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
-  }, [pathname, hash])
-  return null
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      startTransition(() => setShown(location))
+      return
+    }
+    setStage('out')
+    clearTimeout(timer.current)
+    timer.current = setTimeout(() => {
+      startTransition(() => {
+        setShown(location)
+        setStage('in')
+      })
+    }, 230)
+    return () => clearTimeout(timer.current)
+  }, [location, shown])
+
+  /* scroll when the shown page actually changes */
+  useEffect(() => {
+    if (first.current) {
+      first.current = false
+      return
+    }
+    scrollFor(shown)
+  }, [shown.pathname])
+
+  return (
+    <div className={`route-view ${stage === 'out' ? 'route-out' : 'route-in'}`} key={shown.pathname}>
+      {typeof children === 'function' ? children(shown) : children}
+    </div>
+  )
+}
+
+function scrollFor({ hash }) {
+  if (hash) {
+    const el = document.getElementById(hash.slice(1))
+    if (el) {
+      el.scrollIntoView({ behavior: 'instant', block: 'start' })
+      return
+    }
+  }
+  window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
 }
 
 /* Shown only during a client-side navigation while a chunk loads. It
@@ -156,11 +202,12 @@ export function AppShell({ pages = lazyPages }) {
       <Backdrop />
       <a className="skip-link" href="#main">Skip to content</a>
       <Nav />
-      <ScrollManager />
       <main id="main">
         <Boundary>
           <Suspense fallback={<Loading />}>
-            <Routes>
+            <RouteView>
+              {(shown) => (
+            <Routes location={shown}>
               <Route path="/" element={<Home />} />
               <Route path="/services" element={<P.Services />} />
               {SOLUTIONS.map((s) => (
@@ -176,6 +223,8 @@ export function AppShell({ pages = lazyPages }) {
               <Route path="/terms" element={<P.Legal.Terms />} />
               <Route path="*" element={<P.NotFound />} />
             </Routes>
+              )}
+            </RouteView>
           </Suspense>
         </Boundary>
       </main>
@@ -185,6 +234,7 @@ export function AppShell({ pages = lazyPages }) {
 
 export default function App() {
   useEffect(startClickTracking, [])
+  useSmoothScroll()
   return (
     <BrowserRouter>
       <AppShell />
