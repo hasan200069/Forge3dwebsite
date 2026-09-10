@@ -43,9 +43,12 @@ export function Nav() {
 
   useEffect(() => {
     let ticking = false
+    /* hysteresis: the bar becomes a pill past 28 px and only returns
+       above 6 px, so it cannot flicker around one threshold */
     const read = () => {
       ticking = false
-      setStuck(window.scrollY > 12)
+      const y = window.scrollY
+      setStuck((was) => (was ? y > 6 : y > 28))
     }
     const onScroll = () => {
       if (ticking) return

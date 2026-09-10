@@ -28,6 +28,17 @@ async function start() {
     createRoot(root).render(<App />)
   }
   try { sessionStorage.removeItem('fq-chunk-reload') } catch { /* ignore */ }
+
+  /* Warm every other page's chunk once the browser is idle, so a later
+     navigation never waits on the network and never shows a loading
+     gap. Together they are a few tens of kilobytes. */
+  const warm = () => {
+    for (const [k, load] of Object.entries(PAGE_LOADERS)) {
+      if (k !== key) load().catch(() => {})
+    }
+  }
+  if ('requestIdleCallback' in window) requestIdleCallback(warm, { timeout: 4000 })
+  else setTimeout(warm, 1500)
 }
 
 start()

@@ -298,16 +298,44 @@ export function HeroField() {
       signals = []
     }
 
+    /* Resizing keeps the field: points are scaled into the new box and
+       the count is topped up or trimmed, so a phone's address bar coming
+       and going never re-rolls the scene. */
     const resize = () => {
       const r = canvas.getBoundingClientRect()
+      const nw = Math.max(1, Math.round(r.width))
+      const nh = Math.max(1, Math.round(r.height))
+      if (nw === w && nh === h) return
       dpr = Math.min(1.5, window.devicePixelRatio || 1)
-      w = Math.max(1, Math.round(r.width))
-      h = Math.max(1, Math.round(r.height))
-      canvas.width = Math.round(w * dpr)
-      canvas.height = Math.round(h * dpr)
+      canvas.width = Math.round(nw * dpr)
+      canvas.height = Math.round(nh * dpr)
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      seed()
+      if (!pts.length) {
+        w = nw
+        h = nh
+        seed()
+      } else {
+        const sx = nw / w
+        const sy = nh / h
+        for (const p of pts) {
+          p.x *= sx
+          p.y *= sy
+        }
+        w = nw
+        h = nh
+        const n = Math.round(Math.min(110, Math.max(28, (w * h) / 16000)))
+        while (pts.length > n) pts.pop()
+        while (pts.length < n) {
+          pts.push({ x: Math.random() * w, y: Math.random() * h, vx: (Math.random() - 0.5) * 0.18, vy: (Math.random() - 0.5) * 0.18, r: 1 + Math.random() * 1.6, p: Math.random() * Math.PI * 2 })
+        }
+        signals = signals.filter((s) => pts.includes(s.a) && pts.includes(s.b))
+      }
       if (!running) draw(0, true)
+    }
+    let resizeRaf = 0
+    const onResize = () => {
+      cancelAnimationFrame(resizeRaf)
+      resizeRaf = requestAnimationFrame(resize)
     }
 
     let last = 0
@@ -431,7 +459,7 @@ export function HeroField() {
 
     resize()
     io.observe(canvas)
-    window.addEventListener('resize', resize)
+    window.addEventListener('resize', onResize)
     document.addEventListener('visibilitychange', onVis)
     mq.addEventListener('change', onMotion)
     if (fine()) {
@@ -443,7 +471,8 @@ export function HeroField() {
     return () => {
       stop()
       io.disconnect()
-      window.removeEventListener('resize', resize)
+      cancelAnimationFrame(resizeRaf)
+      window.removeEventListener('resize', onResize)
       document.removeEventListener('visibilitychange', onVis)
       mq.removeEventListener('change', onMotion)
       host.removeEventListener('pointermove', onMove)
@@ -477,4 +506,95 @@ export function useScrollProgress() {
       window.removeEventListener('resize', on)
     }
   }, [])
+}
+
+/* ———— inertia scrolling ————
+   Wheel input on a fine pointer is eased toward its target instead of
+   jumping, which is what makes a page feel continuous. The real scroll
+   position is what moves (window.scrollTo), so scroll timelines,
+   observers, sticky elements and anchors all keep working. Off for
+   touch, for reduced motion, while the menu locks the page, and when
+   the pointer is over something that scrolls on its own. Keyboard,
+   scrollbar and anchor scrolling stay native. */
+export function useSmoothScroll({ lerp = 0.11, max = 1.6 } = {}) {
+  useEffect(() => {
+    if (!fine()) return
+    const mq = window.matchMedia(REDUCE)
+    let target = window.scrollY
+    let current = target
+    let raf = 0
+    let last = 0
+
+    const limit = () => document.documentElement.scrollHeight - window.innerHeight
+
+    const innerScrolls = (start, dy) => {
+      for (let el = start; el && el !== document.body && el !== document.documentElement; el = el.parentElement) {
+        const cs = getComputedStyle(el)
+        if (!/(auto|scroll)/.test(cs.overflowY)) continue
+        if (el.scrollHeight <= el.clientHeight + 1) continue
+        if (dy > 0 && el.scrollTop + el.clientHeight < el.scrollHeight - 1) return true
+        if (dy < 0 && el.scrollTop > 0) return true
+      }
+      return false
+    }
+
+    const tick = (t) => {
+      const dt = Math.min(48, t - last || 16)
+      last = t
+      const k = 1 - Math.pow(1 - lerp, dt / 16.7)
+      current += (target - current) * k
+      if (Math.abs(target - current) < 0.5) {
+        current = target
+        window.scrollTo({ top: current, behavior: 'instant' })
+        raf = 0
+        return
+      }
+      window.scrollTo({ top: current, behavior: 'instant' })
+      raf = requestAnimationFrame(tick)
+    }
+
+    const onWheel = (e) => {
+      if (mq.matches || e.ctrlKey || e.defaultPrevented) return
+      if (document.body.style.overflow === 'hidden') return
+      let dy = e.deltaY
+      if (e.deltaMode === 1) dy *= 16
+      else if (e.deltaMode === 2) dy *= window.innerHeight
+      if (!dy || innerScrolls(e.target, dy)) return
+      e.preventDefault()
+      if (!raf) {
+        current = window.scrollY
+        target = current
+      }
+      dy = Math.max(-window.innerHeight * max, Math.min(window.innerHeight * max, dy))
+      target = Math.max(0, Math.min(limit(), target + dy))
+      if (!raf) {
+        last = performance.now()
+        raf = requestAnimationFrame(tick)
+      }
+    }
+
+    /* anything else that scrolls (keys, scrollbar, anchors, the router)
+       takes over: drop our target and follow */
+    const onScroll = () => {
+      if (raf) return
+      target = current = window.scrollY
+    }
+    const stop = () => {
+      cancelAnimationFrame(raf)
+      raf = 0
+      target = current = window.scrollY
+    }
+
+    window.addEventListener('wheel', onWheel, { passive: false })
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('keydown', stop, { passive: true })
+    window.addEventListener('pointerdown', stop, { passive: true })
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('wheel', onWheel)
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('keydown', stop)
+      window.removeEventListener('pointerdown', stop)
+    }
+  }, [lerp, max])
 }
