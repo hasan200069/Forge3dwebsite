@@ -196,6 +196,46 @@ Business Profile, company facts, real profiles for `sameAs`, evidence,
 writing, earned links) and states plainly that no technique guarantees
 a first position.
 
+### Eighth pass: full-screen hero and the motion system
+
+- **The home hero is one full screen** (`min-height: 100svh`, content
+  centred, nav floating over it) with a scroll cue at its foot. Behind
+  it: three slow lights, a receding floor of light lines, and a canvas
+  network of points joined where they are near, with the occasional
+  signal travelling along an edge (`HeroField` in `src/motion.jsx`).
+  The canvas caps pixel ratio at 1.5, scales its point count with area,
+  stops off screen and in hidden tabs, and draws one still frame under
+  reduced motion. The headline rises word by word from behind a clip;
+  the emphasised words keep the gradient. The demonstration card tilts
+  toward a fine pointer with a glare, floats, and plays itself once when
+  it first comes into view (Pause, Show result and Replay remain; under
+  reduced motion it never plays). Its chat is height-capped and scrolls
+  the newest message into view while playing. Everything in the hero
+  recedes as the page scrolls (CSS scroll timeline; static elsewhere).
+- **Navigation** morphs from a full-width bar into a floating glass pill
+  once the page scrolls, with a reading-progress hairline (CSS scroll
+  timeline, JS fallback writing `--scroll`).
+- **Reveals** are JavaScript-observed again, but safely: the hidden
+  starting state is scoped to `html.js` (set by `main.jsx` before
+  hydration) and carries a 2.2 s safety animation, so an environment
+  where the observer never fires still shows every block. Without
+  JavaScript the page is simply complete. `Reveal` and `Stagger` in
+  `src/motion.jsx`; verified with a headless run that counts elements
+  still at opacity 0 after scrolling (zero).
+- **Cards**: pointer spotlight (one listener per grid writing `--px`/
+  `--py`), outlined numeral watermark on solutions, a rotating conic rim
+  on hover (`@property --angle`), lift and sheen. The process on the
+  home page is a timeline whose gradient line draws as it scrolls in.
+  FAQ answers animate height where `interpolate-size` is supported.
+  CTA band has a wandering light and a rotating rim; the footer carries
+  a large gradient wordmark watermark.
+- **Pointer effects** (magnetic buttons, tilt, spotlights) run only on
+  fine pointers and never under reduced motion. All motion is transform
+  and opacity; the reduced-motion block leaves zero infinite animations
+  (measured) and nothing hidden.
+- `scripts/verify-behaviour.mjs` now accounts for the hero autoplay
+  (jumps to the finished state before its playback checks).
+
 ## 3. Final design tokens
 
 | Token | Value | Use |

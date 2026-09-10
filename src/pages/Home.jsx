@@ -135,7 +135,7 @@ export default function Home() {
               Voice · WhatsApp · Automation · AI products
             </p>
             <h1 id="hero-h" className="hero-title">
-              <Words text="AI systems that answer customers and" />
+              <Words text="AI systems that answer customers and" />{' '}
               <span className="em"><Words text="move work forward." offset={6} /></span>
             </h1>
             <p className="lede">

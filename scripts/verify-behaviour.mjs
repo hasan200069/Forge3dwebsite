@@ -30,31 +30,39 @@ try {
 
   /* ———— hero demonstration ———— */
   await page.goto(BASE + '/', { waitUntil: 'networkidle0' })
-  let r = await page.evaluate(() => ({
+  /* the home hero plays itself once on arrival; the checks below start
+     from the finished state, so jump there first if it is still running */
+  await sleep(1600)
+  let r = await page.evaluate(() => ({ status: document.querySelector('.flow .demo-status')?.textContent }))
+  check('hero example plays itself once on arrival', r.status === 'Playing' || r.status === 'Complete', JSON.stringify(r))
+  await page.evaluate(() => [...document.querySelectorAll('.flow .demo-controls button')].find((b) => /Show result/.test(b.textContent))?.click())
+  await sleep(200)
+  r = await page.evaluate(() => ({
     visible: document.querySelectorAll('.flow .bubble:not(.pending):not(.typing)').length,
     total: document.querySelectorAll('.flow .bubble:not(.typing)').length,
     done: document.querySelectorAll('.flow-step.done').length,
     playBtn: !!document.querySelector('.flow .demo-controls button'),
-    layoutH: document.querySelector('.flow .chat').getBoundingClientRect().height,
+    layoutH: document.querySelector('.flow .chat').offsetHeight,
   }))
   check('hero shows the complete example before playback', r.visible === 7 && r.total === 7 && r.done === 4, JSON.stringify(r))
   const h0 = r.layoutH
-  await page.click('.flow .demo-controls button')
+  const clickHero = () => page.evaluate(() => document.querySelector('.flow .demo-controls button').click())
+  await clickHero()
   await sleep(300)
   r = await page.evaluate(() => ({
     visible: document.querySelectorAll('.flow .bubble:not(.pending):not(.typing)').length,
     typing: !!document.querySelector('.flow .bubble.typing'),
     status: document.querySelector('.flow .demo-status').textContent,
-    layoutH: document.querySelector('.flow .chat').getBoundingClientRect().height,
+    layoutH: document.querySelector('.flow .chat').offsetHeight,
     pauseBtn: document.querySelector('.flow .demo-controls button').textContent.trim(),
   }))
   check('play restarts from an empty conversation with a typing indicator', r.visible === 0 && r.typing && r.status === 'Playing', JSON.stringify(r))
   check('playback does not change the layout height', Math.abs(r.layoutH - h0) < 1, `${h0} vs ${r.layoutH}`)
-  await page.click('.flow .demo-controls button') // pause
+  await clickHero() // pause
   await sleep(200)
   r = await page.evaluate(() => ({ status: document.querySelector('.flow .demo-status').textContent, btn: document.querySelector('.flow .demo-controls button').textContent.trim() }))
   check('pause works', r.status === 'Paused' && /Play|Replay/.test(r.btn), JSON.stringify(r))
-  await page.click('.flow .demo-controls button') // resume
+  await clickHero() // resume
   await sleep(4200)
   r = await page.evaluate(() => ({
     visible: document.querySelectorAll('.flow .bubble:not(.pending):not(.typing)').length,
