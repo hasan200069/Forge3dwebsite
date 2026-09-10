@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { LogoMark, WordmarkText } from './logo.jsx'
 import { SOLUTIONS, VOICE } from './data.js'
+import { Reveal, useScrollProgress } from './motion.jsx'
 
 export const EMAIL = 'info@forgequbit.com'
 
@@ -27,6 +28,7 @@ export function Nav() {
   const wasOpen = useRef(false)
 
   useEffect(() => setOpen(false), [pathname])
+  useScrollProgress()
 
   /* move focus into the menu when it opens and back to the button when
      it closes, so keyboard and screen-reader users are never stranded */
@@ -100,31 +102,34 @@ export function Nav() {
   return (
     <>
       <nav className={`nav ${stuck || open ? 'stuck' : ''}`} aria-label="Primary">
-        <Link className="wordmark" to="/" aria-label="ForgeQubit home">
-          <LogoMark size={32} />
-          <WordmarkText />
-        </Link>
+        <div className="nav-progress" aria-hidden="true"><i /></div>
+        <div className="nav-bar">
+          <Link className="wordmark" to="/" aria-label="ForgeQubit home">
+            <LogoMark size={32} />
+            <WordmarkText />
+          </Link>
 
-        <div className="nav-links">
-          {NAV.slice(0, -1).map((l) => (
-            <NavLink key={l.to} to={l.to} className={isActive} end={l.to === '/services' ? false : undefined}>
-              {l.label}
-            </NavLink>
-          ))}
-          <Link className="btn btn-primary btn-sm" to="/contact" data-track="nav-cta">Discuss your project</Link>
+          <div className="nav-links">
+            {NAV.slice(0, -1).map((l) => (
+              <NavLink key={l.to} to={l.to} className={isActive} end={l.to === '/services' ? false : undefined}>
+                <span>{l.label}</span>
+              </NavLink>
+            ))}
+            <Link className="btn btn-primary btn-sm" to="/contact" data-track="nav-cta">Discuss your project</Link>
+          </div>
+
+          <button
+            type="button"
+            ref={toggle}
+            className="nav-toggle"
+            aria-expanded={open}
+            aria-controls="nav-sheet"
+            aria-label={open ? 'Close menu' : 'Open menu'}
+            onClick={() => setOpen((v) => !v)}
+          >
+            <span /><span /><span />
+          </button>
         </div>
-
-        <button
-          type="button"
-          ref={toggle}
-          className="nav-toggle"
-          aria-expanded={open}
-          aria-controls="nav-sheet"
-          aria-label={open ? 'Close menu' : 'Open menu'}
-          onClick={() => setOpen((v) => !v)}
-        >
-          <span /><span /><span />
-        </button>
       </nav>
 
       {/* inert keeps the closed sheet out of the tab order and out of
@@ -210,6 +215,7 @@ export function Footer() {
           <span>United Kingdom · Europe · United States</span>
         </div>
       </div>
+      <div className="footer-watermark" aria-hidden="true">ForgeQubit</div>
     </footer>
   )
 }
@@ -274,7 +280,8 @@ export function CtaBand({
   return (
     <section className="section tight" aria-labelledby="cta-h">
       <div className="shell">
-        <div className="cta-band">
+        <Reveal className="cta-band">
+          <span className="cta-light" aria-hidden="true" />
           <div>
             <p className="eyebrow">{eyebrow}</p>
             <h2 id="cta-h">{title}</h2>
@@ -286,7 +293,7 @@ export function CtaBand({
               ? <a className="btn btn-secondary" href={secondary.to} data-track="cta-band-email">{secondary.label}</a>
               : <Link className="btn btn-secondary" to={secondary.to}>{secondary.label}</Link>)}
           </div>
-        </div>
+        </Reveal>
       </div>
     </section>
   )

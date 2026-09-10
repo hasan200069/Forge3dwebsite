@@ -48,6 +48,7 @@ splitting, contact-form validation and analytics privacy.
 | Design tokens and every style | `src/styles.css` |
 | Nav, footer, breadcrumbs, FAQ, CTA band | `src/chrome.jsx` |
 | Illustrative visuals (chat, workflow, call) | `src/visuals.jsx` |
+| Motion primitives: reveals, split headline, magnetic buttons, tilt, hero canvas | `src/motion.jsx` |
 | Routes and code splitting | `src/App.jsx`, `src/main.jsx`, `src/entry-server.jsx` |
 | Per-route `<head>` and structured data | `src/seo.jsx` |
 | Contact form logic (validation, limits, response handling) | `src/contact-logic.js` |

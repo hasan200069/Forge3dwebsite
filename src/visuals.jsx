@@ -21,7 +21,7 @@ const MQ = '(prefers-reduced-motion: reduce)'
 
 /* ———— a small player: frames with per-frame durations ———— */
 
-function usePlayer(durations, { onStart, onComplete } = {}) {
+function usePlayer(durations, { onStart, onComplete, autoplay = false } = {}) {
   const last = durations.length - 1
   const [index, setIndex] = useState(last) // finished state first
   const [playing, setPlaying] = useState(false)
@@ -30,6 +30,7 @@ function usePlayer(durations, { onStart, onComplete } = {}) {
   const visible = useRef(true)
   const ref = useRef(null)
   const timer = useRef(0)
+  const autoDone = useRef(false)
   const cb = useRef({ onStart, onComplete })
   cb.current = { onStart, onComplete }
 
@@ -48,7 +49,10 @@ function usePlayer(durations, { onStart, onComplete } = {}) {
     return () => mq.removeEventListener('change', apply)
   }, [last])
 
-  /* pause while off screen or in a hidden tab */
+  /* pause while off screen or in a hidden tab; with `autoplay`, run the
+     example once the first time it is on screen (never under reduced
+     motion, and the finished state is what the HTML ships with, so a
+     visitor who scrolls past sees the result either way) */
   useEffect(() => {
     const el = ref.current
     const onVis = () => {
@@ -56,18 +60,33 @@ function usePlayer(durations, { onStart, onComplete } = {}) {
     }
     document.addEventListener('visibilitychange', onVis)
     let io
+    let auto = 0
     if (el && 'IntersectionObserver' in window) {
       io = new IntersectionObserver(([e]) => {
         visible.current = e.isIntersecting
-        if (!e.isIntersecting) setPlaying(false)
+        if (!e.isIntersecting) {
+          setPlaying(false)
+          clearTimeout(auto)
+          return
+        }
+        if (autoplay && !autoDone.current && !window.matchMedia(MQ).matches && !document.hidden) {
+          autoDone.current = true
+          auto = setTimeout(() => {
+            setIndex(0)
+            setStarted(true)
+            setPlaying(true)
+            cb.current.onStart?.()
+          }, 1400)
+        }
       })
       io.observe(el)
     }
     return () => {
+      clearTimeout(auto)
       document.removeEventListener('visibilitychange', onVis)
       io?.disconnect()
     }
-  }, [])
+  }, [autoplay])
 
   /* the schedule */
   useEffect(() => {
@@ -156,24 +175,42 @@ const HERO_FRAMES = [
   { msgs: 7, typing: null, done: 4, ms: 0 },
 ]
 
-export function EnquiryFlow() {
+export function EnquiryFlow({ autoplay = false }) {
   const p = usePlayer(
     HERO_FRAMES.map((f) => f.ms),
-    { onStart: () => track('demo_start', { id: 'hero' }), onComplete: () => track('demo_complete', { id: 'hero' }) }
+    { autoplay, onStart: () => track('demo_start', { id: 'hero' }), onComplete: () => track('demo_complete', { id: 'hero' }) }
   )
   const f = HERO_FRAMES[p.index]
+  const chat = useRef(null)
+
+  /* keep the newest message in view when the chat is height-capped;
+     the finished state stays scrolled to the top so the whole example
+     reads from the beginning */
+  useEffect(() => {
+    const el = chat.current
+    if (!el || el.scrollHeight <= el.clientHeight) return
+    if (!p.playing) {
+      if (p.done) el.scrollTo({ top: 0 })
+      return
+    }
+    const shown = el.querySelectorAll('.bubble:not(.pending)')
+    const last = el.querySelector('.bubble.typing') || shown[shown.length - 1]
+    if (!last) return
+    el.scrollTo({ top: Math.max(0, last.offsetTop + last.offsetHeight - el.clientHeight + 12) })
+  }, [f.msgs, f.typing, p.playing, p.done])
 
   return (
     <figure className="flow" ref={p.ref} aria-label="Illustration of an enquiry being answered, qualified, booked and recorded">
       <div className="flow-head">
         <div className="flow-title">
+          <span className="flow-live" aria-hidden="true" />
           Enquiry to booking
           <small>Heating engineer, WhatsApp channel</small>
         </div>
         <span className="label-illustrative">Illustrative</span>
       </div>
 
-      <div className="chat" aria-live="off">
+      <div className="chat" aria-live="off" ref={chat}>
         {HERO_CHAT.map((m, i) => {
           const shown = i < f.msgs
           const cls = m.me === null ? 'sys' : m.me ? 'me' : 'them'
