@@ -263,6 +263,23 @@ a first position.
   chunk that no longer exists. That is the only full reload the site
   performs, and only ever once per tab.
 
+### Tenth pass: the Apple-style home
+
+- The home page is rebuilt as a sequence of centred "product tiles":
+  one short headline, one line of copy, a Learn more / Discuss it link
+  pair, and one large visual. Paragraph copy is gone from the home.
+- Visuals: the enquiry demonstration under a two-line headline in the
+  hero; AI Reception's example conversation inside a phone frame;
+  the interactive workflow; a document-review assistant in an
+  application window (`ProductWindow` in `src/mocks.jsx`, illustrative
+  and labelled); two mini tiles (voice with a live waveform, avatars
+  and blockchain with orbits); four practice tiles; four stages as a
+  row; five questions in a narrow column; a large "Let's talk." close.
+- Copy that left the home page still lives on Solutions, About and the
+  service pages, which are unchanged in structure.
+- Checks: 21 build tests, 18 browser behaviour checks, zero hidden
+  blocks after scrolling at 1440 and 390 px, no horizontal overflow.
+
 ## 3. Final design tokens
 
 | Token | Value | Use |
