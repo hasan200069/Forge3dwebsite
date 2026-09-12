@@ -12,7 +12,7 @@
    Run via `npm run assets`. Output is committed, so a normal build
    never pays for it. */
 
-import { BRAND, F_CHANNEL, Q_CHANNEL_OUTER, Q_CHANNEL_INNER, MARK_F, MARK_OUTER, MARK_INNER, MARK_TAIL, logoSvg } from '../src/brand.js'
+import { BRAND, MARK_F, MARK_Q, MARK_TAIL, logoSvg } from '../src/brand.js'
 import { writeFileSync, mkdirSync } from 'node:fs'
 import { deflateSync } from 'node:zlib'
 import { dirname, join } from 'node:path'
@@ -247,11 +247,9 @@ const flat = (c) => () => c
 /* Rasterise the exact same polygons used by the vector mark. */
 function drawMark(c, ox, oy, s, onDark = true) {
   const points = (shape) => shape.map(([x,y]) => [ox+x*s,oy+y*s])
-  const f = points(MARK_F), outer = points(MARK_OUTER), inner = points(MARK_INNER), tail = points(MARK_TAIL)
-  const fc = points(F_CHANNEL), qo = points(Q_CHANNEL_OUTER), qi = points(Q_CHANNEL_INNER)
-  draw(c, { sdf: (x,y) => Math.max(sdPolygon(x,y,f), -sdPolygon(x,y,fc)), color: flat(hex(onDark ? '#FAF8F9' : BRAND.oxblood)), bbox: bboxOf(f,2) })
-  draw(c, { sdf: (x,y) => Math.max(sdPolygon(x,y,outer), -sdPolygon(x,y,inner), -Math.max(sdPolygon(x,y,qo), -sdPolygon(x,y,qi))), color: flat(hex(BRAND.rose)), bbox: bboxOf(outer,2) })
-  draw(c, { sdf: (x,y) => sdPolygon(x,y,tail), color: flat(hex(BRAND.rose)), bbox: bboxOf(tail,2) })
+  const f = points(MARK_F), q = points(MARK_Q), tail = points(MARK_TAIL)
+  draw(c, { sdf: (x,y) => sdPolygon(x,y,f), color: flat(hex(onDark ? '#FAF8F9' : BRAND.oxblood)), bbox: bboxOf(f,2) })
+  draw(c, { sdf: (x,y) => Math.min(sdPolygon(x,y,q), sdPolygon(x,y,tail)), color: flat(hex(BRAND.rose)), bbox: bboxOf([...q,...tail],2) })
 }
 
 /* ————————————————————————— stroke typeface ————————————————————————— */

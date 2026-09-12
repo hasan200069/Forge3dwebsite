@@ -1,6 +1,6 @@
 import { F_PATH, MARK_PATH, TAIL_PATH } from './brand.js'
 
-/** FQ ligature: two interlocking letters on a shared geometric grid. */
+/** Angular FQ: equal-weight horizontal and diagonal middle strokes. */
 export function LogoMark({ size = 28, className = '', title }) {
   return (
     <svg className={`logo-mark ${className}`} width={size} height={size} viewBox="0 0 48 48"
