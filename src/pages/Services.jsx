@@ -48,11 +48,9 @@ export default function Services() {
         <div className="page-hero-copy">
           <Crumbs trail={[{ label: 'Solutions', to: '/services' }]} />
           <p className="eyebrow">Solutions</p>
-          <h1>Three things we build, and two we add <span className="em">when they fit.</span></h1>
+          <h1>Intelligence.<br /><span className="em">Put to work.</span></h1>
           <p className="lede">
-            Each solution below is delivered as a working, integrated system with a written scope,
-            weekly demos and a proper handover. Pick the one closest to your problem; the discovery
-            call sorts out the rest.
+            Agents, automation and custom AI. Built around your business, from first idea to everyday use.
           </p>
         </div>
         <nav className="chooser" aria-label="Choose a solution">

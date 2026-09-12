@@ -92,10 +92,10 @@ export function ContactForm({ preselect, submit = defaultSubmit }) {
   const fields = useRef({})
   const successRef = useRef(null)
 
-  /* apply the query-string choice, then any draft left in this tab */
+  /* Preserve an unsent draft; an explicit service link overrides its interest. */
   useEffect(() => {
     const draft = readDraft()
-    setValues((v) => ({ ...v, ...(draft || {}), interest: draft?.interest || preselect }))
+    setValues((v) => ({ ...v, ...(draft || {}), interest: resolveInterest(preselect || draft?.interest) }))
   }, [preselect])
 
   useEffect(() => {
@@ -281,10 +281,12 @@ async function defaultSubmit(values) {
   for (const k of ['name', 'email', 'interest', 'message', 'budget', 'timeline', 'botcheck']) body.append(k, values[k])
 
   let res
+  let data = null
   const ctl = new AbortController()
   const t = setTimeout(() => ctl.abort(), TIMEOUT_MS)
   try {
     res = await fetch(ENDPOINT, { method: 'POST', body, headers: { Accept: 'application/json' }, signal: ctl.signal })
+    try { data = await res.json() } catch (err) { if (err?.name === 'AbortError') throw err }
   } catch (e) {
     const timedOut = e?.name === 'AbortError'
     const err = new Error(
@@ -297,15 +299,13 @@ async function defaultSubmit(values) {
   } finally {
     clearTimeout(t)
   }
-  let data = null
-  try { data = await res.json() } catch { /* non-JSON body: treated as failure below */ }
   const problem = interpretResponse(res.ok, data)
   if (problem) throw new Error(problem)
 }
 
 export default function Contact() {
   const [params] = useSearchParams()
-  const preselect = resolveInterest(params.get('interest'))
+  const preselect = params.has('interest') ? resolveInterest(params.get('interest')) : undefined
 
   return (
     <div className="page">
@@ -314,10 +314,9 @@ export default function Contact() {
         <div className="contact-intro">
           <Crumbs trail={[{ label: 'Contact', to: '/contact' }]} />
           <p className="eyebrow">Contact</p>
-          <h1>Discuss <span className="em">your project.</span></h1>
+          <h1>Big idea?<br /><span className="em">Let’s talk.</span></h1>
           <p className="lede">
-            A few sentences about the enquiries, the process or the product you have in mind is
-            enough to start. No pitch deck required.
+            Tell us what you have in mind. A few sentences is all it takes.
           </p>
           <p className="contact-alt">
             <a className="contact-email" href={`mailto:${EMAIL}`} data-track="contact-email">{EMAIL}</a>

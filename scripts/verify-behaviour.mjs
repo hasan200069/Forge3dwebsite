@@ -76,6 +76,7 @@ try {
   check('"Show result" jumps to the complete, booked state', r.visible === 7 && r.done === 4 && r.status === 'Complete', JSON.stringify(r))
 
   /* ———— workflow decision ———— */
+  await page.click('.demo-tabs button:nth-child(2)')
   await page.evaluate(() => document.querySelector('.wf')?.scrollIntoView({ block: 'center' }))
   await sleep(300)
   await page.evaluate(() => [...document.querySelectorAll('.wf .demo-controls button')].find((b) => /Play/.test(b.textContent))?.click())

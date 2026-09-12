@@ -142,11 +142,12 @@ test('redirect destinations exist', () => {
   }
 })
 
-test('theme colour and brand assets are cyan', () => {
+test('theme colour and brand assets match the ForgeQubit identity', () => {
   const html = pages[0].html
-  assert.match(html, /<meta name="theme-color" content="#061017"/)
+  assert.match(html, /<meta name="theme-color" content="#FAF8F9"/)
   const fav = readFileSync(join(ROOT, 'public', 'favicon.svg'), 'utf8')
-  assert.match(fav, /#22D3EE/i)
+  assert.match(fav, /#70283F/i)
+  assert.match(fav, /#D990A1/i)
   assert.doesNotMatch(fav, /#F5811F|#E2560F/i)
   const css = readFileSync(join(ROOT, 'src', 'styles.css'), 'utf8')
   assert.doesNotMatch(css, /#e2560f|#f5811f|#ffa84a|#5c2e7a/i, 'old palette left in stylesheet')
@@ -214,7 +215,7 @@ test('security headers and hosting config', () => {
 test('stylesheet is inlined and page HTML has no external render-blocking CSS', () => {
   for (const { route, html } of pages) {
     assert.doesNotMatch(html, /<link rel="stylesheet"/, `${route} still links a stylesheet`)
-    assert.match(html, /<style>[\s\S]*--cyan: #22d3ee[\s\S]*<\/style>/, `${route} has no inline stylesheet`)
+    assert.match(html, /<style>[\s\S]*--cyan: #d990a1[\s\S]*<\/style>/, `${route} has no inline stylesheet`)
     assert.doesNotMatch(html, /<script[^>]*src="https?:\/\//, `${route} loads a third-party script in the shell`)
   }
 })

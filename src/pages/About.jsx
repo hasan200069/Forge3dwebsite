@@ -40,11 +40,9 @@ export default function About() {
         <div className="page-hero-copy">
           <Crumbs trail={[{ label: 'About', to: '/about' }]} />
           <p className="eyebrow">About</p>
-          <h1>An engineer-led studio for AI systems <span className="em">that have to keep working.</span></h1>
+          <h1>An engineer-led studio.<br /><span className="em">A human approach.</span></h1>
           <p className="lede">
-            ForgeQubit exists because too many AI projects end as demos. We build reception agents,
-            automations and products that are integrated with the tools you already use, tested
-            against real scenarios, and handed over properly.
+            We turn ambitious ideas into dependable AI systems. Direct collaboration, thoughtful engineering, and ownership that stays with you.
           </p>
         </div>
         <dl className="facts glance" aria-label="Company facts">

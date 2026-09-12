@@ -29,6 +29,13 @@ export function Nav() {
 
   useEffect(() => setOpen(false), [pathname])
   useScrollProgress()
+  useEffect(() => {
+    const desktop = window.matchMedia('(min-width: 861px)')
+    const closeOnDesktop = () => { if (desktop.matches) setOpen(false) }
+    desktop.addEventListener('change', closeOnDesktop)
+    return () => desktop.removeEventListener('change', closeOnDesktop)
+  }, [])
+
 
   /* move focus into the menu when it opens and back to the button when
      it closes, so keyboard and screen-reader users are never stranded */
@@ -118,7 +125,7 @@ export function Nav() {
                 <span>{l.label}</span>
               </NavLink>
             ))}
-            <Link className="btn btn-primary btn-sm" to="/contact" data-track="nav-cta">Discuss your project</Link>
+            <Link className="btn btn-primary btn-sm" to="/contact" data-track="nav-cta">Let’s talk</Link>
           </div>
 
           <button
@@ -156,7 +163,7 @@ export function Nav() {
         ))}
         <div className="nav-sheet-foot">
           <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
-          <Link className="btn btn-primary" to="/contact" data-track="menu-cta">Discuss your project <span aria-hidden="true">→</span></Link>
+          <Link className="btn btn-primary" to="/contact" data-track="menu-cta">Let’s talk <span aria-hidden="true">→</span></Link>
         </div>
       </div>
     </>
@@ -176,9 +183,8 @@ export function Footer() {
               <WordmarkText />
             </Link>
             <p>
-              ForgeQubit builds voice and WhatsApp agents, connects business tools, and
-              develops custom AI products. UK-registered, working with clients in the UK,
-              Europe and the United States.
+              Intelligent systems. Thoughtfully built.
+              A UK-registered AI studio working worldwide.
             </p>
             <a className="link-cta" href={`mailto:${EMAIL}`} data-track="footer-email">{EMAIL} <span aria-hidden="true">→</span></a>
           </div>
@@ -291,7 +297,7 @@ export function CtaBand({
             <p>{body}</p>
           </div>
           <div className="btn-row">
-            <Link className="btn btn-primary" to={to} data-track="cta-band">Discuss your project <span aria-hidden="true">→</span></Link>
+            <Link className="btn btn-primary" to={to} data-track="cta-band">Let’s talk <span aria-hidden="true">→</span></Link>
             {secondary && (secondary.to.startsWith('mailto:')
               ? <a className="btn btn-secondary" href={secondary.to} data-track="cta-band-email">{secondary.label}</a>
               : <Link className="btn btn-secondary" to={secondary.to}>{secondary.label}</Link>)}

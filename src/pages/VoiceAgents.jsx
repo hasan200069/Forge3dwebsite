@@ -47,7 +47,7 @@ export default function VoiceAgents() {
         <div className="page-hero-copy">
           <Crumbs trail={[{ label: 'Solutions', to: '/services' }, { label: VOICE.name }]} />
           <p className="eyebrow"><IconTile icon={ICONS['voice-agents']} size="sm" /> Part of AI Reception & Lead Handling</p>
-          <h1>Voice agents that answer the phone, <span className="em">and know when to pass it on.</span></h1>
+          <h1>A better way<br /><span className="em">to answer.</span></h1>
           <p className="lede">{VOICE.short}</p>
           <div className="btn-row">
             <Link className="btn btn-primary" to={contactHref(VOICE.interest)} data-track="service-hero-voice-agents">Discuss your project <span aria-hidden="true">→</span></Link>

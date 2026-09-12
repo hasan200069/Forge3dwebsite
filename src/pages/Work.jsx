@@ -40,11 +40,9 @@ export default function Work() {
         <div className="page-hero-copy">
           <Crumbs trail={[{ label: 'Work', to: '/case-studies' }]} />
           <p className="eyebrow">Work</p>
-          <h1>Worked examples of how a project <span className="em">is scoped and measured.</span></h1>
+          <h1>See the <span className="em">possibilities.</span></h1>
           <p className="lede">
-            Each example below shows the context, the scope we would agree, the system as it would
-            behave, and the metrics we would define before launch, including the baseline and the
-            measurement period.
+            Explore how reception, voice and automation systems could work for your business. Every example is illustrative.
           </p>
           <nav className="chooser" aria-label="Examples on this page" style={{ marginTop: 26 }}>
             {DEMOS.map((d) => (
@@ -59,12 +57,9 @@ export default function Work() {
           </nav>
         </div>
         <div className="evidence-note glance">
-          <strong>About evidence on this page</strong>
+          <strong>Illustrative examples</strong>
           <span>
-            These are illustrations, not client case studies. We publish client results only with
-            written permission, a stated baseline, a measurement period and a metric definition.
-            Until those are published here, treat every figure you see elsewhere about our work as
-            unverified and ask us for references on a call.
+            These examples show how we approach a brief. Client case studies will be published with permission and measured results.
           </span>
           <span className="label-illustrative" style={{ marginTop: 6 }}>Every example below is illustrative</span>
         </div>

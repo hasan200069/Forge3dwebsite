@@ -12,6 +12,7 @@
    Run via `npm run assets`. Output is committed, so a normal build
    never pays for it. */
 
+import { BRAND, F_CHANNEL, Q_CHANNEL_OUTER, Q_CHANNEL_INNER, MARK_F, MARK_OUTER, MARK_INNER, MARK_TAIL, logoSvg } from '../src/brand.js'
 import { writeFileSync, mkdirSync } from 'node:fs'
 import { deflateSync } from 'node:zlib'
 import { dirname, join } from 'node:path'
@@ -212,16 +213,16 @@ const bboxOf = (pts, pad) => [
 /* ————————————————————————— palette ————————————————————————— */
 
 const C = {
-  bg: hex('#050D14'),
-  bgLift: hex('#0E2230'),
-  cyan: hex('#22D3EE'),
-  cyanBright: hex('#7DF0FF'),
-  cyanPale: hex('#7DF0FF'),
-  cyanDeep: hex('#0E7490'),
-  teal: hex('#2DD4BF'),
-  pulse: hex('#B5F5FF'),
-  ink: hex('#F2FAFD'),
-  inkDim: hex('#B4CAD4'),
+  bg: hex('#20151C'),
+  bgLift: hex('#3C2531'),
+  cyan: hex('#D990A1'),
+  cyanBright: hex('#F2C8D4'),
+  cyanPale: hex('#F2C8D4'),
+  cyanDeep: hex('#70283F'),
+  teal: hex('#D990A1'),
+  pulse: hex('#FAF0F4'),
+  ink: hex('#FAF8F9'),
+  inkDim: hex('#C9B6C0'),
 }
 
 /* linear gradient colour function between two points */
@@ -243,50 +244,14 @@ const flat = (c) => () => c
 
 /* ————————————————————————— the mark ————————————————————————— */
 
-/* draws the 48×48 mark into `c`, scaled by `s` and translated to (ox, oy)
-
-   An open ring with a tail (a Q) and a bright pulse sitting in the
-   opening. Same geometry as src/logo.jsx:
-     ring   centre (23, 23), r 14.5, stroke 3.6, gap 61.2° centred at 315°
-     pulse  23.7° arc centred at 315°
-     tail   (27.5, 27.5) → (39.5, 39.5), crossing the bowl */
-function drawMark(c, ox, oy, s) {
-  const P = (x, y) => [ox + x * s, oy + y * s]
-  const [cx, cy] = P(23, 23)
-  const r = 14.5 * s
-  const half = 1.8 * s
-
-  const deg = (x, y) => ((Math.atan2(y - cy, x - cx) * 180) / Math.PI + 360) % 360
-  const between = (a, lo, hi) => (lo <= hi ? a >= lo && a <= hi : a >= lo || a <= hi)
-  const endpoint = (a) => [cx + r * Math.cos((a * Math.PI) / 180), cy + r * Math.sin((a * Math.PI) / 180)]
-
-  /* stroke of an arc from a0 clockwise to a1 with round caps */
-  const sdArc = (a0, a1) => {
-    const [e0x, e0y] = endpoint(a0)
-    const [e1x, e1y] = endpoint(a1)
-    return (x, y) => {
-      if (between(deg(x, y), a0, a1)) return Math.abs(Math.hypot(x - cx, y - cy) - r) - half
-      return Math.min(Math.hypot(x - e0x, y - e0y), Math.hypot(x - e1x, y - e1y)) - half
-    }
-  }
-
-  const g = lin(...P(8, 8), ...P(42, 42), [[0, C.cyanPale], [0.55, C.cyan], [1, C.cyanDeep]])
-  const bbox = [cx - r - half - 2, cy - r - half - 2, cx + r + half + 2, cy + r + half + 2]
-
-  // the loop: gap from 284.4° to 345.6°
-  draw(c, { sdf: sdArc(345.6, 284.4), color: g, bbox })
-
-  // the tail
-  const [tax, tay] = P(27.5, 27.5)
-  const [tbx, tby] = P(39.5, 39.5)
-  draw(c, {
-    sdf: (x, y) => sdSegment(x, y, tax, tay, tbx, tby) - half,
-    color: g,
-    bbox: bboxOf([[tax, tay], [tbx, tby]], half + 2),
-  })
-
-  // the pulse, centred in the opening
-  draw(c, { sdf: sdArc(303.1, 326.9), color: flat(C.pulse), bbox })
+/* Rasterise the exact same polygons used by the vector mark. */
+function drawMark(c, ox, oy, s, onDark = true) {
+  const points = (shape) => shape.map(([x,y]) => [ox+x*s,oy+y*s])
+  const f = points(MARK_F), outer = points(MARK_OUTER), inner = points(MARK_INNER), tail = points(MARK_TAIL)
+  const fc = points(F_CHANNEL), qo = points(Q_CHANNEL_OUTER), qi = points(Q_CHANNEL_INNER)
+  draw(c, { sdf: (x,y) => Math.max(sdPolygon(x,y,f), -sdPolygon(x,y,fc)), color: flat(hex(onDark ? '#FAF8F9' : BRAND.oxblood)), bbox: bboxOf(f,2) })
+  draw(c, { sdf: (x,y) => Math.max(sdPolygon(x,y,outer), -sdPolygon(x,y,inner), -Math.max(sdPolygon(x,y,qo), -sdPolygon(x,y,qi))), color: flat(hex(BRAND.rose)), bbox: bboxOf(outer,2) })
+  draw(c, { sdf: (x,y) => sdPolygon(x,y,tail), color: flat(hex(BRAND.rose)), bbox: bboxOf(tail,2) })
 }
 
 /* ————————————————————————— stroke typeface ————————————————————————— */
@@ -383,18 +348,14 @@ function drawText(c, text, x, y, size, { weight = 0.08, tracking = 0.16, color }
 /* ————————————————————————— outputs ————————————————————————— */
 
 /* --- favicon.svg --- */
-const FAVICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
-  <defs>
-    <linearGradient id="g" x1="8" y1="8" x2="42" y2="42" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#7DF0FF"/><stop offset=".55" stop-color="#22D3EE"/><stop offset="1" stop-color="#0E7490"/>
-    </linearGradient>
-  </defs>
-  <circle cx="23" cy="23" r="14.5" stroke="url(#g)" stroke-width="3.6" stroke-linecap="round" stroke-dasharray="75.6 15.5" stroke-dashoffset="-87.46"/>
-  <path d="M27.5 27.5 L39.5 39.5" stroke="url(#g)" stroke-width="3.6" stroke-linecap="round"/>
-  <circle cx="23" cy="23" r="14.5" stroke="#B5F5FF" stroke-width="3.6" stroke-linecap="round" stroke-dasharray="6 85.1" stroke-dashoffset="-76.71"/>
-</svg>
-`
-writeFileSync(join(PUB, 'favicon.svg'), FAVICON)
+writeFileSync(join(PUB, 'favicon.svg'), logoSvg())
+writeFileSync(join(PUB, 'logo-mark.svg'), logoSvg())
+writeFileSync(join(PUB, 'logo-mark-mono.svg'), logoSvg({ mono: true }))
+const logoPreview = createCanvas(512, 512)
+paint(logoPreview, () => hex(BRAND.porcelain))
+drawMark(logoPreview, 64, 64, 8, false)
+writeFileSync(join(PUB, 'logo-preview.png'), encodePng(512, 512, toRgba(logoPreview)))
+
 
 /* --- app icons --- */
 function icon(size, { pad = 0.16, rounded = true } = {}) {

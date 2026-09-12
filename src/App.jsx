@@ -5,7 +5,6 @@ import { Analytics } from '@vercel/analytics/react'
 import { Nav, Footer, Backdrop } from './chrome.jsx'
 import { SOLUTIONS } from './data.js'
 import { startClickTracking } from './analytics.js'
-import { useSmoothScroll } from './motion.jsx'
 import Home from './pages/Home.jsx'
 
 /* ————————————————————————————————————————
@@ -90,6 +89,7 @@ function RouteView({ children }) {
 
   useEffect(() => {
     if (location.pathname === shown.pathname) {
+      setStage('in')
       if (location !== shown) setShown(location)
       return
     }
@@ -104,7 +104,7 @@ function RouteView({ children }) {
         setShown(location)
         setStage('in')
       })
-    }, 230)
+    }, 160)
     return () => clearTimeout(timer.current)
   }, [location, shown])
 
@@ -115,7 +115,7 @@ function RouteView({ children }) {
       return
     }
     scrollFor(shown)
-  }, [shown.pathname])
+  }, [shown.pathname, shown.hash])
 
   return (
     <div className={`route-view ${stage === 'out' ? 'route-out' : 'route-in'}`} key={shown.pathname}>
@@ -234,7 +234,6 @@ export function AppShell({ pages = lazyPages }) {
 
 export default function App() {
   useEffect(startClickTracking, [])
-  useSmoothScroll()
   return (
     <BrowserRouter>
       <AppShell />

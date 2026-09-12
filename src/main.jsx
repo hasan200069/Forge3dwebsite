@@ -1,6 +1,7 @@
 import { createRoot, hydrateRoot } from 'react-dom/client'
 import App, { PAGE_LOADERS, loaderFor } from './App.jsx'
 import './styles.css'
+import './studio.css'
 
 const root = document.getElementById('root')
 

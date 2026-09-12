@@ -88,6 +88,12 @@ function useCurrentSection(ids) {
   return current
 }
 
+const HEADLINES = {
+  'ai-reception': 'Every enquiry. Taken care of.',
+  'workflow-automation': 'Give your team their time back.',
+  'custom-ai-products': 'From your idea to everyday use.',
+}
+
 const SECTION_IDS = SECTIONS.map(([id]) => id)
 
 export default function ServicePage({ solution: s }) {
@@ -129,8 +135,8 @@ export default function ServicePage({ solution: s }) {
       <header className="shell page-hero split">
         <div className="page-hero-copy">
           <Crumbs trail={[{ label: 'Solutions', to: '/services' }, { label: s.name }]} />
-          <p className="eyebrow"><IconTile icon={ICONS[s.slug]} size="sm" /> Solution {s.num}</p>
-          <h1>{s.name}</h1>
+          <p className="eyebrow"><IconTile icon={ICONS[s.slug]} size="sm" /> {s.name}</p>
+          <h1>{HEADLINES[s.slug]}</h1>
           <p className="lede">{s.short}</p>
           <div className="btn-row">
             <Link className="btn btn-primary" to={contactHref(s.interest)} data-track={`service-hero-${s.slug}`}>Discuss your project <span aria-hidden="true">→</span></Link>

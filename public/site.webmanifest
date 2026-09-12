@@ -5,8 +5,8 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#061017",
-  "theme_color": "#061017",
+  "background_color": "#FAF8F9",
+  "theme_color": "#FAF8F9",
   "lang": "en-GB",
   "categories": ["business", "productivity", "developer"],
   "icons": [
