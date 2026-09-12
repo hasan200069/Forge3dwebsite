@@ -310,3 +310,12 @@ test('home page carries FAQ structured data and blog posts link to a solution', 
     assert.match(html, /href="\/services\/[a-z-]+"/, `${route} links to a solution page`)
   }
 })
+
+
+test('homepage sections have unique IDs after integration', () => {
+  const html = pages.find((page) => page.route === '/').html
+  const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1])
+  const seen = new Set()
+  const duplicates = ids.filter((id) => seen.has(id) || !seen.add(id))
+  assert.deepEqual(duplicates, [], 'Duplicate IDs suggest overlapping homepage versions or repeated sections')
+})
