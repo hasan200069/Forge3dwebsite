@@ -127,8 +127,7 @@ export function Seo({
 
 export const orgRef = { '@id': ORG_ID }
 
-/* Google shows breadcrumbs in results for any page that declares them —
-   cheap win on every non-home route. */
+/* Breadcrumb markup describes the hierarchy; search appearance is not guaranteed. */
 export function breadcrumbLd(trail) {
   return {
     '@type': 'BreadcrumbList',

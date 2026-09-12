@@ -1,3 +1,4 @@
+import { AREA_SERVED } from '../markets.js'
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { SOLUTIONS, VOICE, contactHref } from '../data.js'
@@ -24,7 +25,7 @@ const META = {
       'Voice and WhatsApp agents that answer enquiries in seconds, qualify prospects, book into your calendar and hand off to your team. Built on your number.',
   },
   'workflow-automation': {
-    title: 'Workflow Automation & Integrations Agency (UK) | ForgeQubit',
+    title: 'Workflow Automation & Integration Services | ForgeQubit',
     description:
       'Connected workflows across CRMs, accounting, helpdesks and internal tools. AI only where judgement is needed, with a person approving anything uncertain.',
   },
@@ -114,7 +115,7 @@ export default function ServicePage({ solution: s }) {
       description: s.short,
       serviceType: s.name,
       provider: orgRef,
-      areaServed: ['GB', 'US', 'EU'],
+      areaServed: AREA_SERVED,
       url: `${SITE_URL}${s.path}`,
     },
     {

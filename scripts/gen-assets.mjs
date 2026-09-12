@@ -437,13 +437,14 @@ writeFileSync(join(PUB, 'og.png'), ogCard())
 
 /* one card per page, so shares and previews name the page, not just the site */
 const CARDS = {
+  'og-international.png': { l1: 'YOUR AI PARTNER.', l2: 'ACROSS BORDERS.', kicker: 'INTERNATIONAL CLIENTS', strip: 'UK · USA · EUROPE · MIDDLE EAST' },
   'og-services.png': { l1: 'THREE THINGS WE BUILD,', l2: 'START TO FINISH', kicker: 'SOLUTIONS' },
   'og-ai-reception.png': { l1: 'AI RECEPTION', l2: 'AND LEAD HANDLING', kicker: 'VOICE AND WHATSAPP AGENTS', strip: 'ANSWER · QUALIFY · BOOK · HAND OFF TO A PERSON' },
   'og-workflow-automation.png': { l1: 'WORKFLOW AUTOMATION', l2: 'AND INTEGRATIONS', kicker: 'CRMS · CALENDARS · HELPDESKS · ACCOUNTING', strip: 'AI ONLY WHERE JUDGEMENT IS NEEDED · A PERSON APPROVES' },
   'og-custom-ai-products.png': { l1: 'CUSTOM AI PRODUCT', l2: 'DEVELOPMENT', kicker: 'APPLICATIONS · AGENTS · SAAS', strip: 'DESIGN · ENGINEERING · EVALUATION FROM DAY ONE' },
   'og-voice-agents.png': { l1: 'VOICE AGENTS THAT', l2: 'ANSWER THE PHONE', kicker: 'PART OF AI RECEPTION', strip: 'FIRST RING · BOOKINGS · HANDOFF WITH CONTEXT' },
   'og-work.png': { l1: 'WORKED EXAMPLES,', l2: 'SCOPED AND MEASURED', kicker: 'WORK', strip: 'ILLUSTRATIVE EXAMPLES · NOT CLIENT CASE STUDIES' },
-  'og-about.png': { l1: 'AN ENGINEER-LED', l2: 'AI STUDIO', kicker: 'ABOUT', strip: 'UK-REGISTERED · UK · EUROPE · UNITED STATES' },
+  'og-about.png': { l1: 'AN ENGINEER-LED', l2: 'AI STUDIO', kicker: 'ABOUT', strip: 'UK · USA · EUROPE · MIDDLE EAST' },
   'og-contact.png': { l1: 'DISCUSS YOUR', l2: 'PROJECT', kicker: 'CONTACT', strip: 'A PERSON REPLIES · A SHORT CALL · A WRITTEN SCOPE' },
   'og-blog.png': { l1: 'NOTES FOR', l2: 'OPERATORS', kicker: 'BLOG', strip: 'AI RECEPTION · AUTOMATION · AI PRODUCTS' },
 }

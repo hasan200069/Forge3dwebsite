@@ -160,3 +160,19 @@ h1,h2,h3{letter-spacing:-.045em;font-weight:600}
   .work-page .demo-visual .call, .work-page .demo-visual .transcript, .work-page .demo-visual .wf { padding: 14px; }
   .work-page .call-line { grid-template-columns: 55px minmax(0,1fr); gap: 8px; }
 }
+.market-presence{display:flex;align-items:center;justify-content:space-between;gap:20px;padding-block:30px;font-size:14px;color:var(--ink-2)}
+.market-presence a{color:var(--brand);text-decoration:none}
+.international-page .page-hero .eyebrow{margin:20px 0}
+.market-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.market-card{background:white;border-radius:24px;padding:36px}
+.market-card h3{font-size:27px;margin:16px 0}
+.market-card>p:not(.eyebrow){color:var(--ink-2);line-height:1.65}
+.market-card .studio-text-link{margin-top:20px}
+.international-process{display:grid;grid-template-columns:1fr 1fr;gap:80px}
+.international-process .lede{margin-top:24px}
+.international-process ol{list-style:none;counter-reset:delivery}
+.international-process li{counter-increment:delivery;padding:24px 0;border-bottom:1px solid var(--line)}
+.international-process li:first-child{padding-top:0}
+.international-process li h3{font-size:22px;margin-bottom:10px}
+.international-process li p{color:var(--ink-2);line-height:1.6}
+@media(max-width:700px){.market-presence{align-items:start;flex-direction:column;gap:8px}.market-grid,.international-process{grid-template-columns:1fr;gap:24px}.market-card{padding:26px}}

@@ -319,3 +319,31 @@ test('homepage sections have unique IDs after integration', () => {
   const duplicates = ids.filter((id) => seen.has(id) || !seen.add(id))
   assert.deepEqual(duplicates, [], 'Duplicate IDs suggest overlapping homepage versions or repeated sections')
 })
+
+
+test('international services are indexable, linked and represented accurately', () => {
+  assert.ok(routes.includes('/international'))
+  const international = pages.find(p => p.route === '/international').html
+  for (const market of ['United Kingdom', 'United States', 'Europe', 'Middle East']) {
+    assert.ok(international.includes(market), `Missing visible market: ${market}`)
+  }
+  for (const {route, html} of pages.filter(p => ['/', '/services', '/contact', '/international'].includes(p.route) || p.route.startsWith('/services/'))) {
+    const graph = JSON.parse(html.match(/<script type="application\/ld\+json" id="route-jsonld">([\s\S]*?)<\/script>/)[1])['@graph']
+    const regionalNodes = []
+    const collectRegions = value => {
+      if (!value || typeof value !== 'object') return
+      if (value.areaServed) regionalNodes.push(value)
+      Object.values(value).forEach(collectRegions)
+    }
+    collectRegions(graph)
+    assert.ok(regionalNodes.length, `${route} has no service area`)
+    for (const node of regionalNodes) {
+      assert.deepEqual(node.areaServed.map(area => area.name).sort(), ['Europe', 'Middle East', 'United Kingdom', 'United States'])
+    }
+    assert.match(html, /href="\/international"/, `${route} has no international client link`)
+    assert.doesNotMatch(html, /hreflang="(?:ar|en-US|en-EU|en-UK|en-ME)"/, 'Do not declare language versions that do not exist')
+  }
+  const sitemap = readFileSync(join(DIST, 'sitemap.xml'), 'utf8')
+  assert.match(sitemap, /<loc>https:\/\/www\.forgequbit\.co\.uk\/international<\/loc>/)
+  assert.doesNotMatch(sitemap, /<url><loc>[^<]+<\/loc><lastmod>[^<]+<\/lastmod><changefreq>monthly/, 'Static pages must not acquire a new modification date on every build')
+})

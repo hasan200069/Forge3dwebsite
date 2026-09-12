@@ -184,7 +184,7 @@ export function Footer() {
             </Link>
             <p>
               Intelligent systems. Thoughtfully built.
-              A UK-registered AI studio working worldwide.
+              A UK-registered AI studio serving the UK, USA, Europe and Middle East.
             </p>
             <a className="link-cta" href={`mailto:${EMAIL}`} data-track="footer-email">{EMAIL} <span aria-hidden="true">→</span></a>
           </div>
@@ -204,6 +204,7 @@ export function Footer() {
               <h3>Company</h3>
               <ul>
                 <li><Link to="/about">About</Link></li>
+                <li><Link to="/international">International clients</Link></li>
                 <li><Link to="/case-studies">Work</Link></li>
                 <li><Link to="/blog">Blog</Link></li>
                 <li><Link to="/contact">Contact</Link></li>
@@ -221,7 +222,7 @@ export function Footer() {
 
         <div className="footer-base">
           <span>© {new Date().getFullYear()} ForgeQubit. Registered in the United Kingdom.</span>
-          <span>United Kingdom · Europe · United States</span>
+          <span>UK · USA · Europe · Middle East</span>
         </div>
       </div>
       <div className="footer-watermark" aria-hidden="true">ForgeQubit</div>

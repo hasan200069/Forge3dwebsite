@@ -14,6 +14,7 @@ import Home from './pages/Home.jsx'
    before hydration (see main.jsx) so the server markup never flashes.
    ———————————————————————————————————————— */
 export const PAGE_LOADERS = {
+  International: () => import('./pages/International.jsx'),
   Services: () => import('./pages/Services.jsx'),
   ServicePage: () => import('./pages/ServicePage.jsx'),
   VoiceAgents: () => import('./pages/VoiceAgents.jsx'),
@@ -32,6 +33,7 @@ export function loaderFor(pathname) {
   if (pathname === '/services') return 'Services'
   if (pathname === '/services/voice-agents') return 'VoiceAgents'
   if (SOLUTIONS.some((s) => s.path === pathname)) return 'ServicePage'
+  if (pathname === '/international') return 'International'
   if (pathname === '/about') return 'About'
   if (pathname === '/case-studies') return 'Work'
   if (pathname === '/blog') return 'Blog'
@@ -214,6 +216,7 @@ export function AppShell({ pages = lazyPages }) {
                 <Route key={s.slug} path={s.path} element={<P.ServicePage solution={s} />} />
               ))}
               <Route path="/services/voice-agents" element={<P.VoiceAgents />} />
+              <Route path="/international" element={<P.International />} />
               <Route path="/about" element={<P.About />} />
               <Route path="/case-studies" element={<P.Work />} />
               <Route path="/blog" element={<P.Blog />} />

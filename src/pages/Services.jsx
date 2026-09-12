@@ -1,3 +1,4 @@
+import { AREA_SERVED } from '../markets.js'
 import { Link } from 'react-router-dom'
 import { SOLUTIONS, VOICE, CAPABILITIES, FAQS, contactHref } from '../data.js'
 import { Crumbs, Footer, Faq, CtaBand } from '../chrome.jsx'
@@ -24,7 +25,7 @@ const JSON_LD = graph(
         description: s.short,
         url: `${SITE_URL}${s.path}`,
         provider: orgRef,
-        areaServed: ['GB', 'US', 'EU'],
+        areaServed: AREA_SERVED,
       },
     })),
   },
@@ -156,6 +157,7 @@ export default function Services() {
         body="Describe the situation in a few sentences. We will tell you which solution applies, or that none does, before anyone talks about price."
         secondary={{ to: '/case-studies', label: 'See worked examples' }}
       />
+      <p className="shell market-presence">Working across borders? <Link to="/international">AI services for the UK, USA, Europe and Middle East</Link></p>
       <Footer />
     </div>
   )

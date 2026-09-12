@@ -1,3 +1,4 @@
+import { AREA_SERVED } from '../markets.js'
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { INTERESTS } from '../data.js'
@@ -19,7 +20,7 @@ const JSON_LD = graph(
     email: EMAIL,
     contactType: 'sales',
     availableLanguage: 'English',
-    areaServed: ['GB', 'US', 'EU'],
+    areaServed: AREA_SERVED,
     parentOrganization: orgRef,
   }
 )

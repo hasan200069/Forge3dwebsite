@@ -1,3 +1,4 @@
+import { AREA_SERVED } from '../markets.js'
 import { Link } from 'react-router-dom'
 import { VOICE, SOLUTIONS, contactHref } from '../data.js'
 import { Crumbs, Footer, Faq, CtaBand } from '../chrome.jsx'
@@ -5,7 +6,7 @@ import { Seo, SITE_URL, ogFor, orgRef, graph, webPageLd, breadcrumbLd } from '..
 import { CallSample } from '../visuals.jsx'
 import { ICONS, IconTile } from '../icons.jsx'
 
-const TITLE = 'AI Voice Agents for Phone Answering & Bookings (UK) | ForgeQubit'
+const TITLE = 'AI Voice Agents for Phone Answering & Bookings | ForgeQubit'
 const DESC =
   'Voice agents that answer on the first ring, book and reschedule appointments, answer common questions and transfer to your team with context. Works with your number.'
 
@@ -22,7 +23,7 @@ const JSON_LD = graph(
     description: VOICE.short,
     serviceType: 'AI voice agent development',
     provider: orgRef,
-    areaServed: ['GB', 'US', 'EU'],
+    areaServed: AREA_SERVED,
     url: `${SITE_URL}${VOICE.path}`,
   },
   {

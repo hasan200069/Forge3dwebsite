@@ -1,65 +1,40 @@
-# Search and AI discoverability
+# International search strategy
 
-What the site does for search engines and for the crawlers that feed
-AI assistants, what is verified by tests, and what only the business can
-do. Nothing here guarantees a position: Google, Bing and AI assistants
-rank on relevance, authority and behaviour that no page can control.
-The aim is to be the easiest source to crawl, understand, cite and
-share.
+Updated 12 September 2026. Targets: United States, United Kingdom, Europe and Middle East. Current website language: English. Canonical domain: https://www.forgequbit.co.uk.
 
-## Built into the site (tested on every build)
+## Implemented
 
-| Layer | What is there | Test |
-| --- | --- | --- |
-| Real HTML | Every route is prerendered to a complete HTML file; a crawler that runs no JavaScript sees all headings, copy, links and structured data | routes, links, one `h1` per page |
-| Titles and descriptions | Unique per page, titles ≤ 70 characters with the search terms buyers use (AI receptionist, WhatsApp and voice agents, workflow automation, custom AI products, UK), descriptions ≤ 165 | length and uniqueness |
-| Canonical host | `https://www.forgequbit.co.uk` everywhere (the apex redirects to www), canonical and `hreflang` on every page | canonical per route |
-| Indexing rules | `index, follow, max-image-preview:large`; 404 is `noindex`; unknown URLs return a real 404 status | robots meta and status |
-| Redirects | Permanent (308) redirects for retired service slugs; no blanket redirect to the home page | each redirect and its target |
-| Sitemap, RSS, robots | `sitemap.xml` with every indexable page, `rss.xml` for the blog, `robots.txt` allowing everyone and naming the AI crawlers explicitly (GPTBot, OAI-SearchBot, ClaudeBot, Claude-SearchBot, PerplexityBot, Google-Extended, Bingbot, Applebot, CCBot and others) | sitemap contents, robots rules |
-| Structured data | Organization/ProfessionalService, WebSite, WebPage, BreadcrumbList, Service, FAQPage (home, solutions, each service page), Blog and BlogPosting; all of it describes visible content only, with no reviews, ratings, locations or people that are not on the page | valid JSON-LD on every page |
-| Social cards | A distinct card per page (`og-*.png`) with title, description and alt text for Open Graph and Twitter | card exists and is unique |
-| Language-model summaries | `llms.txt` (a short, linked summary) and `llms-full.txt` (the substantive text of every page, with the illustrative labels kept) | present, linked, substantial |
-| Internal linking | Crawlable nav and footer, breadcrumbs, related solutions from each blog post, choosers on the overview pages | every internal link resolves |
-| Speed and stability | Inline CSS, code-split routes, self-hosted fonts, CLS 0, Lighthouse SEO 100 on audited pages | Lighthouse (lab) |
+- Prerendered `/international` page: market-specific project considerations, remote delivery, language scoping, data/hosting questions and links to the relevant services. No invented offices or client results.
+- Homepage title and description describe an AI automation agency with international service availability. Service titles no longer unnecessarily restrict the offering to the UK.
+- Visible market coverage and links from the homepage, services page and shared footer.
+- Shared `AREA_SERVED` data in `src/markets.js` applied to organization, services and contact structured data. UK and USA are countries; Europe and Middle East are places, not fictitious country codes.
+- Canonical URLs, sitemap inclusion, crawlable links, a distinct social image and accurate Open Graph/Twitter descriptions for the new page.
+- The sitemap only emits modification dates where an explicit content date exists. It no longer labels unchanged static pages as modified on every build.
+- Removed unused font preloads from the system-font design, reducing competition for initial page bandwidth.
+- Existing genuine article content and service pages retained. No region-name-swapped duplicate pages.
+- Build tests verify regional schema coverage, international links, sitemap inclusion and the absence of invented language alternates.
 
-## What only the business can do
+`llms.txt` and `llms-full.txt` also reflect service availability. These summaries are not a Google ranking factor or an indexing guarantee.
 
-These move rankings and citations far more than any further on-page
-change:
+## Domain and language decisions
 
-1. **Google Search Console and Bing Webmaster Tools.** Verify the
-   `www` property, submit `https://www.forgequbit.co.uk/sitemap.xml`,
-   and request indexing of `/services/voice-agents`. Add the
-   verification token to `index.html` (`<meta name="google-site-verification">`)
-   or use the DNS method.
-2. **Google Business Profile.** A verified profile with the registered
-   address is the strongest signal for "AI agency UK" style searches.
-3. **Company facts on the site.** Companies House number, registered
-   office and founder names, in `TEAM` and `COMPANY` in `src/data.js`.
-   Named people and a verifiable company record are what assistants and
-   search engines use to decide a business is real.
-4. **Profiles and `sameAs`.** LinkedIn company page, GitHub, X and
-   Crunchbase profiles that link to the site, then add their URLs to the
-   Organization `sameAs` in `src/pages/Home.jsx`. Only real profiles.
-5. **Evidence.** One permission-backed case study with a baseline and a
-   metric definition is worth more than any keyword. The site is built
-   to publish it without placeholders.
-6. **Writing that answers real questions.** Two or three posts a quarter
-   on the questions prospects ask on calls (cost of a voice agent,
-   WhatsApp Business approval, human handoff design). Each post links
-   to its solution page. No mass-generated articles.
-7. **Links from others.** Directories for UK AI and automation
-   agencies, partner listings (Twilio, HubSpot, Meta Business partners
-   if applicable), guest writing, talks. Earned links are the ranking
-   input the site itself cannot supply.
+The `.co.uk` domain is a UK geographic signal. The international page makes the offering clear to overseas buyers, but cannot make the domain geographically neutral. If a verified, owned `.com` domain is chosen for a future global migration, plan URL-for-URL permanent redirects, canonical changes, sitemap changes and Search Console migration checks together. Do not run identical canonical sites on two domains.
 
-## Honest limits
+The site keeps English and x-default self-references. There is no Arabic, German or French version yet, so no alternate-language tags imply one exists. Do not use `en-EU`, `en-ME` or `en-UK`: Europe and the Middle East are not valid hreflang country regions, and the UK code is GB. When real translations exist, give each a stable URL, reciprocal alternates, reviewed content and a visible language switcher.
 
-- There is no registry through which MCP servers or AI models "find
-  a website first". Assistants cite pages that are crawlable, clear and
-  corroborated elsewhere. The site now covers the crawlable and clear
-  parts; corroboration comes from items 2 to 7 above.
-- Rankings and traffic are not predicted here. Measure them in Search
-  Console after deployment, and read enquiries by source in Vercel
-  Analytics (see `ANALYTICS.md`).
+## Deployment and measurement
+
+1. Deploy this build to the existing canonical domain. These local changes do not affect live search results until published.
+2. Verify the domain in Google Search Console and Bing Webmaster Tools using owner access. Submit `/sitemap.xml`; inspect `/international` plus the core service URLs. No verification tokens or account access were provided in this task.
+3. In Search Console, monitor impressions, clicks, CTR and average position by country and landing page. Compare 28-day periods after indexing, allowing for seasonality and low volumes.
+4. Track relevant queries: AI automation agency, AI receptionist, voice AI agents, WhatsApp automation, workflow automation services and custom AI development. Separate country filters for the UK, USA, UAE, Saudi Arabia and European countries relevant to actual enquiries. These are positioning themes, not claims based on keyword-volume research.
+5. Publish permission-backed client work with real outcomes and measured baselines. Add verified company and professional profiles when available. Earn relevant regional links through genuine partnerships and publications.
+6. Expand localized content in response to real enquiry/search data. Have Arabic or European-language content reviewed by fluent speakers and operational owners before making service-language claims.
+
+Search rankings, rich results and indexing are determined by search engines and are not guaranteed by metadata or schema.
+
+## Guidance consulted
+
+- https://developers.google.com/search/docs/specialty/international/managing-multi-regional-sites
+- https://developers.google.com/search/docs/specialty/international/localized-versions
+- https://developers.google.com/search/docs/essentials/spam-policies

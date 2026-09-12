@@ -1,3 +1,4 @@
+import { AREA_SERVED } from '../markets.js'
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import { SOLUTIONS, FAQS } from '../data.js'
@@ -6,9 +7,9 @@ import { Seo, SITE_URL, SITE_NAME, ORG_ID, orgRef, graph, webPageLd } from '../s
 import { EnquiryFlow, Workflow } from '../visuals.jsx'
 import { Reveal } from '../motion.jsx'
 
-const TITLE = 'ForgeQubit | AI Receptionist, WhatsApp & Voice Agents, Automation (UK)'
+const TITLE = 'AI Automation Agency | Voice Agents & AI Products | ForgeQubit'
 const DESC =
-  'Voice and WhatsApp agents that answer customers, automations that connect your tools, and custom AI products. UK-registered, serving the UK, Europe and the US.'
+  'AI receptionists, voice and WhatsApp agents, workflow automation and custom AI products for clients in the UK, USA, Europe and Middle East.'
 
 /* ———————————————————— structured data ———————————————————— */
 
@@ -22,7 +23,7 @@ const JSON_LD = graph(
     email: EMAIL,
     slogan: 'AI systems that answer customers and move work forward.',
     description:
-      'UK-registered studio building voice and WhatsApp agents for reception and lead handling, workflow automation and integrations, and custom AI products for clients in the United Kingdom, Europe and the United States.',
+      'UK-registered studio building voice and WhatsApp agents for reception and lead handling, workflow automation and integrations, and custom AI products for clients in the United Kingdom, United States, Europe and Middle East.',
     logo: {
       '@type': 'ImageObject',
       '@id': `${SITE_URL}/#logo`,
@@ -33,18 +34,14 @@ const JSON_LD = graph(
     },
     image: { '@id': `${SITE_URL}/#logo` },
     address: { '@type': 'PostalAddress', addressCountry: 'GB' },
-    areaServed: [
-      { '@type': 'Country', name: 'United Kingdom' },
-      { '@type': 'Country', name: 'United States' },
-      { '@type': 'AdministrativeArea', name: 'Europe' },
-    ],
+    areaServed: AREA_SERVED,
     knowsAbout: SOLUTIONS.map((s) => s.name),
     contactPoint: {
       '@type': 'ContactPoint',
       email: EMAIL,
       contactType: 'sales',
       availableLanguage: 'English',
-      areaServed: ['GB', 'US', 'EU'],
+      areaServed: AREA_SERVED,
     },
     hasOfferCatalog: {
       '@type': 'OfferCatalog',
@@ -127,6 +124,7 @@ export default function Home() {
 
       <section className="section studio-faq" aria-labelledby="faq-h"><div className="shell faq-grid"><Reveal><p className="eyebrow">A few good questions</p><h2 id="faq-h">Let’s clear<br />things up.</h2></Reveal><Faq items={HOME_FAQS} /></div></section>
       <section className="studio-final"><div className="shell"><p className="eyebrow">Your next chapter</p><h2>What if<br /><span>we built it?</span></h2><Link className="btn btn-primary" to="/contact">Tell us your idea <span aria-hidden="true">↗</span></Link><a href={`mailto:${EMAIL}`}>{EMAIL}</a></div></section>
+      <div className="market-presence shell"><p>UK-registered. Serving the USA, UK, Europe and Middle East.</p><Link to="/international">Working with us internationally</Link></div>
       <Footer />
     </div>
   )

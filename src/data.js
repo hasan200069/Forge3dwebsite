@@ -433,7 +433,7 @@ export const FAQS = [
   },
   {
     q: 'Where are you based and who do you work with?',
-    a: 'ForgeQubit is registered in the United Kingdom and works remotely with clients in the UK, Europe and the United States.',
+    a: 'ForgeQubit is registered in the United Kingdom and offers remote services to clients in the UK, USA, Europe and the Middle East.',
   },
 ]
 

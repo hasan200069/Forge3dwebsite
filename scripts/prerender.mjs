@@ -13,6 +13,7 @@
 import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { MARKETS, INTERNATIONAL_FAQS } from '../src/markets.js'
 import { POSTS, SOLUTIONS, VOICE, CAPABILITIES, PROCESS, FAQS, DEMOS } from '../src/data.js'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
@@ -26,6 +27,7 @@ const { render } = await import(pathToFileURL(join(SSR, 'entry-server.js')).href
    via the host rewrite. */
 const ROUTES = [
   { path: '/', changefreq: 'weekly', priority: '1.0' },
+  { path: '/international', changefreq: 'monthly', priority: '0.8' },
   { path: '/services', changefreq: 'monthly', priority: '0.9' },
   ...SOLUTIONS.map((s) => ({ path: s.path, changefreq: 'monthly', priority: '0.9' })),
   { path: VOICE.path, changefreq: 'monthly', priority: '0.8' },
@@ -39,7 +41,6 @@ const ROUTES = [
   { path: '/404', file: '404.html', noindex: true },
 ]
 
-const BUILD_DATE = new Date().toISOString().slice(0, 10)
 
 const esc = (s) =>
   String(s)
@@ -96,6 +97,7 @@ for (const route of ROUTES) {
   html = setMeta(html, 'name', 'twitter:title', head.title)
   html = setMeta(html, 'name', 'twitter:description', head.description)
   html = setMeta(html, 'name', 'twitter:image', head.image)
+  html = setMeta(html, 'name', 'twitter:image:alt', head.imageAlt)
 
   if (head.publishedTime) {
     html = setMeta(html, 'property', 'article:published_time', head.publishedTime)
@@ -134,7 +136,7 @@ const sitemap =
     .map(
       (r) =>
         `  <url><loc>${SITE}${r.path === '/' ? '/' : r.path}</loc>` +
-        `<lastmod>${r.lastmod ?? BUILD_DATE}</lastmod>` +
+        (r.lastmod ? `<lastmod>${r.lastmod}</lastmod>` : '') +
         `<changefreq>${r.changefreq}</changefreq>` +
         `<priority>${r.priority}</priority></url>`
     )
@@ -194,7 +196,7 @@ const md = (s) => String(s).replace(/\s+/g, ' ').trim()
 
 const llms =
   `# ForgeQubit\n\n` +
-  `> ForgeQubit is a UK-registered, engineer-led studio that builds AI systems that answer customers and move work forward: voice and WhatsApp agents for reception and lead handling, workflow automation and integrations across business tools, and custom AI products. Clients are in the United Kingdom, Europe and the United States. Contact: info@forgequbit.com.\n\n` +
+  `> ForgeQubit is a UK-registered, engineer-led studio that builds AI systems that answer customers and move work forward: voice and WhatsApp agents for reception and lead handling, workflow automation and integrations across business tools, and custom AI products. Services are available to clients in the United Kingdom, United States, Europe and Middle East. Contact: info@forgequbit.com.\n\n` +
   `Every scenario, transcript and figure on the site is labelled illustrative; ForgeQubit publishes client results only with written permission, a baseline, a measurement period and a metric definition.\n\n` +
   `## Solutions\n\n` +
   SOLUTIONS.map((s) => `- [${s.name}](${SITE}${s.path}): ${md(s.short)}`).join('\n') +
@@ -203,7 +205,7 @@ const llms =
   `\n\n## How a project runs\n\n` +
   PROCESS.map((p) => `- ${p.t}: ${md(p.d)} Deliverable: ${md(p.out)}`).join('\n') +
   `\n\n## Pages\n\n` +
-  `- [Home](${SITE}/)\n- [Solutions overview](${SITE}/services)\n- [Worked examples](${SITE}/case-studies)\n- [About](${SITE}/about)\n- [Contact](${SITE}/contact)\n- [Blog](${SITE}/blog)\n` +
+  `- [Home](${SITE}/)\n- [International clients](${SITE}/international)\n- [Solutions overview](${SITE}/services)\n- [Worked examples](${SITE}/case-studies)\n- [About](${SITE}/about)\n- [Contact](${SITE}/contact)\n- [Blog](${SITE}/blog)\n` +
   POSTS.map((p) => `- [${p.title}](${SITE}/blog/${p.slug}): ${md(p.excerpt)}`).join('\n') +
   `\n\n## Optional\n\n- [Privacy](${SITE}/privacy)\n- [Terms](${SITE}/terms)\n- [Full text](${SITE}/llms-full.txt)\n`
 
@@ -214,7 +216,9 @@ writeFileSync(join(DIST, 'llms.txt'), llms)
 const section = (title, body) => `\n\n## ${title}\n\n${body}`
 const list = (items) => items.map((i) => `- ${md(i)}`).join('\n')
 
-let full = `# ForgeQubit: full site text\n\nCanonical site: ${SITE}\nContact: info@forgequbit.com\nRegistered in the United Kingdom; works remotely with clients in the UK, Europe and the United States.\n\nAll examples, transcripts and figures below are illustrative unless explicitly stated otherwise.`
+let full = `# ForgeQubit: full site text\n\nCanonical site: ${SITE}\nContact: info@forgequbit.com\nRegistered in the United Kingdom; works remotely with clients in the UK, USA, Europe and Middle East.\n\nAll examples, transcripts and figures below are illustrative unless explicitly stated otherwise.`
+
+full += section(`International clients (${SITE}/international)`, MARKETS.map(m => `### ${m.name}\n${m.intro}\n${m.body}`).join('\n\n') + '\n\n' + INTERNATIONAL_FAQS.map(f => `### ${f.q}\n${f.a}`).join('\n\n'))
 
 for (const s of SOLUTIONS) {
   full += section(`${s.name} (${SITE}${s.path})`,

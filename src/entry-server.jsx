@@ -2,6 +2,7 @@ import { renderToString } from 'react-dom/server'
 import { StaticRouter } from 'react-router'
 import { AppShell } from './App.jsx'
 import { collectedHead } from './seo.jsx'
+import International from './pages/International.jsx'
 import Services from './pages/Services.jsx'
 import ServicePage from './pages/ServicePage.jsx'
 import VoiceAgents from './pages/VoiceAgents.jsx'
@@ -17,6 +18,7 @@ import NotFound from './pages/NotFound.jsx'
    every page to complete HTML while the browser only downloads the
    chunk for the route it is on. */
 const PAGES = {
+  International,
   Services,
   ServicePage,
   VoiceAgents,

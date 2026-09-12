@@ -60,7 +60,7 @@ export default function About() {
           {COMPANY.registeredOffice && <div><dt>Registered office</dt><dd>{COMPANY.registeredOffice}</dd></div>}
           {COMPANY.founded && <div><dt>Founded</dt><dd>{COMPANY.founded}</dd></div>}
           <div><dt>Works with</dt><dd>Service businesses, operations teams, founders and product teams</dd></div>
-          <div><dt>Regions</dt><dd>United Kingdom, Europe, United States (remote)</dd></div>
+          <div><dt>Regions</dt><dd>UK, USA, Europe, Middle East (remote)</dd></div>
           <div><dt>Contact</dt><dd><a href={`mailto:${EMAIL}`}>{EMAIL}</a></dd></div>
           <div><dt>Engagements</dt><dd>Fixed-scope proposals, weekly demos, deliverables assigned to you on payment</dd></div>
         </dl>
@@ -81,8 +81,8 @@ export default function About() {
               in accounts you control.
             </p>
             <p>
-              We are UK-registered and work remotely with clients in the United Kingdom, Europe and
-              the United States, overlapping with both European and US business hours.
+              We are UK-registered and offer remote delivery across the UK, USA, Europe and Middle East.
+              Meeting windows and handover arrangements are agreed around your team.
             </p>
           </div>
           <div className="glance">
