@@ -33,7 +33,7 @@ function Visual({ demo }) {
 
 export default function Work() {
   return (
-    <div className="page">
+    <div className="page work-page">
       <Seo title={TITLE} description={DESC} path="/case-studies" jsonLd={JSON_LD} image={ogFor('work')} imageAlt="ForgeQubit worked examples, scoped and measured" />
 
       <header className="shell page-hero split">
